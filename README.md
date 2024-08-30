@@ -2,6 +2,7 @@
 ## 116745378
 :trollface:
 Eugene Stark - 01
+
 ACADEMIC HONESTY STATEMENT
 ================================================================================
 I certify the following:
@@ -38,4 +39,4 @@ my submission. Such permission is best requested and obtained by E-mail to
 cse320@cs.stonybrook.edu
 ================================================================================
 Signed:
-(date -u) -Vijayabharathi Murugan
+Fri Aug 30 04:17:47 AM UTC 2024 -Vijayabharathi Murugan
