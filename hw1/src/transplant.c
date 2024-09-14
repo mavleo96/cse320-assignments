@@ -45,8 +45,20 @@
  * @return 0 on success, -1 in case of error
  */
 int path_init(char *name) {
-    // To be implemented.
-    abort();
+    // TODO: Add comments and format the function better
+    int count = 0;
+    if (string_length(name) + 1 > sizeof(path_buf)) {
+        return -1;
+    }
+    // TODO: Need to handle the trailing / issue
+    while (*(name + count) != '\0') {
+        *(path_buf + count) = *(name + count);
+        count += 1;
+    }
+    *(path_buf + count + 1) = '\0';
+    path_length = string_length(name);
+
+    return 0;
 }
 
 /*
@@ -63,8 +75,19 @@ int path_init(char *name) {
  * @return 0 in case of success, -1 otherwise.
  */
 int path_push(char *name) {
-    // To be implemented.
-    abort();
+    // TODO: Add comments and format the function better
+    int count = 0;
+    if (path_length + string_length(name) + 1 + 1 > sizeof(path_buf)) {
+        return -1;
+    }
+    *(path_buf + path_length) = '/';
+    while (*(name + count) != '\0') {
+        *(path_buf + path_length + 1 + count) = *(name + count);
+        count += 1;
+    }
+    path_length += string_length(name) + 1;
+
+    return 0;
 }
 
 /*
@@ -80,8 +103,16 @@ int path_push(char *name) {
  * @return 0 in case of success, -1 otherwise.
  */
 int path_pop() {
-    // To be implemented.
-    abort();
+    // TODO: Add comments and format the function better
+    int count = 0;
+    while (*(path_buf + path_length - count) != '/') {
+        *(path_buf + path_length - count) = '\0';
+        count += 1;
+    }
+    *(path_buf + path_length - count) = '\0';
+    path_length -= count;
+    // TODO: Empty path_buf case to be handled
+    return 0;
 }
 
 /*
