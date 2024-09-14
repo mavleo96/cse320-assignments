@@ -1,5 +1,6 @@
 #include "global.h"
 #include "debug.h"
+#include "string_functions.h"
 
 #ifdef _STRING_H
 #error "Do not #include <string.h>. You will get a ZERO."
@@ -218,8 +219,61 @@ int deserialize() {
  * @modifies global variable "global_options" to contain a bitmap representing
  * the selected options.
  */
-int validargs(int argc, char **argv)
-{
-    // To be implemented.
-    abort();
+int validargs(int argc, char **argv) {
+    int validation_status = 0;    // Default to valid arguments
+    int check_args = 1;           // Validation to start from 1st argument
+    char mode = '\0';             // Mode to store the operation s|d
+
+    // Insufficient arguments case
+    if (argc == 1) {
+        validation_status = -1;
+    }
+
+    // Loop through the command-line arguments
+    while (argc - check_args > 0) {
+        // Check for positional argument (must be -h|-s|-d)
+        if (check_args == 1) {
+            if (string_compare(*(argv + check_args), "-h") == 0) {
+                global_options |= (1 << 0);
+                break;
+            } else if (string_compare(*(argv + check_args), "-s") == 0) {
+                mode = 's';
+                global_options |= (1 << 1);
+            } else if (string_compare(*(argv + check_args), "-d") == 0) {
+                mode = 'd';
+                global_options |= (1 << 2);
+            } else {
+                validation_status = -1;
+                break;
+            }
+            check_args += 1;
+            continue;
+        }
+
+        // Check for -p flag (DIR follows -p flag)
+        if (string_compare(*(argv + check_args), "-p") == 0) {
+            if (argc - check_args - 1 == 0) {
+                validation_status = -1;
+                break;
+            }
+            check_args += 2;
+            continue;
+        }
+
+        // Check for -c flag (valid only for mode 'd')
+        if (string_compare(*(argv + check_args), "-c") == 0) {
+            if (mode == 'd') {
+                global_options |= (1 << 3);
+                check_args += 1;
+                continue;
+            } else {
+                validation_status = -1;
+                break;
+            }
+        }
+        // Break for invalid argument
+        validation_status = -1;
+        break;
+    }
+    return validation_status;
 }
