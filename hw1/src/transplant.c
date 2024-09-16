@@ -174,24 +174,8 @@ int deserialize_file(int depth) {
 }
 
 /*
- * @brief  Serialize the contents of a directory as a sequence of records written
- * to the standard output.
- * @details  This function assumes that path_buf contains the name of an existing
- * directory to be serialized.  It serializes the contents of that directory as a
- * sequence of records that begins with a START_OF_DIRECTORY record, ends with an
- * END_OF_DIRECTORY record, and with the intervening records all of type DIRECTORY_ENTRY.
- *
- * @param depth  The value of the depth field that is expected to occur in the
- * START_OF_DIRECTORY, DIRECTORY_ENTRY, and END_OF_DIRECTORY records processed.
- * Note that this depth pertains only to the "top-level" records in the sequence:
- * DIRECTORY_ENTRY records may be recursively followed by similar sequence of
- * records describing sub-directories at a greater depth.
- * @return 0 in case of success, -1 otherwise.  A variety of errors can occur,
- * including failure to open files, failure to traverse directories, and I/O errors
- * that occur while reading file content and writing to standard output.
+ * Helper Function for emitting record header 
  */
-int traverse_dir(const char *path, int depth);
-
 int stream_data(int type, int depth, off_t size) {
     // Emit magic bytes
     putchar(MAGIC_BYTE_1);
@@ -213,12 +197,70 @@ int stream_data(int type, int depth, off_t size) {
     return 0;
 }
 
+/*
+ * Helper Function for emitting metadata
+ */
 int stream_metadata() {
     // TODO: To be implemented; need type/permission (dt_mode) + size information (st_size)
     return 0;
 }
 
+/*
+ * Helper Function for traversing a directory
+ */
+int traverse_dir(const char *path, int depth) {
+    DIR *dir = opendir(path);
+    depth += 1;
+    if (dir == NULL) {
+        return -1;
+    }
+    struct dirent *de;
+    while ((de = readdir(dir)) != NULL) {
+        if (string_compare(de->d_name, ".") + string_compare(de->d_name, "..") > -2) {
+            continue;
+        }
 
+        // TODO: Declare stat_buf
+        off_t size = STD_RECORD_SIZE + STD_METADATA_SIZE + string_length(de->d_name);
+
+        path_push(de->d_name);
+        debug("DIRECTORY ENTRY, DEPTH: %d, SIZE: %ld, PATH: %s", depth, size, path_buf);
+        stream_data(DIRECTORY_ENTRY, depth, size);
+        // TODO: fetch metadata of the files/dirs and pass to below function
+        stream_metadata();
+        if (de->d_type == DT_DIR) {
+            serialize_directory(depth);
+        } else if (de->d_type == DT_REG) {
+            off_t file_size = 100; // TODO: Get this from stat_buf
+            serialize_file(depth, file_size);
+        } else {
+            // TODO: account for more failure cases
+            return -1;
+        }
+        path_pop();
+    }
+    depth -= 1;
+    closedir(dir);
+    return 0;
+}
+
+/*
+ * @brief  Serialize the contents of a directory as a sequence of records written
+ * to the standard output.
+ * @details  This function assumes that path_buf contains the name of an existing
+ * directory to be serialized.  It serializes the contents of that directory as a
+ * sequence of records that begins with a START_OF_DIRECTORY record, ends with an
+ * END_OF_DIRECTORY record, and with the intervening records all of type DIRECTORY_ENTRY.
+ *
+ * @param depth  The value of the depth field that is expected to occur in the
+ * START_OF_DIRECTORY, DIRECTORY_ENTRY, and END_OF_DIRECTORY records processed.
+ * Note that this depth pertains only to the "top-level" records in the sequence:
+ * DIRECTORY_ENTRY records may be recursively followed by similar sequence of
+ * records describing sub-directories at a greater depth.
+ * @return 0 in case of success, -1 otherwise.  A variety of errors can occur,
+ * including failure to open files, failure to traverse directories, and I/O errors
+ * that occur while reading file content and writing to standard output.
+ */
 int serialize_directory(int depth) {
 
     debug("START DIRECTORY, DEPTH: %d, SIZE: %d, PATH: %s", depth + 1, STD_RECORD_SIZE, path_buf);
@@ -278,42 +320,6 @@ int serialize() {
     debug("END TRANSMISSION, DEPTH: %d, SIZE: 16, PATH: %s", depth, path_buf);
     stream_data(END_OF_TRANSMISSION, 0, STD_RECORD_SIZE);
     // TODO: account for failure cases
-    return 0;
-}
-
-int traverse_dir(const char *path, int depth) {
-    DIR *dir = opendir(path);
-    depth += 1;
-    if (dir == NULL) {
-        return -1;
-    }
-    struct dirent *de;
-    while ((de = readdir(dir)) != NULL) {
-        if (string_compare(de->d_name, ".") + string_compare(de->d_name, "..") > -2) {
-            continue;
-        }
-
-        // TODO: Declare stat_buf
-        off_t size = STD_RECORD_SIZE + STD_METADATA_SIZE + string_length(de->d_name);
-
-        path_push(de->d_name);
-        debug("DIRECTORY ENTRY, DEPTH: %d, SIZE: %ld, PATH: %s", depth, size, path_buf);
-        stream_data(DIRECTORY_ENTRY, depth, size);
-        // TODO: fetch metadata of the files/dirs and pass to below function
-        stream_metadata();
-        if (de->d_type == DT_DIR) {
-            serialize_directory(depth);
-        } else if (de->d_type == DT_REG) {
-            off_t file_size = 100; // TODO: Get this from stat_buf
-            serialize_file(depth, file_size);
-        } else {
-            // TODO: account for more failure cases
-            return -1;
-        }
-        path_pop();
-    }
-    depth -= 1;
-    closedir(dir);
     return 0;
 }
 
