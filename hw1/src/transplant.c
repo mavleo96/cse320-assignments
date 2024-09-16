@@ -18,13 +18,15 @@
 #define MAGIC_BYTE_2 0x0D
 #define MAGIC_BYTE_3 0xED
 
-
 #define START_OF_TRANSMISSION 0
 #define END_OF_TRANSMISSION 1
 #define START_OF_DIRECTORY 2
 #define END_OF_DIRECTORY 3
 #define DIRECTORY_ENTRY 4
 #define FILE_DATA 5
+
+#define STD_RECORD_SIZE 16
+#define STD_METADATA_SIZE 12
 
 /*
  * You may modify this file and/or move the functions contained here
@@ -190,7 +192,7 @@ int deserialize_file(int depth) {
  */
 int traverse_dir(const char *path, int depth);
 
-int stream_data(int type, int depth, int size) {
+int stream_data(int type, int depth, off_t size) {
     // Emit magic bytes
     putchar(MAGIC_BYTE_1);
     putchar(MAGIC_BYTE_2);
@@ -211,13 +213,19 @@ int stream_data(int type, int depth, int size) {
     return 0;
 }
 
+int stream_metadata() {
+    // TODO: To be implemented; need type/permission (dt_mode) + size information (st_size)
+    return 0;
+}
+
+
 int serialize_directory(int depth) {
 
-    debug("START DIRECTORY, DEPTH: %d, SIZE: TBD, PATH: %s", depth + 1, path_buf);
-    stream_data(START_OF_DIRECTORY, depth + 1, 16);
+    debug("START DIRECTORY, DEPTH: %d, SIZE: %d, PATH: %s", depth + 1, STD_RECORD_SIZE, path_buf);
+    stream_data(START_OF_DIRECTORY, depth + 1, STD_RECORD_SIZE);
     traverse_dir(path_buf, depth);
-    debug("END DIRECTORY, DEPTH: %d, SIZE: TBD, PATH: %s", depth + 1, path_buf);
-    stream_data(END_OF_DIRECTORY, depth + 1, 16);
+    debug("END DIRECTORY, DEPTH: %d, SIZE: %d, PATH: %s", depth + 1, STD_RECORD_SIZE, path_buf);
+    stream_data(END_OF_DIRECTORY, depth + 1, STD_RECORD_SIZE);
 
     // TODO: account for failure cases
     return 0;
@@ -237,9 +245,11 @@ int serialize_directory(int depth) {
  * from the file, and I/O errors reading the file data or writing to standard output.
  */
 int serialize_file(int depth, off_t size) {
-
-    debug("FILE DATA; DEPTH: %d, PATH: %s", depth, path_buf);
-    stream_data(FILE_DATA, depth, 0);
+    off_t record_size = size + STD_RECORD_SIZE;
+    
+    debug("FILE DATA; DEPTH: %d, SIZE: %ld, PATH: %s", depth, record_size, path_buf);
+    stream_data(FILE_DATA, depth, record_size);
+    // TODO: stream file data from here basis a for loop for given size param
     // FILE *f = fopen(path_buf, "w");
     // fclose(f);
 
@@ -260,18 +270,13 @@ int serialize_file(int depth, off_t size) {
  * @return 0 if serialization completes without error, -1 if an error occurs.
  */
 int serialize() {
-
     // TODO: need to check if there is a better way to manage depth updates
-    uint32_t depth = 0;
-
-    debug("START TRANSMISSION, DEPTH: %d, SIZE: TBD", depth);
-    stream_data(START_OF_TRANSMISSION, 0, 16);
-
+    int depth = 0;
+    debug("START TRANSMISSION, DEPTH: %d, SIZE: 16, PATH: %s", depth, path_buf);
+    stream_data(START_OF_TRANSMISSION, 0, STD_RECORD_SIZE);
     traverse_dir(path_buf, depth);
-    
-    debug("END TRANSMISSION, DEPTH: %d, SIZE: TBD", depth);
-    stream_data(END_OF_TRANSMISSION, 0, 16);
-
+    debug("END TRANSMISSION, DEPTH: %d, SIZE: 16, PATH: %s", depth, path_buf);
+    stream_data(END_OF_TRANSMISSION, 0, STD_RECORD_SIZE);
     // TODO: account for failure cases
     return 0;
 }
@@ -287,21 +292,25 @@ int traverse_dir(const char *path, int depth) {
         if (string_compare(de->d_name, ".") + string_compare(de->d_name, "..") > -2) {
             continue;
         }
+
+        // TODO: Declare stat_buf
+        off_t size = STD_RECORD_SIZE + STD_METADATA_SIZE + string_length(de->d_name);
+
+        path_push(de->d_name);
+        debug("DIRECTORY ENTRY, DEPTH: %d, SIZE: %ld, PATH: %s", depth, size, path_buf);
+        stream_data(DIRECTORY_ENTRY, depth, size);
+        // TODO: fetch metadata of the files/dirs and pass to below function
+        stream_metadata();
         if (de->d_type == DT_DIR) {
-            path_push(de->d_name);
-            debug("DIRECTORY ENTRY, DEPTH: %d, SIZE: TBD, PATH: %s\n", depth, path_buf);
-            stream_data(DIRECTORY_ENTRY, depth, 0);
             serialize_directory(depth);
-            path_pop();
         } else if (de->d_type == DT_REG) {
-            path_push(de->d_name);
-            stream_data(DIRECTORY_ENTRY, depth, 0);
-            serialize_file(depth, 0);
-            path_pop();
+            off_t file_size = 100; // TODO: Get this from stat_buf
+            serialize_file(depth, file_size);
         } else {
             // TODO: account for more failure cases
             return -1;
         }
+        path_pop();
     }
     depth -= 1;
     closedir(dir);
