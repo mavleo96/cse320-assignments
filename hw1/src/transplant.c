@@ -14,6 +14,18 @@
 #error "Do not #include <ctype.h>. You will get a ZERO."
 #endif
 
+#define MAGIC_BYTE_1 0x0C
+#define MAGIC_BYTE_2 0x0D
+#define MAGIC_BYTE_3 0xED
+
+
+#define START_OF_TRANSMISSION 0
+#define END_OF_TRANSMISSION 1
+#define START_OF_DIRECTORY 2
+#define END_OF_DIRECTORY 3
+#define DIRECTORY_ENTRY 4
+#define FILE_DATA 5
+
 /*
  * You may modify this file and/or move the functions contained here
  * to other source files (except for main.c) as you wish.
@@ -176,9 +188,39 @@ int deserialize_file(int depth) {
  * including failure to open files, failure to traverse directories, and I/O errors
  * that occur while reading file content and writing to standard output.
  */
+int traverse_dir(const char *path, int depth);
+
+int stream_data(int type, int depth, int size) {
+    // Emit magic bytes
+    putchar(MAGIC_BYTE_1);
+    putchar(MAGIC_BYTE_2);
+    putchar(MAGIC_BYTE_3);
+
+    // Emit record type
+    putchar(type);
+
+    // Emit depth unsigned 32-bit integer in big-endian format  
+    for (int i = 3; i >= 0; i--) {
+        putchar((depth >> (i * 8)) & 0xFF);
+    }
+    
+    // Emit size unsigned 32-bit integer in big-endian format  
+    for (int i = 7; i >= 0; i--) {
+        putchar((size >> (i * 8)) & 0xFF);
+    }
+    return 0;
+}
+
 int serialize_directory(int depth) {
-    // To be implemented.
-    abort();
+
+    debug("START DIRECTORY, DEPTH: %d, SIZE: TBD, PATH: %s", depth + 1, path_buf);
+    stream_data(START_OF_DIRECTORY, depth + 1, 16);
+    traverse_dir(path_buf, depth);
+    debug("END DIRECTORY, DEPTH: %d, SIZE: TBD, PATH: %s", depth + 1, path_buf);
+    stream_data(END_OF_DIRECTORY, depth + 1, 16);
+
+    // TODO: account for failure cases
+    return 0;
 }
 
 /*
@@ -195,8 +237,14 @@ int serialize_directory(int depth) {
  * from the file, and I/O errors reading the file data or writing to standard output.
  */
 int serialize_file(int depth, off_t size) {
-    // To be implemented.
-    abort();
+
+    debug("FILE DATA; DEPTH: %d, PATH: %s", depth, path_buf);
+    stream_data(FILE_DATA, depth, 0);
+    // FILE *f = fopen(path_buf, "w");
+    // fclose(f);
+
+    // TODO: account for failure cases
+    return 0;
 }
 
 /**
@@ -212,8 +260,52 @@ int serialize_file(int depth, off_t size) {
  * @return 0 if serialization completes without error, -1 if an error occurs.
  */
 int serialize() {
-    // To be implemented.
-    abort();
+
+    // TODO: need to check if there is a better way to manage depth updates
+    uint32_t depth = 0;
+
+    debug("START TRANSMISSION, DEPTH: %d, SIZE: TBD", depth);
+    stream_data(START_OF_TRANSMISSION, 0, 16);
+
+    traverse_dir(path_buf, depth);
+    
+    debug("END TRANSMISSION, DEPTH: %d, SIZE: TBD", depth);
+    stream_data(END_OF_TRANSMISSION, 0, 16);
+
+    // TODO: account for failure cases
+    return 0;
+}
+
+int traverse_dir(const char *path, int depth) {
+    DIR *dir = opendir(path);
+    depth += 1;
+    if (dir == NULL) {
+        return -1;
+    }
+    struct dirent *de;
+    while ((de = readdir(dir)) != NULL) {
+        if (string_compare(de->d_name, ".") + string_compare(de->d_name, "..") > -2) {
+            continue;
+        }
+        if (de->d_type == DT_DIR) {
+            path_push(de->d_name);
+            debug("DIRECTORY ENTRY, DEPTH: %d, SIZE: TBD, PATH: %s\n", depth, path_buf);
+            stream_data(DIRECTORY_ENTRY, depth, 0);
+            serialize_directory(depth);
+            path_pop();
+        } else if (de->d_type == DT_REG) {
+            path_push(de->d_name);
+            stream_data(DIRECTORY_ENTRY, depth, 0);
+            serialize_file(depth, 0);
+            path_pop();
+        } else {
+            // TODO: account for more failure cases
+            return -1;
+        }
+    }
+    depth -= 1;
+    closedir(dir);
+    return 0;
 }
 
 /**
