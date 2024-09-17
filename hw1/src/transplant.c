@@ -185,12 +185,12 @@ int stream_data(int type, int depth, off_t size) {
     // Emit record type
     putchar(type);
 
-    // Emit depth unsigned 32-bit integer in big-endian format  
+    // Emit depth unsigned 32-bit integer in big-endian format
     for (int i = 3; i >= 0; i--) {
         putchar((depth >> (i * 8)) & 0xFF);
     }
     
-    // Emit size unsigned 32-bit integer in big-endian format  
+    // Emit size unsigned 32-bit integer in big-endian format 
     for (int i = 7; i >= 0; i--) {
         putchar((size >> (i * 8)) & 0xFF);
     }
@@ -200,8 +200,16 @@ int stream_data(int type, int depth, off_t size) {
 /*
  * Helper Function for emitting metadata
  */
-int stream_metadata() {
-    // TODO: To be implemented; need type/permission (dt_mode) + size information (st_size)
+int stream_metadata(mode_t mode, off_t size) {
+    // Emit type/permission unsigned 32-bit integer in big-endian format
+    for (int i = 3; i >= 0; i--) {
+        putchar((mode >> (i * 8)) & 0xFF);
+    }
+    
+    // Emit size unsigned 32-bit integer in big-endian format 
+    for (int i = 7; i >= 0; i--) {
+        putchar((size >> (i * 8)) & 0xFF);
+    }
     return 0;
 }
 
@@ -220,19 +228,23 @@ int traverse_dir(const char *path, int depth) {
             continue;
         }
 
-        // TODO: Declare stat_buf
         off_t size = STD_RECORD_SIZE + STD_METADATA_SIZE + string_length(de->d_name);
-
         path_push(de->d_name);
         debug("DIRECTORY ENTRY, DEPTH: %d, SIZE: %ld, PATH: %s", depth, size, path_buf);
         stream_data(DIRECTORY_ENTRY, depth, size);
-        // TODO: fetch metadata of the files/dirs and pass to below function
-        stream_metadata();
-        if (de->d_type == DT_DIR) {
+
+        struct stat stat_buf;
+        stat(path_buf, &stat_buf);
+        stream_metadata(stat_buf.st_mode, size);
+        // Stream file/directory name
+        for (int i = 0; i < string_length(de->d_name); i++) {
+            putchar(*(de->d_name + i));
+        }
+
+        if (S_ISDIR(stat_buf.st_mode)) {
             serialize_directory(depth);
-        } else if (de->d_type == DT_REG) {
-            off_t file_size = 100; // TODO: Get this from stat_buf
-            serialize_file(depth, file_size);
+        } else if (S_ISREG(stat_buf.st_mode)) {
+            serialize_file(depth, stat_buf.st_size - 1);  // TODO: Verify if file null character is needed
         } else {
             // TODO: account for more failure cases
             return -1;
@@ -291,9 +303,22 @@ int serialize_file(int depth, off_t size) {
     
     debug("FILE DATA; DEPTH: %d, SIZE: %ld, PATH: %s", depth, record_size, path_buf);
     stream_data(FILE_DATA, depth, record_size);
-    // TODO: stream file data from here basis a for loop for given size param
-    // FILE *f = fopen(path_buf, "w");
-    // fclose(f);
+    // TODO: need to assert if file sizes match
+    FILE *f = fopen(path_buf, "r");
+    if (f == NULL) {
+        return -1;
+    }
+
+    long int count = 0;
+    int ch = fgetc(f);
+    while ((ch = fgetc(f)) != EOF) {
+        putchar(ch);
+        count += 1;
+    }
+    debug("DUP FILE DATA; DEPTH: %d, SIZE: %ld and %ld, PATH: %s", depth, size, count, path_buf);
+
+
+    fclose(f);
 
     // TODO: account for failure cases
     return 0;
