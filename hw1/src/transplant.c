@@ -235,7 +235,7 @@ int traverse_dir(const char *path, int depth) {
 
         struct stat stat_buf;
         stat(path_buf, &stat_buf);
-        stream_metadata(stat_buf.st_mode, size);
+        stream_metadata(stat_buf.st_mode, stat_buf.st_size);
         // Stream file/directory name
         for (int i = 0; i < string_length(de->d_name); i++) {
             putchar(*(de->d_name + i));
@@ -244,7 +244,7 @@ int traverse_dir(const char *path, int depth) {
         if (S_ISDIR(stat_buf.st_mode)) {
             serialize_directory(depth);
         } else if (S_ISREG(stat_buf.st_mode)) {
-            serialize_file(depth, stat_buf.st_size - 1);  // TODO: Verify if file null character is needed
+            serialize_file(depth, stat_buf.st_size);
         } else {
             // TODO: account for more failure cases
             return -1;
@@ -308,16 +308,13 @@ int serialize_file(int depth, off_t size) {
     if (f == NULL) {
         return -1;
     }
-
     long int count = 0;
-    int ch = fgetc(f);
+    char ch;
     while ((ch = fgetc(f)) != EOF) {
         putchar(ch);
         count += 1;
     }
     debug("DUP FILE DATA; DEPTH: %d, SIZE: %ld and %ld, PATH: %s", depth, size, count, path_buf);
-
-
     fclose(f);
 
     // TODO: account for failure cases
@@ -341,7 +338,7 @@ int serialize() {
     int depth = 0;
     debug("START TRANSMISSION, DEPTH: %d, SIZE: 16, PATH: %s", depth, path_buf);
     stream_data(START_OF_TRANSMISSION, 0, STD_RECORD_SIZE);
-    traverse_dir(path_buf, depth);
+    serialize_directory(depth);
     debug("END TRANSMISSION, DEPTH: %d, SIZE: 16, PATH: %s", depth, path_buf);
     stream_data(END_OF_TRANSMISSION, 0, STD_RECORD_SIZE);
     // TODO: account for failure cases
