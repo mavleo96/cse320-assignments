@@ -214,10 +214,28 @@ int stream_metadata(mode_t mode, off_t size) {
 }
 
 /*
- * Helper Function for traversing a directory
+ * @brief  Serialize the contents of a directory as a sequence of records written
+ * to the standard output.
+ * @details  This function assumes that path_buf contains the name of an existing
+ * directory to be serialized.  It serializes the contents of that directory as a
+ * sequence of records that begins with a START_OF_DIRECTORY record, ends with an
+ * END_OF_DIRECTORY record, and with the intervening records all of type DIRECTORY_ENTRY.
+ *
+ * @param depth  The value of the depth field that is expected to occur in the
+ * START_OF_DIRECTORY, DIRECTORY_ENTRY, and END_OF_DIRECTORY records processed.
+ * Note that this depth pertains only to the "top-level" records in the sequence:
+ * DIRECTORY_ENTRY records may be recursively followed by similar sequence of
+ * records describing sub-directories at a greater depth.
+ * @return 0 in case of success, -1 otherwise.  A variety of errors can occur,
+ * including failure to open files, failure to traverse directories, and I/O errors
+ * that occur while reading file content and writing to standard output.
  */
-int traverse_dir(const char *path, int depth) {
-    DIR *dir = opendir(path);
+int serialize_directory(int depth) {
+
+    debug("START DIRECTORY, DEPTH: %d, SIZE: %d, PATH: %s", depth + 1, STD_RECORD_SIZE, path_buf);
+    stream_data(START_OF_DIRECTORY, depth + 1, STD_RECORD_SIZE);
+
+    DIR *dir = opendir(path_buf);
     depth += 1;
     if (dir == NULL) {
         return -1;
@@ -253,31 +271,6 @@ int traverse_dir(const char *path, int depth) {
     }
     depth -= 1;
     closedir(dir);
-    return 0;
-}
-
-/*
- * @brief  Serialize the contents of a directory as a sequence of records written
- * to the standard output.
- * @details  This function assumes that path_buf contains the name of an existing
- * directory to be serialized.  It serializes the contents of that directory as a
- * sequence of records that begins with a START_OF_DIRECTORY record, ends with an
- * END_OF_DIRECTORY record, and with the intervening records all of type DIRECTORY_ENTRY.
- *
- * @param depth  The value of the depth field that is expected to occur in the
- * START_OF_DIRECTORY, DIRECTORY_ENTRY, and END_OF_DIRECTORY records processed.
- * Note that this depth pertains only to the "top-level" records in the sequence:
- * DIRECTORY_ENTRY records may be recursively followed by similar sequence of
- * records describing sub-directories at a greater depth.
- * @return 0 in case of success, -1 otherwise.  A variety of errors can occur,
- * including failure to open files, failure to traverse directories, and I/O errors
- * that occur while reading file content and writing to standard output.
- */
-int serialize_directory(int depth) {
-
-    debug("START DIRECTORY, DEPTH: %d, SIZE: %d, PATH: %s", depth + 1, STD_RECORD_SIZE, path_buf);
-    stream_data(START_OF_DIRECTORY, depth + 1, STD_RECORD_SIZE);
-    traverse_dir(path_buf, depth);
     debug("END DIRECTORY, DEPTH: %d, SIZE: %d, PATH: %s", depth + 1, STD_RECORD_SIZE, path_buf);
     stream_data(END_OF_DIRECTORY, depth + 1, STD_RECORD_SIZE);
 
@@ -314,7 +307,6 @@ int serialize_file(int depth, off_t size) {
         putchar(ch);
         count += 1;
     }
-    debug("DUP FILE DATA; DEPTH: %d, SIZE: %ld and %ld, PATH: %s", depth, size, count, path_buf);
     fclose(f);
 
     // TODO: account for failure cases
