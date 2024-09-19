@@ -19,13 +19,13 @@
 
 int main(int argc, char **argv)
 {
-    int ret;
     if(validargs(argc, argv))
         USAGE(*argv, EXIT_FAILURE);
     if(global_options & 0x1)
         USAGE(*argv, EXIT_SUCCESS);
 
     // Catch the DIR argument
+    // TODO: Below logic doesn't work if p not present 
     int count = 1;
     while (string_compare(*(argv + count), "-p") != 0) {
         count += 1;
@@ -36,10 +36,20 @@ int main(int argc, char **argv)
     // Code to test path function implementations
     debug("This is path of length %d: %s", path_length, path_buf);
 
-    // TODO: Calling serialize regardless for now
-    serialize();
+    int status;
+    if ((global_options & (1 << 1)) == (1 << 1)){
+        debug("ENTERING SERIALIZATION");
+        status = serialize();
+    } else if ((global_options & (1 << 2)) == (1 << 2)) {
+        debug("ENTERING DESERIALIZATION");
+        status = deserialize();
+    }
 
-    return EXIT_SUCCESS;
+    if (status == 0) {
+        return EXIT_SUCCESS;
+    } else {
+        return EXIT_FAILURE;
+    }
 }
 
 /*

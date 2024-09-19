@@ -130,6 +130,67 @@ int path_pop() {
 }
 
 /*
+ * Too bored to write function doc now
+ */
+int read_record_header(int *type, int *depth, int *size) {
+
+    // // Early exit
+    // if (getchar() == EOF) {
+    //     return 0;
+    // }
+
+    // Validate magic bytes
+    if (getchar() != MAGIC_BYTE_1 || getchar() != MAGIC_BYTE_2 || getchar() != MAGIC_BYTE_3) {
+        return -1;
+    }
+
+    // Read type
+    *type = getchar();
+
+    // Read depth
+    for (int i = 3; i >= 0; i--) {
+        *depth = (*depth << 8);
+        *depth += getchar();
+    }
+
+    // Read size
+    for (int i = 7; i >= 0; i--) {
+        *size = (*size << 8);
+        *size += getchar();
+    }
+
+    // Type validation
+    if ((*type < 0) || (*type > 5)) {
+        debug("FAILURE OCCURED");
+        return -1;
+    }
+
+    // Validate size based on the type
+    if ((*type <= 3 && *size != STD_RECORD_SIZE) || 
+        (*type == 4 && *size < STD_RECORD_SIZE + STD_METADATA_SIZE) ||
+        (*type == 5 && *size < STD_RECORD_SIZE)) {
+        debug("FAILURE OCCURED");
+        return -1;
+    }
+    return 0;
+}
+
+/*
+ * Too bored to write function doc now
+ */
+int read_metadata(int *type, int *size) {
+    for (int i = 3; i >= 0; i--) {
+        *type = (*type << 8);
+        *type += getchar();
+    }
+
+    for (int i = 7; i >= 0; i--) {
+        *size = (*size << 8);
+        *size += getchar();
+    }
+    return 0;
+}
+/*
  * @brief Deserialize directory contents into an existing directory.
  * @details  This function assumes that path_buf contains the name of an existing
  * directory.  It reads (from the standard input) a sequence of DIRECTORY_ENTRY
@@ -147,8 +208,55 @@ int path_pop() {
  * directories.
  */
 int deserialize_directory(int depth) {
-    // To be implemented.
-    abort();
+    int record_type;
+    int record_depth;
+    int record_size;
+
+    int metadata_type;
+    int metadata_size;
+
+    read_record_header(&record_type, &record_depth, &record_size);
+
+    debug("%d, %d", record_depth, depth);
+
+    if ((record_type != START_OF_DIRECTORY) ||
+        (record_depth != depth)) {
+        return -1;
+    }
+    debug("TYPE: %d, DEPTH: %d, SIZE: %d", record_type, record_depth, record_size);
+
+    while (record_type != END_OF_DIRECTORY) {
+        // DIRECTORY ENTRY
+        read_record_header(&record_type, &record_depth, &record_size);
+        if ((record_type != DIRECTORY_ENTRY) || 
+            (record_depth != depth)) {
+            return -1;
+        }
+        debug("TYPE: %d, DEPTH: %d, SIZE: %d", record_type, record_depth, record_size);
+        read_metadata(&metadata_type, &metadata_size);
+
+        int name_size = record_size - STD_RECORD_SIZE - STD_METADATA_SIZE;
+        // TODO: Create a file before writing to it
+        debug("PRINTING FILE NAME");
+        char ch;
+        for (int i = 0; i < name_size; i++) {
+            ch = getchar();
+            printf("%c", ch);
+        }
+        printf("\n");
+        fflush(stdout);
+
+        if (S_ISDIR(metadata_type)) {
+            deserialize_directory(depth + 1);
+        } else if (S_ISREG(metadata_type)) {
+            deserialize_file(depth);
+        } else {
+            return -1;
+        }
+
+        // read_metadata
+    }
+    return 0;
 }
 
 /*
@@ -169,8 +277,28 @@ int deserialize_directory(int depth) {
  * deserialized file.
  */
 int deserialize_file(int depth) {
-    // To be implemented.
-    abort();
+    int record_type;
+    int record_depth;
+    int record_size;
+
+    read_record_header(&record_type, &record_depth, &record_size);
+
+    if ((record_type != FILE_DATA) || 
+        (record_depth != depth)) {
+        return -1;
+    }
+
+    int file_size = record_size - STD_RECORD_SIZE;
+
+    // TODO: Create a file before writing to it
+    debug("PRINTING FILE CONTENT");
+    char ch;
+    for (int i = 0; i < file_size; i++) {
+        ch = getchar();
+        printf("%c", ch);
+    }
+    fflush(stdout);
+    return 0;
 }
 
 /*
@@ -326,6 +454,7 @@ int serialize_file(int depth, off_t size) {
  * @return 0 if serialization completes without error, -1 if an error occurs.
  */
 int serialize() {
+    // TODO: integrate fflush in serialize functions
     // TODO: need to check if there is a better way to manage depth updates
     int depth = 0;
     debug("START TRANSMISSION, DEPTH: %d, SIZE: 16, PATH: %s", depth, path_buf);
@@ -351,8 +480,31 @@ int serialize() {
  * @return 0 if deserialization completes without error, -1 if an error occurs.
  */
 int deserialize() {
-    // To be implemented.
-    abort();
+    int record_type;
+    int record_depth;
+    int record_size;
+
+    read_record_header(&record_type, &record_depth, &record_size);
+
+    if ((record_type == START_OF_TRANSMISSION) &&
+        (record_depth == 0) &&
+        (record_size == STD_RECORD_SIZE)) {
+        debug("START OF TRANSMISSION RECORDED");
+        deserialize_directory(record_depth + 1);
+    } else {
+        return -1;
+    }
+
+    read_record_header(&record_type, &record_depth, &record_size);
+
+    if ((record_type == END_OF_TRANSMISSION) &&
+        (record_depth == 0) &&
+        (record_size == STD_RECORD_SIZE)) {
+        debug("IT WORKS");
+        return 0;
+    } else {
+        return -1;
+    }
 }
 
 /**
