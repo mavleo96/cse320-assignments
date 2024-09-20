@@ -7,3 +7,12 @@ void clear_input_buffer() {
         // continue
     }
 }
+
+int file_exists(const char *name) {
+    FILE *f = fopen(name, "r");
+    if (f) {
+        fclose(f);
+        return 1;
+    }
+    return 0;
+}
