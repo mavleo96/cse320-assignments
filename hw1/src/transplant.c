@@ -62,6 +62,7 @@ int path_init(char *name) {
     // TODO: Add comments and format the function better
     int count = 0;
     if (string_length(name) + 1 > sizeof(path_buf)) {
+        error("Provided path argument of length %d is longer than size of path_buf %ld", string_length(name), sizeof(path_buf));
         return -1;
     }
     // TODO: Need to handle the trailing / issue
@@ -537,6 +538,9 @@ int deserialize() {
  * the selected options.
  */
 int validargs(int argc, char **argv) {
+    debug("Entering validargs...");
+    debug("Arguments to validargs -> argc: %d, %p", argc, argv);
+
     int validation_status = 0;    // Default to valid arguments
     int check_args = 1;           // Validation to start from 1st argument
     char mode = '\0';             // Mode to store the operation s|d
@@ -544,23 +548,29 @@ int validargs(int argc, char **argv) {
     // Insufficient arguments case
     if (argc == 1) {
         validation_status = -1;
+        error("Insufficient arguments");
     }
 
     // Loop through the command-line arguments
     while (argc - check_args > 0) {
+        debug("Checking argment %d: %s", check_args, *(argv + check_args));
         // Check for positional argument (must be -h|-s|-d)
         if (check_args == 1) {
-            if (string_compare(*(argv + check_args), "-h") == 0) {
+            if (string_compare(*(argv + 1), "-h") == 0) {
                 global_options |= (1 << 0);
+                debug("Detected -h flag");
                 break;
-            } else if (string_compare(*(argv + check_args), "-s") == 0) {
+            } else if (string_compare(*(argv + 1), "-s") == 0) {
                 mode = 's';
                 global_options |= (1 << 1);
-            } else if (string_compare(*(argv + check_args), "-d") == 0) {
+                debug("Detected -s flag");
+            } else if (string_compare(*(argv + 1), "-d") == 0) {
                 mode = 'd';
                 global_options |= (1 << 2);
+                debug("Detected -d flag");
             } else {
                 validation_status = -1;
+                error("Detected invalid positional argument: %s", *(argv + 1));
                 break;
             }
             check_args += 1;
@@ -571,8 +581,10 @@ int validargs(int argc, char **argv) {
         if (string_compare(*(argv + check_args), "-p") == 0) {
             if (argc - check_args - 1 == 0) {
                 validation_status = -1;
+                error("No input passed for -p argument");
                 break;
             }
+            debug("Detcted -p flag with arg: %s", *(argv + check_args + 1));
             check_args += 2;
             continue;
         }
@@ -582,14 +594,18 @@ int validargs(int argc, char **argv) {
             if (mode == 'd') {
                 global_options |= (1 << 3);
                 check_args += 1;
+                debug("Detected -c flag for deserialization");
                 continue;
             } else {
                 validation_status = -1;
+                error("Detected -c flag for invalid mode");
                 break;
             }
         }
+
         // Break for invalid argument
         validation_status = -1;
+        error("Detected invalid argument: %s", *(argv + check_args));
         break;
     }
     return validation_status;

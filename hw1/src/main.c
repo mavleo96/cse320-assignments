@@ -17,35 +17,42 @@
 #error "Do not #include <ctype.h>. You will get a ZERO."
 #endif
 
+#define OPTION_HELP (1 << 0)
+#define OPTION_SERIALIZE (1 << 1) 
+#define OPTION_DESERIALIZE (1 << 2)
+
 int main(int argc, char **argv)
 {
+    // Validate arguments
     if(validargs(argc, argv))
         USAGE(*argv, EXIT_FAILURE);
-    if(global_options & 0x1)
+    if(global_options & OPTION_HELP)
         USAGE(*argv, EXIT_SUCCESS);
 
-    // Catch the DIR argument
-    // TODO: Below logic doesn't work if p not present 
-    int count = 1;
-    while (string_compare(*(argv + count), "-p") != 0) {
-        count += 1;
+    // Initialise path_buf
+    if (path_init(".") == -1) return EXIT_FAILURE;
+    debug("Path initialised with path length %d to %s", path_length, path_buf);
+    for (int count = 0; count < argc; count++) {
+        if (string_compare(*(argv + count), "-p") == 0) {
+            char *dir_argv = *(argv + count + 1);
+            if (path_init(dir_argv) == -1) return EXIT_FAILURE;
+            debug("Path initialised with path length %d to %s", path_length, path_buf);
+            break;
+        }
     }
-    char **dir_argv = argv + count + 1;
-    path_init(*dir_argv);
 
-    // Code to test path function implementations
-    debug("This is path of length %d: %s", path_length, path_buf);
-
+    // Enter function according to global_options
     int status;
-    if ((global_options & (1 << 1)) == (1 << 1)){
-        debug("ENTERING SERIALIZATION");
+    if ((global_options & OPTION_SERIALIZE) == OPTION_SERIALIZE) {
+        debug("Entering serialization...");
         status = serialize();
-    } else if ((global_options & (1 << 2)) == (1 << 2)) {
-        debug("ENTERING DESERIALIZATION");
+    } else if ((global_options & OPTION_DESERIALIZE) == OPTION_DESERIALIZE) {
+        debug("Entering deserialization...");
         mkdir(path_buf, 0775);
         status = deserialize();
     }
 
+    // Exit program as per status value
     if (status == 0) {
         return EXIT_SUCCESS;
     } else {
