@@ -42,6 +42,7 @@ int main(int argc, char **argv)
         status = serialize();
     } else if ((global_options & (1 << 2)) == (1 << 2)) {
         debug("ENTERING DESERIALIZATION");
+        mkdir(path_buf, 0775);
         status = deserialize();
     }
 

@@ -212,7 +212,7 @@ int deserialize_directory(int depth) {
     int record_depth;
     int record_size;
 
-    int metadata_type;
+    int metadata_mode;
     int metadata_size;
 
     read_record_header(&record_type, &record_depth, &record_size);
@@ -233,26 +233,34 @@ int deserialize_directory(int depth) {
             return -1;
         }
         debug("TYPE: %d, DEPTH: %d, SIZE: %d", record_type, record_depth, record_size);
-        read_metadata(&metadata_type, &metadata_size);
+        read_metadata(&metadata_mode, &metadata_size);
 
         int name_size = record_size - STD_RECORD_SIZE - STD_METADATA_SIZE;
         // TODO: Create a file before writing to it
         debug("PRINTING FILE NAME");
-        char ch;
-        for (int i = 0; i < name_size; i++) {
-            ch = getchar();
-            printf("%c", ch);
-        }
-        printf("\n");
-        fflush(stdout);
 
-        if (S_ISDIR(metadata_type)) {
+        // TODO: clear name_buf after path push
+        int i;
+        for (i = 0; i < name_size; i++) {
+            *(name_buf + i) = getchar();
+        }
+        *(name_buf + name_size + 1) = '\0';
+        
+        path_push(name_buf);
+        debug("PATH: %s", path_buf);
+
+        if (S_ISDIR(metadata_mode)) {
+            // TODO: make directory here
+            mkdir(path_buf, 0700);
             deserialize_directory(depth + 1);
-        } else if (S_ISREG(metadata_type)) {
+            chmod(path_buf, metadata_mode & 0777);
+        } else if (S_ISREG(metadata_mode)) {
             deserialize_file(depth);
+            chmod(path_buf, metadata_mode & 0777);
         } else {
             return -1;
         }
+        path_pop();
 
         // read_metadata
     }
@@ -292,12 +300,16 @@ int deserialize_file(int depth) {
 
     // TODO: Create a file before writing to it
     debug("PRINTING FILE CONTENT");
+    FILE *f = fopen(path_buf, "w");
     char ch;
     for (int i = 0; i < file_size; i++) {
         ch = getchar();
-        printf("%c", ch);
+        fputc(ch, f);
+        // printf("%c", ch);
     }
-    fflush(stdout);
+    fclose(f);
+
+    // fflush(stdout);
     return 0;
 }
 
@@ -489,7 +501,7 @@ int deserialize() {
     if ((record_type == START_OF_TRANSMISSION) &&
         (record_depth == 0) &&
         (record_size == STD_RECORD_SIZE)) {
-        debug("START OF TRANSMISSION RECORDED");
+        debug("START TRANSMISSION, DEPTH: %d, SIZE: %d, PATH: %s", record_depth, record_size, path_buf);
         deserialize_directory(record_depth + 1);
     } else {
         return -1;
@@ -500,6 +512,7 @@ int deserialize() {
     if ((record_type == END_OF_TRANSMISSION) &&
         (record_depth == 0) &&
         (record_size == STD_RECORD_SIZE)) {
+        debug("END TRANSMISSION, DEPTH: %d, SIZE: %d, PATH: %s", record_depth, record_size, path_buf);
         debug("IT WORKS");
         return 0;
     } else {
