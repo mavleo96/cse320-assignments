@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "string_functions.h"
+#include "path_functions.h"
 
 #include "global.h"
 #include "debug.h"
