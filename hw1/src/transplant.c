@@ -1,6 +1,8 @@
 #include "global.h"
 #include "debug.h"
 #include "string_functions.h"
+#include "path_functions.h"
+#include "helper_functions.h"
 
 #ifdef _STRING_H
 #error "Do not #include <string.h>. You will get a ZERO."
@@ -47,100 +49,12 @@
  */
 
 /*
- * @brief  Initialize path_buf to a specified base path.
- * @details  This function copies its null-terminated argument string into
- * path_buf, including its terminating null byte.
- * The function fails if the argument string, including the terminating
- * null byte, is longer than the size of path_buf.  The path_length variable 
- * is set to the length of the string in path_buf, not including the terminating
- * null byte.
- *
- * @param  Pathname to be copied into path_buf.
- * @return 0 on success, -1 in case of error
- */
-int path_init(char *name) {
-    // TODO: Add comments and format the function better
-    int count = 0;
-    if (string_length(name) + 1 > sizeof(path_buf)) {
-        return -1;
-    }
-    // TODO: Need to handle the trailing / issue
-    while (*(name + count) != '\0') {
-        *(path_buf + count) = *(name + count);
-        count += 1;
-    }
-    *(path_buf + count + 1) = '\0';
-    path_length = string_length(name);
-
-    return 0;
-}
-
-/*
- * @brief  Append an additional component to the end of the pathname in path_buf.
- * @details  This function assumes that path_buf has been initialized to a valid
- * string.  It appends to the existing string the path separator character '/',
- * followed by the string given as argument, including its terminating null byte.
- * The length of the new string, including the terminating null byte, must be
- * no more than the size of path_buf.  The variable path_length is updated to
- * remain consistent with the length of the string in path_buf.
- * 
- * @param  The string to be appended to the path in path_buf.  The string must
- * not contain any occurrences of the path separator character '/'.
- * @return 0 in case of success, -1 otherwise.
- */
-int path_push(char *name) {
-    // TODO: Add comments and format the function better
-    int count = 0;
-    if (path_length + string_length(name) + 1 + 1 > sizeof(path_buf)) {
-        return -1;
-    }
-    *(path_buf + path_length) = '/';
-    while (*(name + count) != '\0') {
-        *(path_buf + path_length + 1 + count) = *(name + count);
-        count += 1;
-    }
-    path_length += string_length(name) + 1;
-
-    return 0;
-}
-
-/*
- * @brief  Remove the last component from the end of the pathname.
- * @details  This function assumes that path_buf contains a non-empty string.
- * It removes the suffix of this string that starts at the last occurrence
- * of the path separator character '/'.  If there is no such occurrence,
- * then the entire string is removed, leaving an empty string in path_buf.
- * The variable path_length is updated to remain consistent with the length
- * of the string in path_buf.  The function fails if path_buf is originally
- * empty, so that there is no path component to be removed.
- *
- * @return 0 in case of success, -1 otherwise.
- */
-int path_pop() {
-    // TODO: Add comments and format the function better
-    int count = 0;
-    while (*(path_buf + path_length - count) != '/') {
-        *(path_buf + path_length - count) = '\0';
-        count += 1;
-    }
-    *(path_buf + path_length - count) = '\0';
-    path_length -= count;
-    // TODO: Empty path_buf case to be handled
-    return 0;
-}
-
-/*
  * Too bored to write function doc now
  */
 int read_record_header(int *type, int *depth, int *size) {
-
-    // // Early exit
-    // if (getchar() == EOF) {
-    //     return 0;
-    // }
-
     // Validate magic bytes
     if (getchar() != MAGIC_BYTE_1 || getchar() != MAGIC_BYTE_2 || getchar() != MAGIC_BYTE_3) {
+        error("Magic bytes were not found in beginning of the record");
         return -1;
     }
 
@@ -159,16 +73,17 @@ int read_record_header(int *type, int *depth, int *size) {
         *size += getchar();
     }
 
-    // Type validation
+    // Validate type
     if ((*type < 0) || (*type > 5)) {
-        debug("FAILURE OCCURED");
+        error("Record has invalid type of %d", *type);
         return -1;
     }
 
     // Validate size based on the type
-    if ((*type <= 3 && *size != STD_RECORD_SIZE) || 
-        (*type == 4 && *size < STD_RECORD_SIZE + STD_METADATA_SIZE) ||
-        (*type == 5 && *size < STD_RECORD_SIZE)) {
+    if ((*type <= END_OF_DIRECTORY && *size != STD_RECORD_SIZE) || 
+        (*type == DIRECTORY_ENTRY && *size < STD_RECORD_SIZE + STD_METADATA_SIZE) ||
+        (*type == FILE_DATA && *size < STD_RECORD_SIZE)) {
+        error("Record has invalid size of %d for type %d", *size, *type);
         debug("FAILURE OCCURED");
         return -1;
     }
@@ -178,7 +93,7 @@ int read_record_header(int *type, int *depth, int *size) {
 /*
  * Too bored to write function doc now
  */
-int read_metadata(int *type, int *size) {
+void read_metadata(int *type, int *size) {
     for (int i = 3; i >= 0; i--) {
         *type = (*type << 8);
         *type += getchar();
@@ -188,7 +103,6 @@ int read_metadata(int *type, int *size) {
         *size = (*size << 8);
         *size += getchar();
     }
-    return 0;
 }
 /*
  * @brief Deserialize directory contents into an existing directory.
@@ -208,6 +122,8 @@ int read_metadata(int *type, int *size) {
  * directories.
  */
 int deserialize_directory(int depth) {
+    int status;
+
     int record_type;
     int record_depth;
     int record_size;
@@ -215,55 +131,90 @@ int deserialize_directory(int depth) {
     int metadata_mode;
     int metadata_size;
 
-    read_record_header(&record_type, &record_depth, &record_size);
+    // Read start directory record; return -1 in case of error
+    status = read_record_header(&record_type, &record_depth, &record_size);
+    if (status == -1) return -1;
 
-    debug("%d, %d", record_depth, depth);
-
-    if ((record_type != START_OF_DIRECTORY) ||
-        (record_depth != depth)) {
+    // Validate if start transmission record entry matches expectation 
+    if ((record_type == START_OF_DIRECTORY) &&
+        (record_depth == depth) &&
+        (record_size == STD_RECORD_SIZE)) {
+        debug("START_OF_DIRECTORY, DEPTH: %d, SIZE: %d, PATH: %s", record_depth, record_size, path_buf);
+    } else {
+        error("Error in start directory record");
+        error("Expected type %d but got %d", START_OF_DIRECTORY, record_type);
+        error("Expected depth %d but got %d", depth, record_depth);
+        error("Expected size %d but got %d", STD_RECORD_SIZE, record_size);
         return -1;
     }
-    debug("TYPE: %d, DEPTH: %d, SIZE: %d", record_type, record_depth, record_size);
 
-    while (record_type != END_OF_DIRECTORY) {
-        // DIRECTORY ENTRY
-        read_record_header(&record_type, &record_depth, &record_size);
-        if ((record_type != DIRECTORY_ENTRY) || 
-            (record_depth != depth)) {
+    // Deserialize until end of directory is reached
+    while (1) {
+        // Read directory entry record; return -1 in case of error
+        status = read_record_header(&record_type, &record_depth, &record_size);
+        if (status == -1) return -1;
+
+        if (record_type == END_OF_DIRECTORY) {
+            break;
+        }
+
+        // Validate if directory entry record entry matches expectation 
+        if ((record_type == DIRECTORY_ENTRY) &&
+            (record_depth == depth)) {
+            debug("DIRECTORY_ENTRY, DEPTH: %d, SIZE: %d, *PATH: %s", record_depth, record_size, path_buf);
+        } else {
+            error("Error in directory entry record");
+            error("Expected type %d but got %d", START_OF_DIRECTORY, record_type);
+            error("Expected size %d but got %d", STD_RECORD_SIZE, record_size);
             return -1;
         }
-        debug("TYPE: %d, DEPTH: %d, SIZE: %d", record_type, record_depth, record_size);
+
+        // Read metadata
         read_metadata(&metadata_mode, &metadata_size);
 
+        // Store file name in name_buf
         int name_size = record_size - STD_RECORD_SIZE - STD_METADATA_SIZE;
-        // TODO: Create a file before writing to it
-        debug("PRINTING FILE NAME");
-
-        // TODO: clear name_buf after path push
-        int i;
-        for (i = 0; i < name_size; i++) {
+        for (int i = 0; i < name_size; i++) {
             *(name_buf + i) = getchar();
         }
         *(name_buf + name_size + 1) = '\0';
         
-        path_push(name_buf);
-        debug("PATH: %s", path_buf);
+        // Update path_buf
+        if (path_push(name_buf) == -1) return -1;
+        debug("UPDATED PATH: %s", path_buf);
+        clear_string(name_buf);
 
+        // Deserialize next record basis file type
         if (S_ISDIR(metadata_mode)) {
-            // TODO: make directory here
-            mkdir(path_buf, 0700);
-            deserialize_directory(depth + 1);
-            chmod(path_buf, metadata_mode & 0777);
+            mkdir(path_buf, 0700);                            // Create directory
+            status = deserialize_directory(depth + 1);        // Deserialize directory
+            if (status == -1) return -1;                      // Exit if status is -1
+            chmod(path_buf, metadata_mode & 0777);            // Set permissions
         } else if (S_ISREG(metadata_mode)) {
-            deserialize_file(depth);
-            chmod(path_buf, metadata_mode & 0777);
+            status = deserialize_file(depth);                 // Deserialize file
+            if (status == -1) return -1;                      // Exit if status is -1
+            chmod(path_buf, metadata_mode & 0777);            // Set permissions
         } else {
+            error("Could not deserialize file: %s\nThis file type is currently not supported in deserialization", path_buf);
             return -1;
         }
-        path_pop();
-
-        // read_metadata
+        // Update path_buf to end of directory
+        if (path_pop() == -1) return -1;
     }
+
+    // Validate if start transmission record entry matches expectation 
+    if ((record_type == END_OF_DIRECTORY) &&
+        (record_depth == depth) &&
+        (record_size == STD_RECORD_SIZE)) {
+        debug("END_OF_DIRECTORY, DEPTH: %d, SIZE: %d, PATH: %s", record_depth, record_size, path_buf);
+    } else {
+        error("Error in end directory record");
+        error("Expected type %d but got %d", END_OF_DIRECTORY, record_type);
+        error("Expected depth %d but got %d", depth, record_depth);
+        error("Expected size %d but got %d", STD_RECORD_SIZE, record_size);
+        return -1;
+    }
+
     return 0;
 }
 
@@ -285,38 +236,44 @@ int deserialize_directory(int depth) {
  * deserialized file.
  */
 int deserialize_file(int depth) {
+    int status;
+
     int record_type;
     int record_depth;
     int record_size;
 
-    read_record_header(&record_type, &record_depth, &record_size);
+    // Read file data record; return -1 in case of error
+    status = read_record_header(&record_type, &record_depth, &record_size);
+    if (status == -1) return -1;
 
-    if ((record_type != FILE_DATA) || 
-        (record_depth != depth)) {
+    // Validate if start transmission record entry matches expectation 
+    if ((record_type == FILE_DATA) &&
+        (record_depth == depth)) {
+        debug("FILE_DATA, DEPTH: %d, SIZE: %d, PATH: %s", record_depth, record_size, path_buf);
+    } else {
+        error("Error in file data record");
+        error("Expected type %d but got %d", FILE_DATA, record_type);
+        error("Expected depth %d but got %d", depth, record_depth);
         return -1;
     }
 
+    // Create a file and write content
     int file_size = record_size - STD_RECORD_SIZE;
-
-    // TODO: Create a file before writing to it
-    debug("PRINTING FILE CONTENT");
     FILE *f = fopen(path_buf, "w");
     char ch;
     for (int i = 0; i < file_size; i++) {
         ch = getchar();
         fputc(ch, f);
-        // printf("%c", ch);
     }
     fclose(f);
 
-    // fflush(stdout);
     return 0;
 }
 
 /*
  * Helper Function for emitting record header 
  */
-int stream_data(int type, int depth, off_t size) {
+void stream_data(int type, int depth, off_t size) {
     // Emit magic bytes
     putchar(MAGIC_BYTE_1);
     putchar(MAGIC_BYTE_2);
@@ -334,13 +291,12 @@ int stream_data(int type, int depth, off_t size) {
     for (int i = 7; i >= 0; i--) {
         putchar((size >> (i * 8)) & 0xFF);
     }
-    return 0;
 }
 
 /*
  * Helper Function for emitting metadata
  */
-int stream_metadata(mode_t mode, off_t size) {
+void stream_metadata(mode_t mode, off_t size) {
     // Emit type/permission unsigned 32-bit integer in big-endian format
     for (int i = 3; i >= 0; i--) {
         putchar((mode >> (i * 8)) & 0xFF);
@@ -350,7 +306,6 @@ int stream_metadata(mode_t mode, off_t size) {
     for (int i = 7; i >= 0; i--) {
         putchar((size >> (i * 8)) & 0xFF);
     }
-    return 0;
 }
 
 /*
@@ -371,50 +326,65 @@ int stream_metadata(mode_t mode, off_t size) {
  * that occur while reading file content and writing to standard output.
  */
 int serialize_directory(int depth) {
+    int status;
 
-    debug("START DIRECTORY, DEPTH: %d, SIZE: %d, PATH: %s", depth + 1, STD_RECORD_SIZE, path_buf);
-    stream_data(START_OF_DIRECTORY, depth + 1, STD_RECORD_SIZE);
+    // Emit start of directory record
+    stream_data(START_OF_DIRECTORY, depth, STD_RECORD_SIZE);
+    debug("START_OF_DIRECTORY, DEPTH: %d, SIZE: %d, PATH: %s", depth, STD_RECORD_SIZE, path_buf);
 
+    // Open directory to be traversed
     DIR *dir = opendir(path_buf);
-    depth += 1;
-    if (dir == NULL) {
-        return -1;
-    }
+    if (dir == NULL) return -1;
+
+    // Traverse directory inside a while loop
     struct dirent *de;
     while ((de = readdir(dir)) != NULL) {
+        // Skip "." & ".." directories
         if (string_compare(de->d_name, ".") + string_compare(de->d_name, "..") > -2) {
             continue;
         }
 
-        off_t size = STD_RECORD_SIZE + STD_METADATA_SIZE + string_length(de->d_name);
-        path_push(de->d_name);
-        debug("DIRECTORY ENTRY, DEPTH: %d, SIZE: %ld, PATH: %s", depth, size, path_buf);
-        stream_data(DIRECTORY_ENTRY, depth, size);
+        // Update path_buf to given cursor de; return -1 if error
+        if (path_push(de->d_name) == -1) return -1;
 
+        // Emit directory entry record header
+        int entry_name_size = string_length(de->d_name);
+        off_t record_size = STD_RECORD_SIZE + STD_METADATA_SIZE + entry_name_size;
+        stream_data(DIRECTORY_ENTRY, depth, record_size);
+        debug("DIRECTORY_ENTRY, DEPTH: %d, SIZE: %ld, PATH: %s", depth, record_size, path_buf);
+
+        // Emit metadata
         struct stat stat_buf;
         stat(path_buf, &stat_buf);
         stream_metadata(stat_buf.st_mode, stat_buf.st_size);
-        // Stream file/directory name
-        for (int i = 0; i < string_length(de->d_name); i++) {
+
+        // Emit file/directory name
+        for (int i = 0; i < entry_name_size; i++) {
             putchar(*(de->d_name + i));
         }
 
+        // Emit next record basis file type
         if (S_ISDIR(stat_buf.st_mode)) {
-            serialize_directory(depth);
+            status = serialize_directory(depth + 1);
+            if (status == -1) return -1;
         } else if (S_ISREG(stat_buf.st_mode)) {
-            serialize_file(depth, stat_buf.st_size);
+            status = serialize_file(depth, stat_buf.st_size);
+            if (status == -1) return -1;
         } else {
-            // TODO: account for more failure cases
+            error("Could not serialize file: %s\nThis file type is currently not supported in serialization", path_buf);
             return -1;
         }
-        path_pop();
+        // Update path_buf to end of directory
+        if (path_pop() == -1) return -1;
     }
-    depth -= 1;
-    closedir(dir);
-    debug("END DIRECTORY, DEPTH: %d, SIZE: %d, PATH: %s", depth + 1, STD_RECORD_SIZE, path_buf);
-    stream_data(END_OF_DIRECTORY, depth + 1, STD_RECORD_SIZE);
 
-    // TODO: account for failure cases
+    // Close directory
+    closedir(dir);
+
+    // Emit end of directory record
+    stream_data(END_OF_DIRECTORY, depth, STD_RECORD_SIZE);
+    debug("END_OF_DIRECTORY, DEPTH: %d, SIZE: %d, PATH: %s", depth, STD_RECORD_SIZE, path_buf);
+
     return 0;
 }
 
@@ -432,24 +402,35 @@ int serialize_directory(int depth) {
  * from the file, and I/O errors reading the file data or writing to standard output.
  */
 int serialize_file(int depth, off_t size) {
+    // Emit file data record header
     off_t record_size = size + STD_RECORD_SIZE;
-    
-    debug("FILE DATA; DEPTH: %d, SIZE: %ld, PATH: %s", depth, record_size, path_buf);
     stream_data(FILE_DATA, depth, record_size);
-    // TODO: need to assert if file sizes match
+    debug("FILE DATA; DEPTH: %d, SIZE: %ld, PATH: %s", depth, record_size, path_buf);
+
+    // Open file initialized in path_buf; return -1 if error in opening file
     FILE *f = fopen(path_buf, "r");
     if (f == NULL) {
+        error("Error in opening file %s", path_buf);
         return -1;
     }
+
+    // Emit file data
     long int count = 0;
     char ch;
     while ((ch = fgetc(f)) != EOF) {
         putchar(ch);
         count += 1;
     }
+
+    // Close file
     fclose(f);
 
-    // TODO: account for failure cases
+    // Check if correct number of bytes were emitted 
+    if (count != size) {
+        error("Error in transmitting file %s\nShould have emitted %ld byte(s) but emitted %ld byte(s)", path_buf, size, count);
+        return -1;
+    }
+
     return 0;
 }
 
@@ -466,15 +447,21 @@ int serialize_file(int depth, off_t size) {
  * @return 0 if serialization completes without error, -1 if an error occurs.
  */
 int serialize() {
-    // TODO: integrate fflush in serialize functions
-    // TODO: need to check if there is a better way to manage depth updates
     int depth = 0;
-    debug("START TRANSMISSION, DEPTH: %d, SIZE: 16, PATH: %s", depth, path_buf);
-    stream_data(START_OF_TRANSMISSION, 0, STD_RECORD_SIZE);
-    serialize_directory(depth);
-    debug("END TRANSMISSION, DEPTH: %d, SIZE: 16, PATH: %s", depth, path_buf);
-    stream_data(END_OF_TRANSMISSION, 0, STD_RECORD_SIZE);
-    // TODO: account for failure cases
+    int status;
+
+    // Emit start transmission record
+    stream_data(START_OF_TRANSMISSION, depth, STD_RECORD_SIZE);
+    debug("START_OF_TRANSMISSION, DEPTH: %d, SIZE: %d, PATH: %s", depth, STD_RECORD_SIZE, path_buf);
+
+    // Call serialize_directory
+    status = serialize_directory(depth + 1);
+    if (status == -1) return -1; // Exit if status is -1
+
+    // Emit end transmission record
+    stream_data(END_OF_TRANSMISSION, depth, STD_RECORD_SIZE);
+    debug("END_OF_TRANSMISSION, DEPTH: %d, SIZE: %d, PATH: %s", depth, STD_RECORD_SIZE, path_buf);
+
     return 0;
 }
 
@@ -492,32 +479,59 @@ int serialize() {
  * @return 0 if deserialization completes without error, -1 if an error occurs.
  */
 int deserialize() {
+    int depth = 0;
+    int status;
+
     int record_type;
     int record_depth;
     int record_size;
 
-    read_record_header(&record_type, &record_depth, &record_size);
+    // Read start transmission record; return -1 in case of error
+    status = read_record_header(&record_type, &record_depth, &record_size);
+    if (status == -1) return -1;
 
+    // Validate if start transmission record entry matches expectation 
     if ((record_type == START_OF_TRANSMISSION) &&
-        (record_depth == 0) &&
+        (record_depth == depth) &&
         (record_size == STD_RECORD_SIZE)) {
-        debug("START TRANSMISSION, DEPTH: %d, SIZE: %d, PATH: %s", record_depth, record_size, path_buf);
-        deserialize_directory(record_depth + 1);
+        debug("START_OF_TRANSMISSION, DEPTH: %d, SIZE: %d, PATH: %s", record_depth, record_size, path_buf);
     } else {
+        error("Error in start transmission record");
+        error("Expected type %d but got %d", START_OF_TRANSMISSION, record_type);
+        error("Expected depth %d but got %d", depth, record_depth);
+        error("Expected size %d but got %d", STD_RECORD_SIZE, record_size);
         return -1;
     }
 
-    read_record_header(&record_type, &record_depth, &record_size);
+    // Call deserialize_directory
+    status = deserialize_directory(record_depth + 1);
+    if (status == -1) return -1; // Exit if status is -1
 
+    // Read end transmission record; return -1 in case of error
+    status = read_record_header(&record_type, &record_depth, &record_size);
+    if (status == -1) return -1;
+
+    // Validate if end transmission record entry matches expectation 
     if ((record_type == END_OF_TRANSMISSION) &&
-        (record_depth == 0) &&
+        (record_depth == depth) &&
         (record_size == STD_RECORD_SIZE)) {
-        debug("END TRANSMISSION, DEPTH: %d, SIZE: %d, PATH: %s", record_depth, record_size, path_buf);
-        debug("IT WORKS");
-        return 0;
+        debug("END_OF_TRANSMISSION, DEPTH: %d, SIZE: %d, PATH: %s", record_depth, record_size, path_buf);
     } else {
+        error("Error in end transmission record");
+        error("Expected type %d but got %d", START_OF_TRANSMISSION, record_type);
+        error("Expected depth %d but got %d", depth, record_depth);
+        error("Expected size %d but got %d", STD_RECORD_SIZE, record_size);
         return -1;
     }
+
+    // Check if EOF is reached on stdin
+    if (getchar() != EOF) {
+        clear_input_buffer();
+        error("Input did not end after end transmission record");
+        return -1;
+    }
+    
+    return 0;
 }
 
 /**
@@ -537,6 +551,9 @@ int deserialize() {
  * the selected options.
  */
 int validargs(int argc, char **argv) {
+    debug("Entering validargs...");
+    debug("Arguments to validargs -> argc: %d, %p", argc, argv);
+
     int validation_status = 0;    // Default to valid arguments
     int check_args = 1;           // Validation to start from 1st argument
     char mode = '\0';             // Mode to store the operation s|d
@@ -544,23 +561,29 @@ int validargs(int argc, char **argv) {
     // Insufficient arguments case
     if (argc == 1) {
         validation_status = -1;
+        error("Insufficient arguments");
     }
 
     // Loop through the command-line arguments
     while (argc - check_args > 0) {
+        debug("Checking argment %d: %s", check_args, *(argv + check_args));
         // Check for positional argument (must be -h|-s|-d)
         if (check_args == 1) {
-            if (string_compare(*(argv + check_args), "-h") == 0) {
+            if (string_compare(*(argv + 1), "-h") == 0) {
                 global_options |= (1 << 0);
+                debug("Detected -h flag");
                 break;
-            } else if (string_compare(*(argv + check_args), "-s") == 0) {
+            } else if (string_compare(*(argv + 1), "-s") == 0) {
                 mode = 's';
                 global_options |= (1 << 1);
-            } else if (string_compare(*(argv + check_args), "-d") == 0) {
+                debug("Detected -s flag");
+            } else if (string_compare(*(argv + 1), "-d") == 0) {
                 mode = 'd';
                 global_options |= (1 << 2);
+                debug("Detected -d flag");
             } else {
                 validation_status = -1;
+                error("Detected invalid positional argument: %s", *(argv + 1));
                 break;
             }
             check_args += 1;
@@ -571,8 +594,10 @@ int validargs(int argc, char **argv) {
         if (string_compare(*(argv + check_args), "-p") == 0) {
             if (argc - check_args - 1 == 0) {
                 validation_status = -1;
+                error("No input passed for -p argument");
                 break;
             }
+            debug("Detcted -p flag with arg: %s", *(argv + check_args + 1));
             check_args += 2;
             continue;
         }
@@ -582,14 +607,18 @@ int validargs(int argc, char **argv) {
             if (mode == 'd') {
                 global_options |= (1 << 3);
                 check_args += 1;
+                debug("Detected -c flag for deserialization");
                 continue;
             } else {
                 validation_status = -1;
+                error("Detected -c flag for invalid mode");
                 break;
             }
         }
+
         // Break for invalid argument
         validation_status = -1;
+        error("Detected invalid argument: %s", *(argv + check_args));
         break;
     }
     return validation_status;
