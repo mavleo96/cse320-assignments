@@ -2,6 +2,7 @@
 #include "debug.h"
 #include "string_functions.h"
 #include "path_functions.h"
+#include "helper_functions.h"
 
 #ifdef _STRING_H
 #error "Do not #include <string.h>. You will get a ZERO."
@@ -51,14 +52,9 @@
  * Too bored to write function doc now
  */
 int read_record_header(int *type, int *depth, int *size) {
-
-    // // Early exit
-    // if (getchar() == EOF) {
-    //     return 0;
-    // }
-
     // Validate magic bytes
     if (getchar() != MAGIC_BYTE_1 || getchar() != MAGIC_BYTE_2 || getchar() != MAGIC_BYTE_3) {
+        error("Magic bytes were not found in beginning of the record");
         return -1;
     }
 
@@ -77,16 +73,17 @@ int read_record_header(int *type, int *depth, int *size) {
         *size += getchar();
     }
 
-    // Type validation
+    // Validate type
     if ((*type < 0) || (*type > 5)) {
-        debug("FAILURE OCCURED");
+        error("Record has invalid type of %d", *type);
         return -1;
     }
 
     // Validate size based on the type
-    if ((*type <= 3 && *size != STD_RECORD_SIZE) || 
-        (*type == 4 && *size < STD_RECORD_SIZE + STD_METADATA_SIZE) ||
-        (*type == 5 && *size < STD_RECORD_SIZE)) {
+    if ((*type <= END_OF_DIRECTORY && *size != STD_RECORD_SIZE) || 
+        (*type == DIRECTORY_ENTRY && *size < STD_RECORD_SIZE + STD_METADATA_SIZE) ||
+        (*type == FILE_DATA && *size < STD_RECORD_SIZE)) {
+        error("Record has invalid size of %d for type %d", *size, *type);
         debug("FAILURE OCCURED");
         return -1;
     }
@@ -96,7 +93,7 @@ int read_record_header(int *type, int *depth, int *size) {
 /*
  * Too bored to write function doc now
  */
-int read_metadata(int *type, int *size) {
+void read_metadata(int *type, int *size) {
     for (int i = 3; i >= 0; i--) {
         *type = (*type << 8);
         *type += getchar();
@@ -106,7 +103,6 @@ int read_metadata(int *type, int *size) {
         *size = (*size << 8);
         *size += getchar();
     }
-    return 0;
 }
 /*
  * @brief Deserialize directory contents into an existing directory.
@@ -126,6 +122,8 @@ int read_metadata(int *type, int *size) {
  * directories.
  */
 int deserialize_directory(int depth) {
+    int status;
+
     int record_type;
     int record_depth;
     int record_size;
@@ -133,55 +131,90 @@ int deserialize_directory(int depth) {
     int metadata_mode;
     int metadata_size;
 
-    read_record_header(&record_type, &record_depth, &record_size);
+    // Read start directory record; return -1 in case of error
+    status = read_record_header(&record_type, &record_depth, &record_size);
+    if (status == -1) return -1;
 
-    debug("%d, %d", record_depth, depth);
-
-    if ((record_type != START_OF_DIRECTORY) ||
-        (record_depth != depth)) {
+    // Validate if start transmission record entry matches expectation 
+    if ((record_type == START_OF_DIRECTORY) &&
+        (record_depth == depth) &&
+        (record_size == STD_RECORD_SIZE)) {
+        debug("START_OF_DIRECTORY, DEPTH: %d, SIZE: %d, PATH: %s", record_depth, record_size, path_buf);
+    } else {
+        error("Error in start directory record");
+        error("Expected type %d but got %d", START_OF_DIRECTORY, record_type);
+        error("Expected depth %d but got %d", depth, record_depth);
+        error("Expected size %d but got %d", STD_RECORD_SIZE, record_size);
         return -1;
     }
-    debug("TYPE: %d, DEPTH: %d, SIZE: %d", record_type, record_depth, record_size);
 
-    while (record_type != END_OF_DIRECTORY) {
-        // DIRECTORY ENTRY
-        read_record_header(&record_type, &record_depth, &record_size);
-        if ((record_type != DIRECTORY_ENTRY) || 
-            (record_depth != depth)) {
+    // Deserialize until end of directory is reached
+    while (1) {
+        // Read directory entry record; return -1 in case of error
+        status = read_record_header(&record_type, &record_depth, &record_size);
+        if (status == -1) return -1;
+
+        if (record_type == END_OF_DIRECTORY) {
+            break;
+        }
+
+        // Validate if directory entry record entry matches expectation 
+        if ((record_type == DIRECTORY_ENTRY) &&
+            (record_depth == depth)) {
+            debug("DIRECTORY_ENTRY, DEPTH: %d, SIZE: %d, *PATH: %s", record_depth, record_size, path_buf);
+        } else {
+            error("Error in directory entry record");
+            error("Expected type %d but got %d", START_OF_DIRECTORY, record_type);
+            error("Expected size %d but got %d", STD_RECORD_SIZE, record_size);
             return -1;
         }
-        debug("TYPE: %d, DEPTH: %d, SIZE: %d", record_type, record_depth, record_size);
+
+        // Read metadata
         read_metadata(&metadata_mode, &metadata_size);
 
+        // Store file name in name_buf
         int name_size = record_size - STD_RECORD_SIZE - STD_METADATA_SIZE;
-        // TODO: Create a file before writing to it
-        debug("PRINTING FILE NAME");
-
-        // TODO: clear name_buf after path push
-        int i;
-        for (i = 0; i < name_size; i++) {
+        for (int i = 0; i < name_size; i++) {
             *(name_buf + i) = getchar();
         }
         *(name_buf + name_size + 1) = '\0';
         
-        path_push(name_buf);
-        debug("PATH: %s", path_buf);
+        // Update path_buf
+        if (path_push(name_buf) == -1) return -1;
+        debug("UPDATED PATH: %s", path_buf);
+        clear_string(name_buf);
 
+        // Deserialize next record basis file type
         if (S_ISDIR(metadata_mode)) {
-            // TODO: make directory here
-            mkdir(path_buf, 0700);
-            deserialize_directory(depth + 1);
-            chmod(path_buf, metadata_mode & 0777);
+            mkdir(path_buf, 0700);                            // Create directory
+            status = deserialize_directory(depth + 1);        // Deserialize directory
+            if (status == -1) return -1;                      // Exit if status is -1
+            chmod(path_buf, metadata_mode & 0777);            // Set permissions
         } else if (S_ISREG(metadata_mode)) {
-            deserialize_file(depth);
-            chmod(path_buf, metadata_mode & 0777);
+            status = deserialize_file(depth);                 // Deserialize file
+            if (status == -1) return -1;                      // Exit if status is -1
+            chmod(path_buf, metadata_mode & 0777);            // Set permissions
         } else {
+            error("Could not deserialize file: %s\nThis file type is currently not supported in deserialization", path_buf);
             return -1;
         }
-        path_pop();
-
-        // read_metadata
+        // Update path_buf to end of directory
+        if (path_pop() == -1) return -1;
     }
+
+    // Validate if start transmission record entry matches expectation 
+    if ((record_type == END_OF_DIRECTORY) &&
+        (record_depth == depth) &&
+        (record_size == STD_RECORD_SIZE)) {
+        debug("END_OF_DIRECTORY, DEPTH: %d, SIZE: %d, PATH: %s", record_depth, record_size, path_buf);
+    } else {
+        error("Error in end directory record");
+        error("Expected type %d but got %d", END_OF_DIRECTORY, record_type);
+        error("Expected depth %d but got %d", depth, record_depth);
+        error("Expected size %d but got %d", STD_RECORD_SIZE, record_size);
+        return -1;
+    }
+
     return 0;
 }
 
@@ -203,31 +236,37 @@ int deserialize_directory(int depth) {
  * deserialized file.
  */
 int deserialize_file(int depth) {
+    int status;
+
     int record_type;
     int record_depth;
     int record_size;
 
-    read_record_header(&record_type, &record_depth, &record_size);
+    // Read file data record; return -1 in case of error
+    status = read_record_header(&record_type, &record_depth, &record_size);
+    if (status == -1) return -1;
 
-    if ((record_type != FILE_DATA) || 
-        (record_depth != depth)) {
+    // Validate if start transmission record entry matches expectation 
+    if ((record_type == FILE_DATA) &&
+        (record_depth == depth)) {
+        debug("FILE_DATA, DEPTH: %d, SIZE: %d, PATH: %s", record_depth, record_size, path_buf);
+    } else {
+        error("Error in file data record");
+        error("Expected type %d but got %d", FILE_DATA, record_type);
+        error("Expected depth %d but got %d", depth, record_depth);
         return -1;
     }
 
+    // Create a file and write content
     int file_size = record_size - STD_RECORD_SIZE;
-
-    // TODO: Create a file before writing to it
-    debug("PRINTING FILE CONTENT");
     FILE *f = fopen(path_buf, "w");
     char ch;
     for (int i = 0; i < file_size; i++) {
         ch = getchar();
         fputc(ch, f);
-        // printf("%c", ch);
     }
     fclose(f);
 
-    // fflush(stdout);
     return 0;
 }
 
@@ -257,7 +296,7 @@ void stream_data(int type, int depth, off_t size) {
 /*
  * Helper Function for emitting metadata
  */
-int stream_metadata(mode_t mode, off_t size) {
+void stream_metadata(mode_t mode, off_t size) {
     // Emit type/permission unsigned 32-bit integer in big-endian format
     for (int i = 3; i >= 0; i--) {
         putchar((mode >> (i * 8)) & 0xFF);
@@ -267,7 +306,6 @@ int stream_metadata(mode_t mode, off_t size) {
     for (int i = 7; i >= 0; i--) {
         putchar((size >> (i * 8)) & 0xFF);
     }
-    return 0;
 }
 
 /*
@@ -414,7 +452,7 @@ int serialize() {
 
     // Emit start transmission record
     stream_data(START_OF_TRANSMISSION, depth, STD_RECORD_SIZE);
-    debug("START_TRANSMISSION, DEPTH: %d, SIZE: %d, PATH: %s", depth, STD_RECORD_SIZE, path_buf);
+    debug("START_OF_TRANSMISSION, DEPTH: %d, SIZE: %d, PATH: %s", depth, STD_RECORD_SIZE, path_buf);
 
     // Call serialize_directory
     status = serialize_directory(depth + 1);
@@ -422,7 +460,7 @@ int serialize() {
 
     // Emit end transmission record
     stream_data(END_OF_TRANSMISSION, depth, STD_RECORD_SIZE);
-    debug("END TRANSMISSION, DEPTH: %d, SIZE: %d, PATH: %s", depth, STD_RECORD_SIZE, path_buf);
+    debug("END_OF_TRANSMISSION, DEPTH: %d, SIZE: %d, PATH: %s", depth, STD_RECORD_SIZE, path_buf);
 
     return 0;
 }
@@ -441,32 +479,59 @@ int serialize() {
  * @return 0 if deserialization completes without error, -1 if an error occurs.
  */
 int deserialize() {
+    int depth = 0;
+    int status;
+
     int record_type;
     int record_depth;
     int record_size;
 
-    read_record_header(&record_type, &record_depth, &record_size);
+    // Read start transmission record; return -1 in case of error
+    status = read_record_header(&record_type, &record_depth, &record_size);
+    if (status == -1) return -1;
 
+    // Validate if start transmission record entry matches expectation 
     if ((record_type == START_OF_TRANSMISSION) &&
-        (record_depth == 0) &&
+        (record_depth == depth) &&
         (record_size == STD_RECORD_SIZE)) {
-        debug("START TRANSMISSION, DEPTH: %d, SIZE: %d, PATH: %s", record_depth, record_size, path_buf);
-        deserialize_directory(record_depth + 1);
+        debug("START_OF_TRANSMISSION, DEPTH: %d, SIZE: %d, PATH: %s", record_depth, record_size, path_buf);
     } else {
+        error("Error in start transmission record");
+        error("Expected type %d but got %d", START_OF_TRANSMISSION, record_type);
+        error("Expected depth %d but got %d", depth, record_depth);
+        error("Expected size %d but got %d", STD_RECORD_SIZE, record_size);
         return -1;
     }
 
-    read_record_header(&record_type, &record_depth, &record_size);
+    // Call deserialize_directory
+    status = deserialize_directory(record_depth + 1);
+    if (status == -1) return -1; // Exit if status is -1
 
+    // Read end transmission record; return -1 in case of error
+    status = read_record_header(&record_type, &record_depth, &record_size);
+    if (status == -1) return -1;
+
+    // Validate if end transmission record entry matches expectation 
     if ((record_type == END_OF_TRANSMISSION) &&
-        (record_depth == 0) &&
+        (record_depth == depth) &&
         (record_size == STD_RECORD_SIZE)) {
-        debug("END TRANSMISSION, DEPTH: %d, SIZE: %d, PATH: %s", record_depth, record_size, path_buf);
-        debug("IT WORKS");
-        return 0;
+        debug("END_OF_TRANSMISSION, DEPTH: %d, SIZE: %d, PATH: %s", record_depth, record_size, path_buf);
     } else {
+        error("Error in end transmission record");
+        error("Expected type %d but got %d", START_OF_TRANSMISSION, record_type);
+        error("Expected depth %d but got %d", depth, record_depth);
+        error("Expected size %d but got %d", STD_RECORD_SIZE, record_size);
         return -1;
     }
+
+    // Check if EOF is reached on stdin
+    if (getchar() != EOF) {
+        clear_input_buffer();
+        error("Input did not end after end transmission record");
+        return -1;
+    }
+    
+    return 0;
 }
 
 /**
