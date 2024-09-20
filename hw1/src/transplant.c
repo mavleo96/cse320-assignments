@@ -30,6 +30,8 @@
 #define STD_RECORD_SIZE 16
 #define STD_METADATA_SIZE 12
 
+#define OPTION_CLOBBER (1 << 3)
+
 /*
  * You may modify this file and/or move the functions contained here
  * to other source files (except for main.c) as you wish.
@@ -237,6 +239,7 @@ int deserialize_directory(int depth) {
  */
 int deserialize_file(int depth) {
     int status;
+    int clobber = (global_options & OPTION_CLOBBER) ? 1 : 0;
 
     int record_type;
     int record_depth;
@@ -254,6 +257,12 @@ int deserialize_file(int depth) {
         error("Error in file data record");
         error("Expected type %d but got %d", FILE_DATA, record_type);
         error("Expected depth %d but got %d", depth, record_depth);
+        return -1;
+    }
+
+    // Check if file already exists and return -1 if clobber flag is not set
+    if (!clobber && file_exists(path_buf)) {
+        error("File %s exists already", path_buf);
         return -1;
     }
 

@@ -25,9 +25,9 @@
 int main(int argc, char **argv)
 {
     // Validate arguments
-    if(validargs(argc, argv))
+    if (validargs(argc, argv))
         USAGE(*argv, EXIT_FAILURE);
-    if(global_options & OPTION_HELP)
+    if (global_options & OPTION_HELP)
         USAGE(*argv, EXIT_SUCCESS);
 
     // Initialize path_buf
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
 
     // Enter function according to global_options
     int status;
-    if ((global_options & OPTION_SERIALIZE) == OPTION_SERIALIZE) {
+    if (global_options & OPTION_SERIALIZE) {
         debug("Entering serialization...");
         // Check if initialized path exists
         struct stat stat_buf;
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
             status = serialize();
         }
         debug("Exiting serialization...");
-    } else if ((global_options & OPTION_DESERIALIZE) == OPTION_DESERIALIZE) {
+    } else if (global_options & OPTION_DESERIALIZE) {
         debug("Entering deserialization...");
         if (string_compare(path_buf, ".") != 0) mkdir(path_buf, 0775);  // Make directory with 775 permission if not set to cwd
         status = deserialize();
