@@ -30,14 +30,14 @@ int main(int argc, char **argv)
     if(global_options & OPTION_HELP)
         USAGE(*argv, EXIT_SUCCESS);
 
-    // Initialise path_buf
+    // Initialize path_buf
     if (path_init(".") == -1) return EXIT_FAILURE;
-    debug("Path initialised with path length %d to %s", path_length, path_buf);
+    debug("Path initialized with path length %d to %s", path_length, path_buf);
     for (int count = 0; count < argc; count++) {
         if (string_compare(*(argv + count), "-p") == 0) {
             char *dir_argv = *(argv + count + 1);
             if (path_init(dir_argv) == -1) return EXIT_FAILURE;
-            debug("Path initialised with path length %d to %s", path_length, path_buf);
+            debug("Path initialized with path length %d to %s", path_length, path_buf);
             break;
         }
     }
@@ -46,17 +46,28 @@ int main(int argc, char **argv)
     int status;
     if ((global_options & OPTION_SERIALIZE) == OPTION_SERIALIZE) {
         debug("Entering serialization...");
-        status = serialize();
+        // Check if initialized path exists
+        struct stat stat_buf;
+        if (stat(path_buf, &stat_buf) == -1) {
+            status = -1;
+            error("Provided path does not exist");
+        } else {
+            status = serialize();
+        }
+        debug("Exiting serialization...");
     } else if ((global_options & OPTION_DESERIALIZE) == OPTION_DESERIALIZE) {
         debug("Entering deserialization...");
-        mkdir(path_buf, 0775);
+        if (string_compare(path_buf, ".") != 0) mkdir(path_buf, 0775);  // Make directory with 775 permission if not set to cwd
         status = deserialize();
+        debug("Exiting deserialization...");
     }
 
     // Exit program as per status value
     if (status == 0) {
+        debug("Exiting program successfully");
         return EXIT_SUCCESS;
     } else {
+        debug("Exiting program with failure");
         return EXIT_FAILURE;
     }
 }

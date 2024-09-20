@@ -234,7 +234,7 @@ int deserialize_file(int depth) {
 /*
  * Helper Function for emitting record header 
  */
-int stream_data(int type, int depth, off_t size) {
+void stream_data(int type, int depth, off_t size) {
     // Emit magic bytes
     putchar(MAGIC_BYTE_1);
     putchar(MAGIC_BYTE_2);
@@ -252,7 +252,6 @@ int stream_data(int type, int depth, off_t size) {
     for (int i = 7; i >= 0; i--) {
         putchar((size >> (i * 8)) & 0xFF);
     }
-    return 0;
 }
 
 /*
@@ -289,50 +288,65 @@ int stream_metadata(mode_t mode, off_t size) {
  * that occur while reading file content and writing to standard output.
  */
 int serialize_directory(int depth) {
+    int status;
 
-    debug("START DIRECTORY, DEPTH: %d, SIZE: %d, PATH: %s", depth + 1, STD_RECORD_SIZE, path_buf);
-    stream_data(START_OF_DIRECTORY, depth + 1, STD_RECORD_SIZE);
+    // Emit start of directory record
+    stream_data(START_OF_DIRECTORY, depth, STD_RECORD_SIZE);
+    debug("START_OF_DIRECTORY, DEPTH: %d, SIZE: %d, PATH: %s", depth, STD_RECORD_SIZE, path_buf);
 
+    // Open directory to be traversed
     DIR *dir = opendir(path_buf);
-    depth += 1;
-    if (dir == NULL) {
-        return -1;
-    }
+    if (dir == NULL) return -1;
+
+    // Traverse directory inside a while loop
     struct dirent *de;
     while ((de = readdir(dir)) != NULL) {
+        // Skip "." & ".." directories
         if (string_compare(de->d_name, ".") + string_compare(de->d_name, "..") > -2) {
             continue;
         }
 
-        off_t size = STD_RECORD_SIZE + STD_METADATA_SIZE + string_length(de->d_name);
-        path_push(de->d_name);
-        debug("DIRECTORY ENTRY, DEPTH: %d, SIZE: %ld, PATH: %s", depth, size, path_buf);
-        stream_data(DIRECTORY_ENTRY, depth, size);
+        // Update path_buf to given cursor de; return -1 if error
+        if (path_push(de->d_name) == -1) return -1;
 
+        // Emit directory entry record header
+        int entry_name_size = string_length(de->d_name);
+        off_t record_size = STD_RECORD_SIZE + STD_METADATA_SIZE + entry_name_size;
+        stream_data(DIRECTORY_ENTRY, depth, record_size);
+        debug("DIRECTORY_ENTRY, DEPTH: %d, SIZE: %ld, PATH: %s", depth, record_size, path_buf);
+
+        // Emit metadata
         struct stat stat_buf;
         stat(path_buf, &stat_buf);
         stream_metadata(stat_buf.st_mode, stat_buf.st_size);
-        // Stream file/directory name
-        for (int i = 0; i < string_length(de->d_name); i++) {
+
+        // Emit file/directory name
+        for (int i = 0; i < entry_name_size; i++) {
             putchar(*(de->d_name + i));
         }
 
+        // Emit next record basis file type
         if (S_ISDIR(stat_buf.st_mode)) {
-            serialize_directory(depth);
+            status = serialize_directory(depth + 1);
+            if (status == -1) return -1;
         } else if (S_ISREG(stat_buf.st_mode)) {
-            serialize_file(depth, stat_buf.st_size);
+            status = serialize_file(depth, stat_buf.st_size);
+            if (status == -1) return -1;
         } else {
-            // TODO: account for more failure cases
+            error("Could not serialize file: %s\nThis file type is currently not supported in serialization", path_buf);
             return -1;
         }
-        path_pop();
+        // Update path_buf to end of directory
+        if (path_pop() == -1) return -1;
     }
-    depth -= 1;
-    closedir(dir);
-    debug("END DIRECTORY, DEPTH: %d, SIZE: %d, PATH: %s", depth + 1, STD_RECORD_SIZE, path_buf);
-    stream_data(END_OF_DIRECTORY, depth + 1, STD_RECORD_SIZE);
 
-    // TODO: account for failure cases
+    // Close directory
+    closedir(dir);
+
+    // Emit end of directory record
+    stream_data(END_OF_DIRECTORY, depth, STD_RECORD_SIZE);
+    debug("END_OF_DIRECTORY, DEPTH: %d, SIZE: %d, PATH: %s", depth, STD_RECORD_SIZE, path_buf);
+
     return 0;
 }
 
@@ -350,24 +364,35 @@ int serialize_directory(int depth) {
  * from the file, and I/O errors reading the file data or writing to standard output.
  */
 int serialize_file(int depth, off_t size) {
+    // Emit file data record header
     off_t record_size = size + STD_RECORD_SIZE;
-    
-    debug("FILE DATA; DEPTH: %d, SIZE: %ld, PATH: %s", depth, record_size, path_buf);
     stream_data(FILE_DATA, depth, record_size);
-    // TODO: need to assert if file sizes match
+    debug("FILE DATA; DEPTH: %d, SIZE: %ld, PATH: %s", depth, record_size, path_buf);
+
+    // Open file initialized in path_buf; return -1 if error in opening file
     FILE *f = fopen(path_buf, "r");
     if (f == NULL) {
+        error("Error in opening file %s", path_buf);
         return -1;
     }
+
+    // Emit file data
     long int count = 0;
     char ch;
     while ((ch = fgetc(f)) != EOF) {
         putchar(ch);
         count += 1;
     }
+
+    // Close file
     fclose(f);
 
-    // TODO: account for failure cases
+    // Check if correct number of bytes were emitted 
+    if (count != size) {
+        error("Error in transmitting file %s\nShould have emitted %ld byte(s) but emitted %ld byte(s)", path_buf, size, count);
+        return -1;
+    }
+
     return 0;
 }
 
@@ -384,15 +409,21 @@ int serialize_file(int depth, off_t size) {
  * @return 0 if serialization completes without error, -1 if an error occurs.
  */
 int serialize() {
-    // TODO: integrate fflush in serialize functions
-    // TODO: need to check if there is a better way to manage depth updates
     int depth = 0;
-    debug("START TRANSMISSION, DEPTH: %d, SIZE: 16, PATH: %s", depth, path_buf);
-    stream_data(START_OF_TRANSMISSION, 0, STD_RECORD_SIZE);
-    serialize_directory(depth);
-    debug("END TRANSMISSION, DEPTH: %d, SIZE: 16, PATH: %s", depth, path_buf);
-    stream_data(END_OF_TRANSMISSION, 0, STD_RECORD_SIZE);
-    // TODO: account for failure cases
+    int status;
+
+    // Emit start transmission record
+    stream_data(START_OF_TRANSMISSION, depth, STD_RECORD_SIZE);
+    debug("START_TRANSMISSION, DEPTH: %d, SIZE: %d, PATH: %s", depth, STD_RECORD_SIZE, path_buf);
+
+    // Call serialize_directory
+    status = serialize_directory(depth + 1);
+    if (status == -1) return -1; // Exit if status is -1
+
+    // Emit end transmission record
+    stream_data(END_OF_TRANSMISSION, depth, STD_RECORD_SIZE);
+    debug("END TRANSMISSION, DEPTH: %d, SIZE: %d, PATH: %s", depth, STD_RECORD_SIZE, path_buf);
+
     return 0;
 }
 
