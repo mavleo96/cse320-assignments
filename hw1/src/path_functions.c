@@ -16,19 +16,24 @@
  * @return 0 on success, -1 in case of error
  */
 int path_init(char *name) {
-    // TODO: Add comments and format the function better
-    int count = 0;
-    if (string_length(name) + 1 > sizeof(path_buf)) {
-        error("Provided path argument of length %d is longer than size of path_buf %ld", string_length(name), sizeof(path_buf));
+    // Check if name is longer than PATH_MAX; exit if yes
+    int name_length = string_length(name);
+    if (name_length + 1 > sizeof(path_buf)) {
+        error("Provided path argument of length %d is longer than size of path_buf %ld", name_length + 1, sizeof(path_buf));
         return -1;
     }
-    // TODO: Need to handle the trailing / issue
-    while (*(name + count) != '\0') {
-        *(path_buf + count) = *(name + count);
-        count += 1;
+
+    // Pop trailing '/' character
+    if (*(name + name_length - 1) == '/') name_length--;
+
+    // Copy name into path_buf
+    for (int i = 0; i < name_length; i++) {
+        *(path_buf + i) = *(name + i);
     }
-    *(path_buf + count + 1) = '\0';
-    path_length = string_length(name);
+    *(path_buf + name_length) = '\0';
+
+    // Initialize path_length
+    path_length = name_length;
 
     return 0;
 }
@@ -47,17 +52,30 @@ int path_init(char *name) {
  * @return 0 in case of success, -1 otherwise.
  */
 int path_push(char *name) {
-    // TODO: Add comments and format the function better
+    // Check if name is valid; '/' should not exist in name
+    int name_length = string_length(name);
+    for (int i = 0; i < name_length; i++) {
+        if (*(name + i) == '/') {
+            error("String to be appended contains '/' character");
+            return -1;
+        }
+    }
+
+    // Check if name is valid; final path_length should not be longer than PATH_MAX
     int count = 0;
-    if (path_length + string_length(name) + 1 + 1 > sizeof(path_buf)) {
+    if (path_length + 1 + name_length + 1 > sizeof(path_buf)) { // path_buf + '/' + name + '\0'
+        error("Updated path_buf of length %d will be longer than size of path_bug %ld", path_length + name_length + 2 , sizeof(path_buf));
         return -1;
     }
+
+    // Update path_buf
     *(path_buf + path_length) = '/';
-    while (*(name + count) != '\0') {
-        *(path_buf + path_length + 1 + count) = *(name + count);
-        count += 1;
+    for (int i = 0; i < name_length + 1; i++) {
+        *(path_buf + path_length + 1 + i) = *(name + i);
     }
-    path_length += string_length(name) + 1;
+
+    // Update path_length
+    path_length += name_length + 1;
 
     return 0;
 }
@@ -75,14 +93,22 @@ int path_push(char *name) {
  * @return 0 in case of success, -1 otherwise.
  */
 int path_pop() {
-    // TODO: Add comments and format the function better
+    // Check if path_buf is empty
+    if (string_length(path_buf) == 0) {
+        error("Nothing to pop; path_buf is empty");
+        return -1;
+    }
+
+    // Pop characters after last occurance of '/'
     int count = 0;
     while (*(path_buf + path_length - count) != '/') {
         *(path_buf + path_length - count) = '\0';
         count += 1;
     }
     *(path_buf + path_length - count) = '\0';
+
+    // Update path_length
     path_length -= count;
-    // TODO: Empty path_buf case to be handled
+
     return 0;
 }
