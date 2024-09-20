@@ -7,11 +7,3 @@ void clear_input_buffer() {
         // continue
     }
 }
-
-void clear_string(char *str) {
-    int count = 0;
-    while (*(str + count) != '\0') {
-        *(str + count) = '\0';
-        count++;
-    }
-}

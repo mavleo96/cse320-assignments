@@ -182,7 +182,7 @@ int deserialize_directory(int depth) {
         // Update path_buf
         if (path_push(name_buf) == -1) return -1;
         debug("UPDATED PATH: %s", path_buf);
-        clear_string(name_buf);
+        string_clear(name_buf);
 
         // Deserialize next record basis file type
         if (S_ISDIR(metadata_mode)) {
