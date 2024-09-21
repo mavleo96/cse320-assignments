@@ -51,7 +51,13 @@
  */
 
 /*
- * Too bored to write function doc now
+ * @brief Read record header and update pointers as per parsed data
+ *
+ * @param type Pointer to type to be updated
+ * @param depth Pointer to depth to be updated
+ * @param size Pointer to size to be updated
+ *
+ * @return 0 in case of success else -1
  */
 int read_record_header(int *type, int *depth, int *size) {
     // Validate magic bytes
@@ -93,14 +99,19 @@ int read_record_header(int *type, int *depth, int *size) {
 }
 
 /*
- * Too bored to write function doc now
+ * @brief Read metadata in the record and update pointers as per parsed data
+ *
+ * @param mode Pointer to type to be updated
+ * @param size Pointer to size to be updated
  */
-void read_metadata(int *type, int *size) {
+void read_metadata(int *mode, int *size) {
+    // Read type and permissions
     for (int i = 3; i >= 0; i--) {
-        *type = (*type << 8);
-        *type += getchar();
+        *mode = (*mode << 8);
+        *mode += getchar();
     }
 
+    // Read size of file
     for (int i = 7; i >= 0; i--) {
         *size = (*size << 8);
         *size += getchar();
@@ -166,7 +177,7 @@ int deserialize_directory(int depth) {
             debug("DIRECTORY_ENTRY, DEPTH: %d, SIZE: %d, *PATH: %s", record_depth, record_size, path_buf);
         } else {
             error("Error in directory entry record");
-            error("Expected type %d but got %d", START_OF_DIRECTORY, record_type);
+            error("Expected type %d but got %d", DIRECTORY_ENTRY, record_type);
             error("Expected size %d but got %d", STD_RECORD_SIZE, record_size);
             return -1;
         }
@@ -197,14 +208,15 @@ int deserialize_directory(int depth) {
             if (status == -1) return -1;                      // Exit if status is -1
             chmod(path_buf, metadata_mode & 0777);            // Set permissions
         } else {
-            error("Could not deserialize file: %s\nThis file type is currently not supported in deserialization", path_buf);
+            error("Could not deserialize file: %s", path_buf);
+            error("This file type is currently not supported in deserialization");
             return -1;
         }
-        // Update path_buf to end of directory
+        // Update path_buf
         if (path_pop() == -1) return -1;
     }
 
-    // Validate if start transmission record entry matches expectation 
+    // Validate if end directory record entry matches expectation 
     if ((record_type == END_OF_DIRECTORY) &&
         (record_depth == depth) &&
         (record_size == STD_RECORD_SIZE)) {
@@ -249,7 +261,7 @@ int deserialize_file(int depth) {
     status = read_record_header(&record_type, &record_depth, &record_size);
     if (status == -1) return -1;
 
-    // Validate if start transmission record entry matches expectation 
+    // Validate if file data record entry matches expectation 
     if ((record_type == FILE_DATA) &&
         (record_depth == depth)) {
         debug("FILE_DATA, DEPTH: %d, SIZE: %d, PATH: %s", record_depth, record_size, path_buf);
@@ -280,7 +292,11 @@ int deserialize_file(int depth) {
 }
 
 /*
- * Helper Function for emitting record header 
+ * @brief Stream data to stdout
+ *
+ * @param type Type of record to be emitted
+ * @param depth Depth of the given record
+ * @param size Size of record to be emitted
  */
 void stream_data(int type, int depth, off_t size) {
     // Emit magic bytes
@@ -303,7 +319,10 @@ void stream_data(int type, int depth, off_t size) {
 }
 
 /*
- * Helper Function for emitting metadata
+ * @brief Stream metadata to stdout
+ *
+ * @param mode Type/permission of the directory entry
+ * @param depth Depth of the given directory entry record
  */
 void stream_metadata(mode_t mode, off_t size) {
     // Emit type/permission unsigned 32-bit integer in big-endian format
