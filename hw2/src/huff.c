@@ -415,7 +415,7 @@ static void outputcompressed(int blocksize)    {
             }
         }
         //while not at leaf
-        while(a->left != NULL && a->right != NULL)  {
+        while(a != NULL && a->left != NULL && a->right != NULL)  {
             //we put the bits into char out one by one and increment count
             out = out << 1;
             out += a->weight;
@@ -693,7 +693,7 @@ int validargs(int argc, char **argv)
             //while the 4th argument is not null and is betwen 0 and 9
             int blocksize = 0;
             while(**(argv+3) != '\0')    {
-                // if the blocksize argument has invalid character then return with -1
+                                // if the blocksize argument has invalid character then return with -1
                 if (!(**(argv+3) >= '0' && **(argv+3) <= '9')) {
                     return -1;
                 }
