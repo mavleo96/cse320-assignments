@@ -634,7 +634,7 @@ static int strequal(char* first, char* second) {
         first++;
         second++;
     }
-    return 1;
+        return 1;
 }
 
 /**
@@ -692,7 +692,11 @@ int validargs(int argc, char **argv)
         if(strequal(*(argv+1), "-c") && strequal(*(argv+2), "-b"))  {
             //while the 4th argument is not null and is betwen 0 and 9
             int blocksize = 0;
-            while(**(argv+3) != '\0' && **(argv+3) >= '0' && **(argv+3) <= '9')    {
+            while(**(argv+3) != '\0')    {
+                // if the blocksize argument has invalid character then return with -1
+                if (!(**(argv+3) >= '0' && **(argv+3) <= '9')) {
+                    return -1;
+                }
                 //multiply blocksize by 10 and add the new number to it by
                 //by subtracting the ascii value of '0' from it
                 blocksize = blocksize * 10 + **(argv+3) - '0';
