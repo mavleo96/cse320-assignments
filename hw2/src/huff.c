@@ -532,6 +532,9 @@ int compress_block() {
 int decompress_block() {
     //read huffman tree
     int q = read_huffman_tree();
+    // if return is 1 then return 1
+    if(q == 1)
+        return 1;
     //if return is not 0 then it is an error
     if(q != 0)
         return -1;
