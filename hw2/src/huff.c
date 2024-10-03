@@ -291,16 +291,18 @@ static void construct_histogram(int blocksize)  {
             a.parent = NULL;
             a.left = NULL;
             a.right = NULL;
+            a.weight = 1;
             *(nodes+num_nodes) = a;
             num_nodes++;
         }
     }
     //we make an node to represent end of file
     NODE a;
-    a.symbol = -1;
+    a.symbol = 256;
     a.parent = NULL;
     a.left = NULL;
     a.right = NULL;
+    a.weight = 1;
     *(nodes+num_nodes) = a;
     num_nodes++;
 
