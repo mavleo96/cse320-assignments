@@ -470,7 +470,12 @@ int compress_block() {
         char c = fgetc(stdin);
         //if end of file, exit loop
         if(feof(stdin)) {
-            break;
+            // if end of file while read is 0 implies input is empty
+            if (read == 0) {
+                return 0;
+            } else {
+                break;
+            }
         }
         //if an error occurs, return -1
         else if(ferror(stdin))  {
