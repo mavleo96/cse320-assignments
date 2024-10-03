@@ -166,8 +166,14 @@ int read_huffman_tree() {
     unsigned char* currblockptr = current_block;
     for(int i = 0; i < 2; i++)  {
         *currblockptr++ = fgetc(stdin);
-        //if end of file or error, return -1
-        if(feof(stdin) || ferror(stdin))
+        //if end of file in first byte indicates empty file, return 1
+        if(feof(stdin) && (i == 0))
+            return 1;
+        //if end of file in second byte indicates incorrect input, return -1
+        if(feof(stdin) && (i == 1))
+            return -1;
+        //if error, return -1
+        if(ferror(stdin))
             return -1;
     }
     //the first 2 bytes read will be num_nodes
