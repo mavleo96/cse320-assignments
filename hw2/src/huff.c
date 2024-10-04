@@ -452,9 +452,10 @@ static void outputcompressed(int blocksize)    {
     }
 
     //we pad the last byte with 0s if it hasn't filled all 8 bits
-    if(count != 0)
+    if(count != 0) {
         out = out << (8 - count);
-    fputc(out, stdout);
+        fputc(out, stdout);
+    }
     fflush(stdout);
 
     return;
