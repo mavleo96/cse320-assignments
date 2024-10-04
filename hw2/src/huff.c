@@ -646,8 +646,8 @@ int decompress() {
         //if decompress_block returns 1 and we have no decompressed blocks, return 0
         if(error == 1 && decompressed == 0)
             return 0;
-        //if decompress_block returns -1 and we have no decompressed blocks, return -1
-        if(error && decompressed == 0)
+        //if decompress_block returns -1 then return -1
+        if(error == -1)
             return -1;
         decompressed++;
     }
