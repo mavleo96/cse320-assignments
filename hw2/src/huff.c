@@ -580,9 +580,11 @@ int decompress_block() {
         }
         //after the inner loop ends, we are at a leaf
         //if the symbol represents EOF, then we break
-        if(a->symbol == 256)
+        if(a->symbol == 256) {
+            fflush(stdout);
             break;
-        
+        }
+
         //we output the symbol
         fputc(a->symbol, stdout);
         fflush(stdout);
