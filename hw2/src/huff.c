@@ -548,21 +548,15 @@ int decompress_block() {
     if(q != 0)
         return -1;
 
-    unsigned char c = fgetc(stdin);
-    if(feof(stdin) || ferror(stdin))
-        return -1;
-    int count = 0;
+    //intialize count and c variables
+    unsigned char c;
+    int count = 8;
     //we do loop until break or return error
     while(1) {
         //NODE pointer to root of tree
         NODE* a = nodes;
         //while a is not a leaf
-        while(a->left != NULL && a->right != NULL)  {
-            //c & 10000000 will test if the most significant bit is 1 or 0
-            int bit = c & 0x80;
-            //then we shift c left 1 and increment count
-            c = c << 1;
-            count++;
+        while(1)  {
             //if count = 8 then we have used all 8 bits of the byte
             //so we get the next byte and reset count
             if(count == 8)  {
@@ -571,14 +565,23 @@ int decompress_block() {
                 c = fgetc(stdin);
                 if(feof(stdin) || ferror(stdin))
                     return -1;
-                count = 0;
+                count = 1;
+            } else {
+                //then we shift c left 1 and increment count
+                c = c << 1;
+                count++;
             }
-
+            //c & 10000000 will test if the most significant bit is 1 or 0
+            int bit = c & 0x80;
             //if bit = 0, then the msb was 0 so we go left else right for 1
             if(bit == 0)
                 a = a->left;
             else
                 a = a->right;
+            
+            //break from inner loop if leaf is reached
+            if(a->left == NULL && a->right == NULL)
+                break;
         }
         //after the inner loop ends, we are at a leaf
         //if the symbol represents EOF, then we break
