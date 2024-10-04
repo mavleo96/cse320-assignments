@@ -239,7 +239,11 @@ int read_huffman_tree() {
             a = a << 1;
         }
     }
-    
+    //if stackptr-1 is not back to address of node then return -1
+    if (&(*nodes) != stackptr-1) {
+        return -1;
+    }
+
     //we traverse the tree post order and put leaf pointers in the node_for_symbol array
     int zzz = 0;
     postordertrackleaf(nodes, &zzz);
