@@ -229,7 +229,10 @@ int read_huffman_tree() {
                 position--;
                 *(nodes+position) = L;
                 position--;
-
+                //if stackptr is less than address of node at any point then return -1
+                if (stackptr < &(*nodes)) {
+                    return -1;
+                }
                 NODE P;
                 P.left = (nodes+position+1);
                 P.right = (nodes+position+2);
