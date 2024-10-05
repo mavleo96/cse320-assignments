@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "global.h"
 #include "huff.h"
@@ -403,19 +404,25 @@ static void construct_huffmantree()    {
 }
 
 //helper method to convert the block of data to compressed data and output
-static void outputcompressed(int blocksize)    {
-    //out is 1 byte to be printed while count keeps track of when out reaches 8 bits
-    unsigned char out = 0;
+static int outputcompressed(int blocksize)    {
+    //max depth of huffman tree -> ((num_nodes - 1) / 2) > (num_nodes / 2)
+    int max_size = blocksize * (num_nodes / 2) / sizeof(unsigned char);
+    //allocate a out array to hold output using malloc
+    unsigned char *out = (unsigned char *)malloc(max_size * sizeof(unsigned char));
+    //handle memory allocation failure
+    if (out == NULL) {
+        return -1;
+    }
+    //initialize the output buffer
+    memset(out, 0, max_size * sizeof(unsigned char));
+
     int count = 0;
     NODE* a = NULL;
+
     //compression to be repeated for every element in buffer
-    for(int i = 0; i < blocksize+1; i++) {
-        //if i == blocksize, we set a as end block pointer
-        if(i == blocksize)
-            a = findnode(256);
-        //else we set a normally
-        else
-            a = findnode(*(current_block+i));
+    for(int i = 0; i < blocksize + 1; i++) {
+        //if i == blocksize, we set a as end block pointer else we set a normally
+        a = (i == blocksize) ? findnode(256) : findnode(*(current_block+i));
         //while not at root
         while(a != NULL && a->parent != NULL) {
             //if a is a left child set its parents weight as 0
@@ -431,34 +438,27 @@ static void outputcompressed(int blocksize)    {
         }
         //while not at leaf
         while(a != NULL && a->left != NULL && a->right != NULL)  {
-            //we put the bits into char out one by one and increment count
-            out = out << 1;
-            out += a->weight;
+            //we put the bits into char *out one by one and increment count
+            out[count / 8] <<= 1;
+            out[count / 8] += a->weight;
             count++;
-            //if count = 8 then we filled all 8 bits of out so we output it and
-            //reset count to 0
-            if(count == 8)  {
-                fputc(out, stdout);
-                fflush(stdout);
-                count = 0;
-            }
 
             //depending on whether weight is 0 or 1, set a to its left/right child
-            if(a->weight == 0)
-                a = a->left;
-            else
-                a = a->right;
+            a = (a->weight == 0) ? a->left : a->right;
         }
     }
 
     //we pad the last byte with 0s if it hasn't filled all 8 bits
-    if(count != 0) {
-        out = out << (8 - count);
-        fputc(out, stdout);
+    if(count % 8 != 0) {
+        out[count /8] <<= (8 - (count % 8));
     }
+    //output the array
+    int actual_size = (count % 8 != 0) ? (count / 8 + 1) : (count / 8);
+    fwrite(out, sizeof(unsigned char), actual_size, stdout);
+    //free the memory
+    free(out);
     fflush(stdout);
-
-    return;
+    return 0;
 }
 
 /**
@@ -521,7 +521,9 @@ int compress_block() {
     //emits description of tree
     emit_huffman_tree();
     //compress the data and output it
-    outputcompressed(blocksize);
+    int status = outputcompressed(blocksize);
+    if(status == -1)
+        return -1;
 
     return 0;
 }
