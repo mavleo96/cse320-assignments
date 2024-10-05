@@ -56,9 +56,9 @@
     |                                                                                         |
     |                                                                                         |
     +------------------------------------------------------------+--------+---------+---------+ <- footer
-    |                                       block_size           | unused |prv alloc|  alloc  |
+    |                                       block_size           | alloc  |prv alloc|  unused |
     |                                  (5 LSB's implicitly 0)    |  (0)   |  (0/1)  |   (0)   |
-    |                                        (1 row)             | 3 bits |  1 bit  |  1 bit  |
+    |                                        (1 row)             | 1 bit  |  1 bit  |  3 bits |
     +------------------------------------------------------------+--------+---------+---------+
 
     NOTE: For a free block, footer contents must always be identical to header contents.
@@ -130,7 +130,7 @@ typedef struct sf_block {
     |                                                                                         |
     +------------------------------------------------------------+--------+---------+---------+ <- header
     |                                       block_size           | alloc  |prv alloc|  unused |
-    |                                  (5 LSB's implicitly 0)    |   1    |  (0/1)  |   (0)   | epilogue
+    |                                  (5 LSB's implicitly 0)    |  (1)   |  (0/1)  |   (0)   | epilogue
     |                                        (1 row)             | 1 bit  |  1 bit  |  3 bits |
     +------------------------------------------------------------+--------+---------+---------+ <- heap end
                                                                                                    (32-byte aligned)
