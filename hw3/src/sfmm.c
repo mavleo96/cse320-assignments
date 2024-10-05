@@ -9,17 +9,21 @@
 #include "sfmm.h"
 
 void *sf_malloc(size_t size) {
-    return NULL;
+    // To be implemented
+    abort();
 }
 
 void sf_free(void *pp) {
-    return;
+    // To be implemented
+    abort();
 }
 
 void *sf_realloc(void *pp, size_t rsize) {
-    return NULL;
+    // To be implemented
+    abort();
 }
 
 void *sf_memalign(size_t size, size_t align) {
-    return NULL;
+    // To be implemented
+    abort();
 }
