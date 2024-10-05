@@ -541,6 +541,15 @@ int compress_block() {
  * encountered at the start of a block, otherwise -1 if an error occurs.
  */
 int decompress_block() {
+    //allocate a out array to hold output using malloc
+    unsigned char *out = (unsigned char *)malloc(MAX_BLOCK_SIZE * sizeof(unsigned char));
+    //handle memory allocation failure
+    if (out == NULL) {
+        return -1;
+    }
+    //initialize the output buffer
+    memset(out, 0, MAX_BLOCK_SIZE * sizeof(unsigned char));
+
     //read huffman tree
     int q = read_huffman_tree();
     // if return is 1 then return 1
@@ -550,9 +559,10 @@ int decompress_block() {
     if(q != 0)
         return -1;
 
-    //intialize count and c variables
+    //intialize count, global_count and c variables
     unsigned char c;
     int count = 8;
+    int global_count = 0;
     //we do loop until break or return error
     while(1) {
         //NODE pointer to root of tree
@@ -592,10 +602,15 @@ int decompress_block() {
             break;
         }
 
-        //we output the symbol
-        fputc(a->symbol, stdout);
-        fflush(stdout);
+        //we store the symbol in out array
+        out[global_count] = a->symbol;
+        global_count++;
     }
+
+    //output the decompressed block
+    fwrite(out, sizeof(unsigned char), global_count, stdout);
+    free(out);
+    fflush(stdout);
 
     return 0;
 }
