@@ -155,8 +155,8 @@ int sf_errno;
  * The first list holds blocks of the minimum size M.  The second list holds blocks of size 2M.
  * The third list holds blocks of size 3M.  The fourth list holds blocks whose size is in the
  * interval (3M, 5M].  The fifth list holds blocks whose size is in the interval (5M, 8M],
- * and so on.  This continues up to the list at index NUM_FREE_LISTS-1 (i.e. 9), which
- * contains blocks whose size is greater than 55M.
+ * and so on.  This continues up to the list at index NUM_FREE_LISTS-1 (i.e. 8), which
+ * contains blocks whose size is greater than 34M.
  *
  * Each of the circular, doubly linked lists has a "dummy" block used as the list header.
  * This dummy block is always linked between the last and the first element of the list.
