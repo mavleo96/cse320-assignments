@@ -1,0 +1,15 @@
+USAGE: bin/transplant [-h] -s|-d [-c] [-p DIR]
+   -h       Help: displays this help menu.
+   -s       Serialize: traverse tree of files, output serialized data.
+   -d       Deserialize: read serialized data, reconstruct tree of files.
+            Optional additional parameter for both -s and -d:
+               -p DIR       DIR is a pathname that specifies the source directory
+                            for serialization or the target directory for deserialization.
+                            If this parameter is not present, the pathname `.`
+                            (referring to the current working directory) is assumed.
+            Optional additional parameter for -d:
+               -c           ``clobber'': the program will overwrite existing files,
+                            rather than terminating with an error, and it will ignore
+                            errors that result when attempts is made to create directories
+                            that already exist.
+
