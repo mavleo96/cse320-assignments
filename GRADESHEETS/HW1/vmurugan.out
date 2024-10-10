@@ -1,0 +1,38 @@
+Graded Commit:9e684c88c89da60f5f016c9323e08f812f65d75a
+
+
+run(ulimit -t 10; ulimit -f 2000; bin/transplant -h -s -d -c -p test_output/blackbox_1/test.out < tests/rsrc/blackbox_1/ref.in > test_output/blackbox_1/test.out 2> test_output/blackbox_1/test.err)
+run(diff --ignore-tab-expansion --ignore-trailing-space --ignore-space-change --ignore-blank-lines tests/rsrc/blackbox_1/ref.err test_output/blackbox_1/test.err)
+run(ulimit -t 10; ulimit -f 2000; bin/transplant -d -p test_output/blackbox_10/test.alt < tests/rsrc/blackbox_10/ref.in > test_output/blackbox_10/test.out 2> test_output/blackbox_10/test.err)
+run(ulimit -t 10; ulimit -f 2000; bin/transplant -d -p test_output/blackbox_11/test.alt < tests/rsrc/blackbox_11/ref.in > test_output/blackbox_11/test.out 2> test_output/blackbox_11/test.err)
+[----] tests/test_common.c:127: Assertion failed: The program terminated with an unexpected signal (11).
+[FAIL] blackbox_suite::blackbox_11: (0,06s)
+run(ulimit -t 10; ulimit -f 2000; bin/transplant -p test_output/blackbox_2/test.out < tests/rsrc/blackbox_2/ref.in > test_output/blackbox_2/test.out 2> test_output/blackbox_2/test.err)
+run(ulimit -t 10; ulimit -f 2000; bin/transplant -s -p tests/rsrc/blackbox_3/ref.in < tests/rsrc/blackbox_3/ref.in > test_output/blackbox_3/test.out 2> test_output/blackbox_3/test.err)
+run(diff --recursive --ignore-tab-expansion --ignore-trailing-space --ignore-space-change --ignore-blank-lines tests/rsrc/blackbox_3/ref.in test_output/blackbox_3/test.alt)
+run(ulimit -t 10; ulimit -f 2000; bin/transplant -d -p test_output/blackbox_4/test.alt -c < tests/rsrc/blackbox_4/ref.in > test_output/blackbox_4/test.out 2> test_output/blackbox_4/test.err)
+run(diff --recursive --ignore-tab-expansion --ignore-trailing-space --ignore-space-change --ignore-blank-lines tests/rsrc/blackbox_4/ref.out test_output/blackbox_4/test.alt)
+run(ulimit -t 10; ulimit -f 2000; bin/transplant -d -p test_output/blackbox_5/test.alt < tests/rsrc/blackbox_5/ref.in > test_output/blackbox_5/test.out 2> test_output/blackbox_5/test.err)
+run(ulimit -t 10; ulimit -f 2000; bin/transplant -d -p test_output/blackbox_6/test.out < tests/rsrc/blackbox_6/ref.in > test_output/blackbox_6/test.out 2> test_output/blackbox_6/test.err)
+[----] tests/test_common.c:127: Assertion failed: The program terminated with an unexpected signal (11).
+[FAIL] blackbox_suite::blackbox_6: (0,07s)
+run(ulimit -t 10; ulimit -f 2000; bin/transplant -d -p test_output/blackbox_7/test.alt < tests/rsrc/blackbox_7/ref.in > test_output/blackbox_7/test.out 2> test_output/blackbox_7/test.err)
+run(ulimit -t 10; ulimit -f 2000; bin/transplant -d -p test_output/blackbox_8/test.alt < tests/rsrc/blackbox_8/ref.in > test_output/blackbox_8/test.out 2> test_output/blackbox_8/test.err)
+run(ulimit -t 10; ulimit -f 2000; bin/transplant -d -p test_output/blackbox_9/test.alt < tests/rsrc/blackbox_9/ref.in > test_output/blackbox_9/test.out 2> test_output/blackbox_9/test.err)
+run(diff --recursive --ignore-tab-expansion --ignore-trailing-space --ignore-space-change --ignore-blank-lines tests/rsrc/deserialize_directory_no_subdir/ref.out test_output/deserialize_directory_no_subdir/test.out)
+run(diff --recursive --ignore-tab-expansion --ignore-trailing-space --ignore-space-change --ignore-blank-lines tests/rsrc/deserialize_directory_with_subdir/ref.out test_output/deserialize_directory_with_subdir/test.out)
+run(diff --ignore-tab-expansion --ignore-trailing-space --ignore-space-change --ignore-blank-lines tests/rsrc/deserialize_file_binary_with_c/ref.out test_output/deserialize_file_binary_with_c/test.out)
+run(diff --ignore-tab-expansion --ignore-trailing-space --ignore-space-change --ignore-blank-lines tests/rsrc/deserialize_file_empty_with_c/ref.out test_output/deserialize_file_empty_with_c/test.out)
+run(diff --ignore-tab-expansion --ignore-trailing-space --ignore-space-change --ignore-blank-lines tests/rsrc/deserialize_file_text_with_c/ref.out test_output/deserialize_file_text_with_c/test.out)
+run(diff --recursive --ignore-tab-expansion --ignore-trailing-space --ignore-space-change --ignore-blank-lines tests/rsrc/deserialize_no_subdir/ref.out test_output/deserialize_no_subdir/test.out)
+run(diff --recursive --ignore-tab-expansion --ignore-trailing-space --ignore-space-change --ignore-blank-lines tests/rsrc/deserialize_with_subdir/ref.out test_output/deserialize_with_subdir/test.out)
+run(diff --recursive --ignore-tab-expansion --ignore-trailing-space --ignore-space-change --ignore-blank-lines tests/rsrc/serialize_dir_no_subdir/ref.in test_output/serialize_dir_no_subdir/test.alt)
+run(diff --recursive --ignore-tab-expansion --ignore-trailing-space --ignore-space-change --ignore-blank-lines tests/rsrc/serialize_dir_with_subdir/ref.in test_output/serialize_dir_with_subdir/test.alt)
+run(diff --ignore-tab-expansion --ignore-trailing-space --ignore-space-change --ignore-blank-lines tests/rsrc/serialize_file_binary/ref.out test_output/serialize_file_binary/test.out)
+run(diff --ignore-tab-expansion --ignore-trailing-space --ignore-space-change --ignore-blank-lines tests/rsrc/serialize_file_empty/ref.out test_output/serialize_file_empty/test.out)
+run(diff --ignore-tab-expansion --ignore-trailing-space --ignore-space-change --ignore-blank-lines tests/rsrc/serialize_file_text/ref.out test_output/serialize_file_text/test.out)
+run(diff --recursive --ignore-tab-expansion --ignore-trailing-space --ignore-space-change --ignore-blank-lines tests/rsrc/serialize_no_subdir/ref.in test_output/serialize_no_subdir/test.alt)
+run(diff --recursive --ignore-tab-expansion --ignore-trailing-space --ignore-space-change --ignore-blank-lines tests/rsrc/serialize_with_subdir/ref.in test_output/serialize_with_subdir/test.alt)
+[----] tests/hw1_tests.c:177: Assertion failed: Wrong value for global_options: expected 0x0, was 0x2
+[FAIL] validargs_suite::validargs_13: (0,00s)
+[====] Synthesis: Tested: 46 | Passing: 43 | Failing: 3 | Crashing: 0 
