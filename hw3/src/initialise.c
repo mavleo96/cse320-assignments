@@ -7,7 +7,7 @@
  */
 void update_prologue() {
     // TODO: make this function better
-    debug("updating prologue");
+    info("updating prologue");
     long int *heap_start = (long int *) sf_mem_start();
     // Prologue header
     *(heap_start + offset / 8) = 0x20 + 0x10;
@@ -18,7 +18,7 @@ void update_prologue() {
  */
 void update_epilogue() {
     // TODO: make this function better
-    debug("updating epilogue");
+    info("updating epilogue");
     long int *heap_end = (long int *) sf_mem_end();
 
     // Prologue header
@@ -30,7 +30,7 @@ void update_epilogue() {
  */
 void first_free_block() {
     // TODO: make this function better
-    debug("updating first free block");
+    info("updating first free block");
     long int *block_start = ((long int *) sf_mem_start()) + offset / 8 + 4;
     long int *block_end = ((long int *) sf_mem_end()) - 1;
     size_t block_size = (size_t) block_end - (size_t) block_start;

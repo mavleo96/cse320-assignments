@@ -55,7 +55,7 @@ sf_block get_sf_block(void* hdr_ptr);
  * Helper function to find a free block for a given in the specified index of free_lists
  */
 void *find_in_free_list_i(int index, size_t size) {
-    debug("Searching for a block of size %ld in free list %d", size, index);
+    info("Searching for a block of size %ld in free list %d", size, index);
     sf_block *list_head = &sf_free_list_heads[index];
     sf_block block = sf_free_list_heads[index];
     // void *block_pointer = &sf_free_list_heads[index];

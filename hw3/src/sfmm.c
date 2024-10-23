@@ -12,8 +12,7 @@
 
 int sf_init() {
     // TODO: error handling needed here
-    debug("Initializing sf_malloc...");
-    debug("Initializing sf_free_list_heads...");
+    info("Initializing sf_free_list_heads...");
     for (int i = 0; i < NUM_FREE_LISTS; i++) {
         sf_block new_block = {
             .header = 0,
@@ -24,7 +23,7 @@ int sf_init() {
         };
         sf_free_list_heads[i] = new_block;
     }
-    debug("Setting global_...");
+    info("Setting global_...");
     global_ = 0x1;
 
     // Heap alignment
@@ -37,7 +36,6 @@ int sf_init() {
 
     // get new_memblock
     sf_mem_grow();
-    debug("after memory grow:");
     debug("mem_start : %p", heap_start);
     debug("mem_end   : %p", sf_mem_end());
 
@@ -48,24 +46,22 @@ int sf_init() {
     first_free_block(offset);
 
     // update epilogue
-    update_epilogue(offset);
-    
-    debug("Initialization complete");
+    update_epilogue(offset);    
+    info("Initialization complete");
     return 0;
 }
 
 void *sf_malloc(size_t size) {
     // Initialize the sf_malloc
     if (global_ != 0x1) {
+        info("Initializing sf_malloc...");
         int status = sf_init();
-        if (status == -1) debug("error");
-        void *p1 = sf_mem_start();
-        return p1;
+        if (status == -1) error("error");
     }
 
     // Check if requested size is 0; return NUll if true
     if (size == 0) {
-        debug("Request size is 0");
+        info("Request size is 0");
         return NULL;
     }
 
