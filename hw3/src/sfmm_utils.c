@@ -49,28 +49,58 @@ size_t get_blocksize_from_header(sf_header header) {
     return size;
 }
 
+sf_block get_sf_block(void* hdr_ptr);
+
 /*
  * Helper function to find a free block for a given in the specified index of free_lists
  */
-sf_block *find_in_free_list_i(int index, size_t size) {
+void *find_in_free_list_i(int index, size_t size) {
     debug("Searching for a block of size %ld in free list %d", size, index);
     sf_block *list_head = &sf_free_list_heads[index];
-    sf_block *block = &sf_free_list_heads[index];
+    sf_block block = sf_free_list_heads[index];
+    // void *block_pointer = &sf_free_list_heads[index];
+    
+    while (block.body.links.next != list_head) {
 
-    while (1) {
-        if (block->body.links.next == list_head) {
-            debug("Returning null since no block found in free list %d", index);
-            return NULL;
-        }
-        if (get_blocksize_from_header(block->header) >= size) {
-            (block->body.links.next)->body.links.prev = block->body.links.prev;
-            (block->body.links.prev)->body.links.next = block->body.links.next;
-            break;
-        } else {
-            block = block->body.links.next;
-        }
+        // if (block_pointer == list_head) {
+        //     debug("Returning null since no block found in free list %d", index);
+        //     return NULL;
+        // }
+        void *block_pointer = block.body.links.next;
+        block = get_sf_block(block_pointer);
+
+        if (get_blocksize_from_header(block.header) >= size) {
+            return block_pointer;
+        } //else {
+        //     block_pointer = 
+        //     block = get_sf_block(block.body.links.next);
+        // }
     }
     // TODO: block->body.payload = (char *) block + HEADER_SIZE;
     // TODO: Error handling to be done
+    // return block;
+    return NULL;
+}
+
+/*
+ * Helper function to construct sf_block for header pointer
+ */
+sf_block get_sf_block(void* hdr_ptr) {
+    long int *p = (long int *) hdr_ptr;
+    sf_block block;
+
+    // size_t block_size = *p & (~ 0b11111);
+    int allocated = *p & 0b10000;
+    // int prev_allocated = *p & 0b1000;
+
+    if (allocated) {
+        block.header = *p;
+        char *payload_start = (char *)(p + 1);
+        block.body.payload[0] = *payload_start;
+    } else {
+        block.header = *p;
+        block.body.links.next = (struct sf_block *) *(p+2);
+        block.body.links.prev = (struct sf_block *) *(p+1);
+    }
     return block;
 }
