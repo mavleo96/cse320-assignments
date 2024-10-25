@@ -63,25 +63,18 @@ void *sf_malloc(size_t size) {
     sf_block *bp;
     for (int j = index; j < NUM_FREE_LISTS; j++) {
         bp = find_in_free_list_i(j, required_size);
-        if (j < NUM_FREE_LISTS - 1) {
-            if (bp == NULL) continue;
-            else {
-                remove_block_from_free_list(bp);
-                if (get_blocksize(bp) - required_size >= ALIGNMENT) {
-                    sf_block *rbp = break_block(bp, required_size);
-                    add_block_to_free_list(rbp, 0);
-                }
-            }
-        } else if (j == NUM_FREE_LISTS - 1) {
-            if ((bp == NULL) || (get_blocksize(bp) == required_size)) {
+        if (bp == NULL) {
+            if (j == NUM_FREE_LISTS - 1) {
                 sf_block *fbp = expand_heap();
                 fbp = coalesce_block(fbp);
                 add_block_to_free_list(fbp, 1);
                 j--;
-            } else {
-                remove_block_from_free_list(bp);
+            } else continue;
+        } else {
+            remove_block_from_free_list(bp);
+            if (get_blocksize(bp) - required_size >= ALIGNMENT) {
                 sf_block *rbp = break_block(bp, required_size);
-                add_block_to_free_list(rbp, 1);
+                add_block_to_free_list(rbp, (j == NUM_FREE_LISTS - 1) ? 1 : 0);
             }
         }
     }
@@ -99,7 +92,6 @@ void sf_free(void *pp) {
     nbp->header &= ~ 0b1000;
     if (!get_allocated_bit(nbp)) *get_footer(nbp) = nbp->header;
 
-    printf("Coalesce scam");
     bp = coalesce_block(bp);
     add_block_to_free_list(bp, 0);
 
