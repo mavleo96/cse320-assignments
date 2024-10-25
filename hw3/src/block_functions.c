@@ -15,10 +15,9 @@ sf_block *break_block(sf_block *bp, size_t rsize) {
         return NULL;
     }
 
-    // TODO: assert that rsize < blocksize
-    size_t blocksize = BLOCKSIZE(bp);
 
-    // Calculate pointer of remainder block
+    // Calculate pointer of remainder block and blocksize
+    size_t blocksize = BLOCKSIZE(bp);
     sf_block *rbp = (sf_block *)((char *)bp + (sf_header)rsize);
     
     // Update header and footer of block
