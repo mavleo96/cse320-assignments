@@ -83,6 +83,9 @@ void *sf_malloc(size_t size) {
 }
 
 void sf_free(void *pp) {
+    info("Validating the pointer to be freed...");
+    validate_pointer(pp, 0);
+
     info("Freeing the memory allocated at %p", pp);
     sf_block *bp = (sf_block *)((char *) pp - MEMROWSIZE);
     bp->header &= ~ 0b10000;
@@ -99,8 +102,30 @@ void sf_free(void *pp) {
 }
 
 void *sf_realloc(void *pp, size_t rsize) {
-    // To be implemented
-    abort();
+    info("Validating the pointer to be reallocated...");
+    validate_pointer(pp, 0);
+
+    info("Freeing the memory allocated at %p", pp);
+    sf_block *bp = (sf_block *)((char *) pp - MEMROWSIZE);
+    size_t block_size = get_blocksize(bp);
+    size_t new_block_size = min_required_blocksize(rsize);
+
+    if (rsize == 0) {
+        sf_free(pp);
+        return NULL;
+    } else if (new_block_size == block_size) {
+        return pp;
+    } else if (new_block_size > block_size) {
+        void *npp = sf_malloc(rsize);
+        memcpy(npp, pp, block_size - MEMROWSIZE);
+        sf_free(pp);
+        return npp;
+    } else {
+        sf_block *rbp = break_block(bp, new_block_size);
+        rbp = coalesce_block(rbp);
+        add_block_to_free_list(rbp, 0);
+        return pp;
+    }
 }
 
 void *sf_memalign(size_t size, size_t align) {

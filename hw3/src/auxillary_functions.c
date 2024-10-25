@@ -45,3 +45,35 @@ int min_required_blocksize(size_t size) {
     size += (size % ALIGNMENT != 0) ? (ALIGNMENT - size % ALIGNMENT) : 0;       // Add padding to align block boundaries
     return size;
 }
+
+sf_block *get_prologue_pointer() {
+    return (sf_block *)((char *) sf_mem_start() + offset);
+}
+
+sf_block *get_epilogue_pointer() {
+    return (sf_block *)((char *) sf_mem_end() - MEMROWSIZE);
+}
+
+/*
+ * Helper function to validate pointer for sf_free and sf_realloc function
+ */
+void validate_pointer(void *pp, int mode) {
+    if ((pp == NULL) || ((long int) pp % ALIGNMENT != 0)) abort();
+
+    sf_block *bp = (sf_block *)((char *) pp - MEMROWSIZE);
+
+    if ((bp <= get_prologue_pointer()) || (bp >= get_epilogue_pointer())) abort();
+    if ((sf_block *) get_footer(bp) >= (sf_block *) sf_mem_end()) abort();
+
+    size_t block_size = get_blocksize(bp);
+
+    if (mode) {
+        if ((block_size < 32) || (block_size % 32 != 0)) abort();
+        if (!get_allocated_bit(bp)) abort();
+    } else {
+        if (block_size % 32 != 0) abort();
+    }
+    if ((!get_prev_allocated_bit(bp)) && (get_allocated_bit((sf_block *)((sf_header *) bp - 1)))) abort();
+    
+    return;
+}

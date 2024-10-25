@@ -19,6 +19,11 @@ sf_block *get_next_block(sf_block *bp);
 int min_required_blocksize(size_t payload_size);
 sf_footer *get_footer(sf_block *bp);
 
+sf_block *get_prologue_pointer();
+sf_block *get_epilogue_pointer();
+
+void validate_pointer(void *pp, int mode);
+
 // Block Functions
 sf_block *break_block(sf_block *bp, size_t required_size);
 sf_block *expand_heap();
