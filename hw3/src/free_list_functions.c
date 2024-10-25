@@ -19,7 +19,6 @@ int get_free_list_index_for_size(size_t size) {
 }
 
 sf_block *find_in_free_list_i(int index, size_t size) {
-    info("Searching for a block of size %ld in free list %d", size, index);
     sf_block *list_head = &sf_free_list_heads[index];
     sf_block *bp = &sf_free_list_heads[index];
     

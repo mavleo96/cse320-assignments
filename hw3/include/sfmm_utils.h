@@ -6,7 +6,7 @@
 #include "debug.h"
 #include "sfmm.h"
 
-int global_;
+int init_flag;
 #define ALIGNMENT 32
 #define MEMROWSIZE 8
 int offset;
