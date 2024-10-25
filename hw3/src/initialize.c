@@ -32,7 +32,7 @@ void add_wilderness_block() {
     *FOOTER_POINTER(bp) = bp->header;
 
     // Add wilderness block to free list
-    add_block_to_free_list(bp, 1);
+    add_block_to_free_list(bp);
     // TODO: remove below commented code after testing
     // bp->body.links.next = &sf_free_list_heads[8];
     // bp->body.links.prev = &sf_free_list_heads[8];

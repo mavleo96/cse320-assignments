@@ -41,7 +41,7 @@ void *sf_malloc(size_t size) {
                 info("No free blocks found...");
                 sf_block *fbp = expand_heap();
                 fbp = coalesce_block(fbp);
-                add_block_to_free_list(fbp, 1);
+                add_block_to_free_list(fbp);
                 j--;
             } else continue;
         } else {
@@ -50,7 +50,7 @@ void *sf_malloc(size_t size) {
             if (BLOCKSIZE(bp) - rsize >= ALIGNMENT) {
                 // If free block found can be broken without splinter
                 sf_block *rbp = break_block(bp, rsize);
-                add_block_to_free_list(rbp, (j == NUM_FREE_LISTS - 1) ? 1 : 0);
+                add_block_to_free_list(rbp);
             }
         }
     }
@@ -76,8 +76,7 @@ void sf_free(void *pp) {
 
     // Coalesce the block and add to free list
     bp = coalesce_block(bp);
-    if (NEXT_BLOCK_POINTER(bp) == EPILOGUE_POINTER) add_block_to_free_list(bp, 1);
-    else add_block_to_free_list(bp, 0);
+    add_block_to_free_list(bp);
 
     return;
 }
@@ -88,6 +87,7 @@ void *sf_realloc(void *pp, size_t rsize) {
     // TODO: update mode arg below
     validate_pointer(pp, 0);
 
+    info("Reallocating the memory at %p...", pp);
     // Calculate block pointer and block sizes
     sf_block *bp = (sf_block *)((char *) pp - MEMROWSIZE);
     size_t block_size = BLOCKSIZE(bp);
@@ -110,8 +110,7 @@ void *sf_realloc(void *pp, size_t rsize) {
         // If block is to be reallocated to smaller size then break block, coalesce remainder contents and add to free list
         sf_block *rbp = break_block(bp, new_block_size);
         rbp = coalesce_block(rbp);
-        if (NEXT_BLOCK_POINTER(bp) == EPILOGUE_POINTER) add_block_to_free_list(bp, 1);
-        else add_block_to_free_list(bp, 0);
+        add_block_to_free_list(rbp);
         return pp;
     }
 }

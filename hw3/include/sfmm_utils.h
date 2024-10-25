@@ -35,7 +35,7 @@ sf_block *coalesce_block(sf_block *bp);
 int get_free_list_index_for_size(size_t size);
 sf_block *find_in_free_list_i(int index, size_t size);
 void remove_block_from_free_list(sf_block *bp);
-void add_block_to_free_list(sf_block *bp, int wilderness_signal);
+void add_block_to_free_list(sf_block *bp);
 
 // Initialise Functions
 void update_prologue();

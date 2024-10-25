@@ -73,15 +73,24 @@ void remove_block_from_free_list(sf_block *bp) {
 /*
  * Helper function to add a block to appropriate free list
  */
-void add_block_to_free_list(sf_block *bp, int wilderness_signal) {
+void add_block_to_free_list(sf_block *bp) {
     // Validate block pointer 
     if (bp == NULL) {
         error("NULL pointer passed!");
         return;
     }
-    size_t blocksize = BLOCKSIZE(bp);
-    // TODO: internalize the wilderness_signal arg
-    int index = wilderness_signal ? NUM_FREE_LISTS - 1 : get_free_list_index_for_size(blocksize);
+    if (ALLOCATED_BIT(bp)) {
+        error("Allocated block passed!");
+    }
+
+    // Check if the free block passed is wilderness block
+    int index;
+    if (NEXT_BLOCK_POINTER(bp) == EPILOGUE_POINTER) {
+        // Add to last free list if the block is wilderness block
+        index = NUM_FREE_LISTS - 1;
+    } else {
+        index = get_free_list_index_for_size(BLOCKSIZE(bp));
+    }
 
     // Add the free block to the list by updating links
     sf_block *list_head = &sf_free_list_heads[index];
