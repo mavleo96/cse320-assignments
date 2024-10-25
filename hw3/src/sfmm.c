@@ -8,10 +8,9 @@
 #include "debug.h"
 #include "sfmm.h"
 #include "sfmm_utils.h"
-#include "initialise.h"
 
-int sf_init() {
-    // TODO: error handling needed here
+void sf_init() {
+    info("Initializing sf_malloc...");
     info("Initializing sf_free_list_heads...");
     for (int i = 0; i < NUM_FREE_LISTS; i++) {
         sf_block new_block = {
@@ -26,38 +25,29 @@ int sf_init() {
     info("Setting global_...");
     global_ = 0x1;
 
-    // Heap alignment
+    // Check heap pointers
+    info("Getting heap start pointer...");
     void *heap_start = sf_mem_start();
-    if ((long int) heap_start % 16 != 0) return -1;
-    if ((long int) heap_start % 32 == 0) offset = (3 * 8); else offset = (1 * 8);
-    debug("mem_start : %p", heap_start);
-    debug("mem_end   : %p", sf_mem_end());
+    if ((long int) heap_start % 16 != 0) error("Heap start is not 16 byte aligned!");
+    if ((long int) heap_start % 32 == 0) offset = (3 * MEMROWSIZE); else offset = (1 * MEMROWSIZE);
+    debug("heap start: %p", heap_start);
     debug("offset    : %d", offset);
 
-    // get new_memblock
+    // Expand heap
+    info("Expanding heap...");
     sf_mem_grow();
-    debug("mem_start : %p", heap_start);
     debug("mem_end   : %p", sf_mem_end());
 
-    // update prologue
     update_prologue();
-
-    // update pointers by adding the block to freelist
-    first_free_block(offset);
-
-    // update epilogue
-    update_epilogue(offset);    
+    add_wilderness_block();
+    update_epilogue();
     info("Initialization complete");
-    return 0;
+    return;
 }
 
 void *sf_malloc(size_t size) {
     // Initialize the sf_malloc
-    if (global_ != 0x1) {
-        info("Initializing sf_malloc...");
-        int status = sf_init();
-        if (status == -1) error("error");
-    }
+    if (global_ != 0x1) sf_init();
 
     // Check if requested size is 0; return NUll if true
     if (size == 0) {
@@ -65,36 +55,54 @@ void *sf_malloc(size_t size) {
         return NULL;
     }
 
-    // Convert the size to required min block size
-    size_t required_size = min_blocksize(size);
+    // Convert the payload size to min required size and get 
+    size_t required_size = min_required_blocksize(size);
     int index = get_free_list_index_for_size(required_size);
 
-    void *bp;
-    sf_block block;
-
+    // Find block of required_size
+    sf_block *bp;
     for (int j = index; j < NUM_FREE_LISTS; j++) {
         bp = find_in_free_list_i(j, required_size);
-        if (bp == NULL) {
-            if (j == NUM_FREE_LISTS - 1) {
-                // TODO: expand & coalesce heap
+        if (j < NUM_FREE_LISTS - 1) {
+            if (bp == NULL) continue;
+            else {
+                remove_block_from_free_list(bp);
+                if (get_blocksize(bp) - required_size >= ALIGNMENT) {
+                    sf_block *rbp = break_block(bp, required_size);
+                    add_block_to_free_list(rbp, 0);
+                }
+            }
+        } else if (j == NUM_FREE_LISTS - 1) {
+            if ((bp == NULL) || (get_blocksize(bp) == required_size)) {
+                sf_block *fbp = expand_heap();
+                fbp = coalesce_block(fbp);
+                add_block_to_free_list(fbp, 1);
                 j--;
             } else {
-                continue;
-            }
-        } else {
-            block = get_sf_block(bp);
-            if (get_blocksize_from_header(block.header) - required_size >= ALIGNMENT) {
-                // TODO: break the block
-                *((long int* )bp) = *((long int*) bp) | 0x1000;
+                remove_block_from_free_list(bp);
+                sf_block *rbp = break_block(bp, required_size);
+                add_block_to_free_list(rbp, 1);
             }
         }
     }
-    // sf_block block = get_sf_block(bp)
-    return bp+8;
+    info("Memory allocated");
+    return bp->body.payload;
 }
 
 void sf_free(void *pp) {
-    // To be implemented
+    info("Freeing the memory allocated at %p", pp);
+    sf_block *bp = (sf_block *)((char *) pp - MEMROWSIZE);
+    bp->header &= ~ 0b10000;
+    *get_footer(bp) = bp->header;
+
+    sf_block *nbp = get_next_block(bp);
+    nbp->header &= ~ 0b1000;
+    if (!get_allocated_bit(nbp)) *get_footer(nbp) = nbp->header;
+
+    printf("Coalesce scam");
+    bp = coalesce_block(bp);
+    add_block_to_free_list(bp, 0);
+
     return;
 }
 
