@@ -32,17 +32,17 @@ sf_block *coalesce_block(sf_block *bp) {
     if (prev_allocated & next_allocated) return bp;
     if (!next_allocated) {
         size_t next_block_size = get_blocksize(get_next_block(bp));
-        bp->header += next_block_size;
         remove_block_from_free_list(get_next_block(bp));
+        bp->header += next_block_size;
         bp->header &= ~ 0b10000;
     }
     if (!prev_allocated) {
         size_t prev_block_size = get_blocksize((sf_block *)((sf_header *) bp - 1));
         size_t block_size = get_blocksize(bp);
         bp = (sf_block *)((char *) bp - prev_block_size);
-        bp->header += block_size;
         remove_block_from_free_list(bp);
-        // bp->header &= ~ 0b10000; 
+        bp->header += block_size;
+        bp->header &= ~ 0b10000;
     }
     *get_footer(bp) = bp->header;
     return bp;
