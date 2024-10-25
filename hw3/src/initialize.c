@@ -5,7 +5,7 @@
  */
 void update_prologue() {
     info("Updating prologue...");
-    PROLOGUE_POINTER->header = 0x20 + 0b10000;  // (blocksize, allocated, prev_allocated) -> (32, 1, 0)
+    PROLOGUE_POINTER->header = (sf_header)(0x20 + 0b10000);  // (blocksize, allocated, prev_allocated) -> (32, 1, 0)
 }
 
 /*
@@ -14,7 +14,7 @@ void update_prologue() {
  */
 void update_epilogue() {
     info("Updating epilogue...");
-    EPILOGUE_POINTER->header = 0x0 + 0b10000;   // (blocksize, allocated, prev_allocated) -> (0, 1, 0)
+    EPILOGUE_POINTER->header = (sf_header)(0x0 + 0b10000);   // (blocksize, allocated, prev_allocated) -> (0, 1, 0)
 }
 
 /*
@@ -28,7 +28,7 @@ void add_wilderness_block() {
 
     // Update block header
     // Previous block is prologue block which is allocated by definition
-    bp->header = blocksize + 0b01000;  // (blocksize, allocated, prev_allocated) -> (blocksize, 0, 1)
+    bp->header = (sf_header)(blocksize + 0b01000);  // (blocksize, allocated, prev_allocated) -> (blocksize, 0, 1)
     *FOOTER_POINTER(bp) = bp->header;
 
     // Add wilderness block to free list
