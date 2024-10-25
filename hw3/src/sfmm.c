@@ -76,7 +76,8 @@ void sf_free(void *pp) {
 
     // Coalesce the block and add to free list
     bp = coalesce_block(bp);
-    add_block_to_free_list(bp, 0);
+    if (NEXT_BLOCK_POINTER(bp) == EPILOGUE_POINTER) add_block_to_free_list(bp, 1);
+    else add_block_to_free_list(bp, 0);
 
     return;
 }
@@ -109,7 +110,8 @@ void *sf_realloc(void *pp, size_t rsize) {
         // If block is to be reallocated to smaller size then break block, coalesce remainder contents and add to free list
         sf_block *rbp = break_block(bp, new_block_size);
         rbp = coalesce_block(rbp);
-        add_block_to_free_list(rbp, 0);
+        if (NEXT_BLOCK_POINTER(bp) == EPILOGUE_POINTER) add_block_to_free_list(bp, 1);
+        else add_block_to_free_list(bp, 0);
         return pp;
     }
 }
