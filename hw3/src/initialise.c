@@ -43,3 +43,36 @@ void add_wilderness_block() {
     sf_free_list_heads[8].body.links.next = bp;
     sf_free_list_heads[8].body.links.prev = bp;
 }
+
+void sf_init() {
+    info("Initializing sf_malloc...");
+
+    // Initialize sf_free_list_heads with sentinel nodes
+    info("Initializing sf_free_list_heads...");
+    for (int i = 0; i < NUM_FREE_LISTS; i++) {
+        sf_free_list_heads[i].body.links.next = &sf_free_list_heads[i];
+        sf_free_list_heads[i].body.links.prev = &sf_free_list_heads[i];
+    }
+
+    // Check heap pointers
+    info("Getting heap start pointer...");
+    void *heap_start = sf_mem_start();
+    if ((long int) heap_start % 16 != 0) error("Heap start is not 16 byte aligned!");
+    if ((long int) heap_start % 32 == 0) offset = (3 * MEMROWSIZE); else offset = (1 * MEMROWSIZE);
+    debug("heap start, offset: %p, %d", heap_start, offset);
+
+    // Expand heap
+    info("Expanding heap...");
+    sf_mem_grow();
+    debug("mem_end: %p", sf_mem_end());
+
+    update_prologue();
+    add_wilderness_block();
+    update_epilogue();
+    
+    info("Setting global_...");
+    global_ = 0x1;
+    
+    info("Initialization complete");
+    return;
+}

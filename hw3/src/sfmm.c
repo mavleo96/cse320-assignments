@@ -9,42 +9,6 @@
 #include "sfmm.h"
 #include "sfmm_utils.h"
 
-void sf_init() {
-    info("Initializing sf_malloc...");
-    info("Initializing sf_free_list_heads...");
-    for (int i = 0; i < NUM_FREE_LISTS; i++) {
-        sf_block new_block = {
-            .header = 0,
-            .body.links = {
-                .next = &sf_free_list_heads[i],
-                .prev = &sf_free_list_heads[i],
-            },
-        };
-        sf_free_list_heads[i] = new_block;
-    }
-    info("Setting global_...");
-    global_ = 0x1;
-
-    // Check heap pointers
-    info("Getting heap start pointer...");
-    void *heap_start = sf_mem_start();
-    if ((long int) heap_start % 16 != 0) error("Heap start is not 16 byte aligned!");
-    if ((long int) heap_start % 32 == 0) offset = (3 * MEMROWSIZE); else offset = (1 * MEMROWSIZE);
-    debug("heap start: %p", heap_start);
-    debug("offset    : %d", offset);
-
-    // Expand heap
-    info("Expanding heap...");
-    sf_mem_grow();
-    debug("mem_end   : %p", sf_mem_end());
-
-    update_prologue();
-    add_wilderness_block();
-    update_epilogue();
-    info("Initialization complete");
-    return;
-}
-
 void *sf_malloc(size_t size) {
     // Initialize the sf_malloc
     if (global_ != 0x1) sf_init();
