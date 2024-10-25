@@ -25,7 +25,7 @@ sf_block *find_in_free_list_i(int index, size_t size) {
     
     while (bp->body.links.next != list_head) {
         bp = bp->body.links.next;
-        if (get_blocksize(bp) >= size) {
+        if (BLOCKSIZE(bp) >= size) {
             return bp;
         }
     }
@@ -34,7 +34,7 @@ sf_block *find_in_free_list_i(int index, size_t size) {
 
 
 void remove_block_from_free_list(sf_block *bp) {
-    size_t block_size = get_blocksize(bp);
+    size_t block_size = BLOCKSIZE(bp);
     // Allocated bit change
     bp->header |= 0b10000;
 
@@ -49,7 +49,7 @@ void remove_block_from_free_list(sf_block *bp) {
 }
 
 void add_block_to_free_list(sf_block *bp, int wilderness_signal) {
-    size_t block_size = get_blocksize(bp);
+    size_t block_size = BLOCKSIZE(bp);
     int index = wilderness_signal ? NUM_FREE_LISTS - 1 : get_free_list_index_for_size(block_size);
     sf_block *list_head = &sf_free_list_heads[index];
 

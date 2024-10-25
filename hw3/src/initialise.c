@@ -8,7 +8,7 @@ void update_prologue() {
     sf_block *pp = (sf_block *)((char *) sf_mem_start() + offset);
     // Prologue header & footer
     pp->header = 0x20 + 0b10000;
-    *get_footer(pp) = pp->header;
+    *FOOTER_POINTER(pp) = pp->header;
     debug("prologue: %p", pp);
 }
 
@@ -33,7 +33,7 @@ void add_wilderness_block() {
     size_t block_size = (size_t) sf_mem_end() - (size_t) bp - MEMROWSIZE;
 
     bp->header = block_size + 0b1000;
-    *get_footer(bp) = bp->header;
+    *FOOTER_POINTER(bp) = bp->header;
     debug("wilderness block header %ld %ld", bp->header, block_size);
 
     // pointers

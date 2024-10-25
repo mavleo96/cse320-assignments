@@ -20,7 +20,7 @@ void *sf_malloc(size_t size) {
     }
 
     // Convert the payload size to min required size and get 
-    size_t required_size = min_required_blocksize(size);
+    size_t required_size = MIN_REQUIRED_BLOCKSIZE(size);
     int index = get_free_list_index_for_size(required_size);
 
     // Find block of required_size
@@ -36,7 +36,7 @@ void *sf_malloc(size_t size) {
             } else continue;
         } else {
             remove_block_from_free_list(bp);
-            if (get_blocksize(bp) - required_size >= ALIGNMENT) {
+            if (BLOCKSIZE(bp) - required_size >= ALIGNMENT) {
                 sf_block *rbp = break_block(bp, required_size);
                 add_block_to_free_list(rbp, (j == NUM_FREE_LISTS - 1) ? 1 : 0);
             }
@@ -53,11 +53,11 @@ void sf_free(void *pp) {
     info("Freeing the memory allocated at %p", pp);
     sf_block *bp = (sf_block *)((char *) pp - MEMROWSIZE);
     bp->header &= ~ 0b10000;
-    *get_footer(bp) = bp->header;
+    *FOOTER_POINTER(bp) = bp->header;
 
-    sf_block *nbp = get_next_block(bp);
+    sf_block *nbp = NEXT_BLOCK_POINTER(bp);
     nbp->header &= ~ 0b1000;
-    if (!get_allocated_bit(nbp)) *get_footer(nbp) = nbp->header;
+    if (!ALLOCATED_BIT(nbp)) *FOOTER_POINTER(nbp) = nbp->header;
 
     bp = coalesce_block(bp);
     add_block_to_free_list(bp, 0);
@@ -71,8 +71,8 @@ void *sf_realloc(void *pp, size_t rsize) {
 
     info("Freeing the memory allocated at %p", pp);
     sf_block *bp = (sf_block *)((char *) pp - MEMROWSIZE);
-    size_t block_size = get_blocksize(bp);
-    size_t new_block_size = min_required_blocksize(rsize);
+    size_t block_size = BLOCKSIZE(bp);
+    size_t new_block_size = MIN_REQUIRED_BLOCKSIZE(rsize);
 
     if (rsize == 0) {
         sf_free(pp);

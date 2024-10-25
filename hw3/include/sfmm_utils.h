@@ -11,16 +11,18 @@ int global_;
 #define MEMROWSIZE 8
 int offset;
 
-// Auxillary Functions
-size_t get_blocksize(sf_block *bp);
-int get_allocated_bit(sf_block *bp);
-int get_prev_allocated_bit(sf_block *bp);
-sf_block *get_next_block(sf_block *bp);
-int min_required_blocksize(size_t payload_size);
-sf_footer *get_footer(sf_block *bp);
-
-sf_block *get_prologue_pointer();
-sf_block *get_epilogue_pointer();
+// Macros to parse information from block header
+#define BLOCKSIZE(bp)          ((bp)->header & ~0b11111)    // Mask 5 LSB to get the block size
+#define ALLOCATED_BIT(bp)      (((bp)->header & 0b10000) >> 4)
+#define PREV_ALLOCATED_BIT(bp) (((bp)->header & 0b01000) >> 3)
+// Macros to get useful pointers
+#define NEXT_BLOCK_POINTER(bp) ((sf_block *)((char *)(bp) + BLOCKSIZE(bp)))
+#define FOOTER_POINTER(bp)     ((sf_footer *)((char *)(bp) + BLOCKSIZE(bp) - MEMROWSIZE))
+#define PROLOGUE_POINTER       ((sf_block *)((char *)sf_mem_start() + offset))
+#define EPILOGUE_POINTER       ((sf_block *)((char *)sf_mem_end() - MEMROWSIZE))
+// Macro to calculate minimum required block size from payload size
+#define MIN_REQUIRED_BLOCKSIZE(size) \
+    (((size) + MEMROWSIZE + ((ALIGNMENT - ((size) + MEMROWSIZE) % ALIGNMENT) % ALIGNMENT)))
 
 void validate_pointer(void *pp, int mode);
 
@@ -39,5 +41,6 @@ void add_block_to_free_list(sf_block *bp, int wilderness_signal);
 void update_prologue();
 void update_epilogue();
 void add_wilderness_block();
+void sf_init();
 
 #endif
