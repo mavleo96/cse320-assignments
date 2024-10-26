@@ -63,8 +63,7 @@ sf_block *coalesce_block(sf_block *bp) {
     if (!next_allocated) {
         size_t next_blocksize = BLOCKSIZE(NEXT_BLOCK_POINTER(bp));
         remove_block_from_free_list(NEXT_BLOCK_POINTER(bp));
-        bp->header += next_blocksize;
-        bp->header &= ~ 0b10000;
+        update_block_header(bp, bp->header + next_blocksize);
     }
 
     // Coalesce with previous block
@@ -74,9 +73,9 @@ sf_block *coalesce_block(sf_block *bp) {
         size_t blocksize = BLOCKSIZE(bp);
         bp = (sf_block *)((char *) bp - prev_blocksize);
         remove_block_from_free_list(bp);
-        bp->header += blocksize;
-        bp->header &= ~ 0b10000;
+        update_block_header(bp, bp->header + blocksize);
     }
-    *FOOTER_POINTER(bp) = bp->header;
+    // Mark coalesced block as free
+    update_block_header(bp, (bp->header & ~ 0b10000));
     return bp;
 }

@@ -28,7 +28,8 @@ void add_wilderness_block() {
 
     // Update block header
     // Previous block is prologue block which is allocated by definition
-    bp->header = (sf_header)(blocksize + 0b01000);  // (blocksize, allocated, prev_allocated) -> (blocksize, 0, 1)
+    update_block_header(bp, (sf_header)(blocksize + 0b01000));  // (blocksize, allocated, prev_allocated) -> (blocksize, 0, 1)
+    // TODO: Interesting bug; above function doesn't modify footer in this place
     *FOOTER_POINTER(bp) = bp->header;
 
     // Add wilderness block to free list
