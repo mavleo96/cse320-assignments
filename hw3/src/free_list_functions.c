@@ -5,9 +5,9 @@
  */
 int get_free_list_index_for_size(size_t size) {
     // Check if size is aligned; return -1 if not
-    if (size % ALIGNMENT != 0) return -1;
-    // Convert size to multiples of alignments
-    size = size / ALIGNMENT;
+    if (size % MINBLOCKSIZE != 0) return -1;
+    // Convert size to multiples of minimum size
+    size = size / MINBLOCKSIZE;
 
     // Return index by comparing size against fibonacci series
     if (size > 21) return 7;

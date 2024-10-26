@@ -38,7 +38,7 @@ void add_wilderness_block() {
 /*
  * Function to initialize the malloc by initializing the free lists, expanding heap & setting prologue and epilogue
  */
-void sf_init() {
+int sf_init() {
     info("Initializing sf_malloc...");
 
     // Initialize sf_free_list_heads with sentinel nodes
@@ -51,12 +51,19 @@ void sf_init() {
     // Assert that heap is aligned
     info("Getting heap start pointer...");
     void *heap_start = sf_mem_start();
-    if ((long int) heap_start % 16 != 0) error("heap start is not 16 byte aligned!");
+    if ((long int) heap_start % 16 != 0) {
+        error("heap start is not 16 byte aligned!");
+        return -1;
+    }
     if ((long int) heap_start % 32 == 0) offset = (3 * MEMROWSIZE); else offset = (1 * MEMROWSIZE);
 
     // Expand heap
     info("Expanding heap...");
-    sf_mem_grow();
+    if (sf_mem_grow() == NULL) {
+        sf_errno = ENOMEM;
+        error("not enough memory!");
+        return -1;
+    }
     debug("(mem_start, mem_end, offset) -> (%p, %p, %d)", heap_start, sf_mem_end(), offset);
 
     // Initialize the heap
@@ -69,5 +76,5 @@ void sf_init() {
     init_flag = 0x1;
     
     info("Initialization complete");
-    return;
+    return 0;
 }

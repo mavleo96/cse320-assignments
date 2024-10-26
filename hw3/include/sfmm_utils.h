@@ -2,12 +2,14 @@
 #define SFMM_UTILS_H
 
 #include <stddef.h>
+#include <errno.h>
 
 #include "debug.h"
 #include "sfmm.h"
 
 int init_flag;
 #define ALIGNMENT 32
+#define MINBLOCKSIZE 32
 #define MEMROWSIZE 8
 int offset;
 
@@ -42,6 +44,6 @@ void add_block_to_free_list(sf_block *bp);
 void update_prologue();
 void update_epilogue();
 void add_wilderness_block();
-void sf_init();
+int sf_init();
 
 #endif

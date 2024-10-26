@@ -45,7 +45,11 @@ sf_block *expand_heap() {
  
     // Expand heap and update epilogue
     info("Expanding heap...");
-    sf_mem_grow();
+    if (sf_mem_grow() == NULL) {
+        sf_errno = ENOMEM;
+        error("not enough memory!");
+        return NULL;
+    }
     update_epilogue();
 
     // Update header and footer of free block and return pointer

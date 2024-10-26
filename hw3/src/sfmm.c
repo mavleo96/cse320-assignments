@@ -11,7 +11,9 @@
 
 void *sf_malloc(size_t size) {
     // Initialize the sf_malloc
-    if (init_flag != 0x1) sf_init();
+    if (init_flag != 0x1) {
+        if (sf_init() != 0) return NULL;
+    }
 
     info("Allocating memory...");
     // Check if requested size is 0; return NULL if true
@@ -40,6 +42,9 @@ void *sf_malloc(size_t size) {
                 // If free block not found in last free list then expand heap
                 info("No free blocks found...");
                 sf_block *fbp = expand_heap();
+                if (fbp == NULL) {
+                    return NULL;
+                }
                 fbp = coalesce_block(fbp);
                 add_block_to_free_list(fbp);
                 j--;
@@ -61,8 +66,10 @@ void *sf_malloc(size_t size) {
 void sf_free(void *pp) {
     // Validate the pointer to be freed
     info("Validating the pointer to be freed...");
-    if (validate_pointer(pp) != 0) abort();
-
+    if (validate_pointer(pp) != 0) {
+        sf_errno = EINVAL;
+        abort();
+    }
     // Free the block by updating header & footer
     info("Freeing the memory allocated at %p", pp);
     sf_block *bp = (sf_block *)((char *) pp - MEMROWSIZE);
@@ -77,14 +84,16 @@ void sf_free(void *pp) {
     // Coalesce the block and add to free list
     bp = coalesce_block(bp);
     add_block_to_free_list(bp);
-
     return;
 }
 
 void *sf_realloc(void *pp, size_t rsize) {
     // Validate the pointer to be reallocated
     info("Validating the pointer to be reallocated...");
-    if (validate_pointer(pp) != 0) abort();
+    if (validate_pointer(pp) != 0) {
+        sf_errno = EINVAL;
+        return NULL;
+    }
 
     info("Reallocating the memory at %p...", pp);
     // Calculate block pointer and block sizes
