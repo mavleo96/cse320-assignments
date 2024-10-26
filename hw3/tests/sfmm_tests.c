@@ -209,7 +209,7 @@ Test(sfmm_basecode_suite, realloc_smaller_block_free_block, .timeout = TEST_TIME
 /*			  sfmm_utils test suite				*/
 /*----------------------------------------------*/
 
-Test(sfmm_utils_suite, validate_pointer) {
+Test(sfmm_utils_suite, validate_pointer, .timeout = TEST_TIMEOUT) {
 	// Simulating malloc operations
 	// Valid allocated block
 	void *ptr1 = sf_malloc(32);
@@ -239,7 +239,7 @@ Test(sfmm_utils_suite, validate_pointer) {
     cr_assert_eq(validate_pointer(ptr1), 0, "Expected 0 for valid pointer");					// Test valid block
 }
 
-Test(sfmm_utils_suite, expand_heap) {
+Test(sfmm_utils_suite, expand_heap, .timeout = TEST_TIMEOUT) {
 	// Initializing the heap
 	sf_malloc(0);
 	sf_block *nfbp = expand_heap();
@@ -248,7 +248,7 @@ Test(sfmm_utils_suite, expand_heap) {
 	cr_assert_eq(EPILOGUE_POINTER->header, 0x10, "Epilogue is not updated correctly!");			// Test if epilogue is set correctly
 }
 
-Test(sfmm_utils_suite, expand_heap_error) {
+Test(sfmm_utils_suite, expand_heap_error, .timeout = TEST_TIMEOUT) {
 	// Initializing the heap
 	sf_malloc(0);
 	sf_block *bp;
@@ -259,7 +259,7 @@ Test(sfmm_utils_suite, expand_heap_error) {
 	cr_assert_eq(sf_errno, ENOMEM, "sf_errno not set to ENOMEM!");								// Test if sf_errno is set correctly
 }
 
-Test(sfmm_utils_suite, update_block_header) {
+Test(sfmm_utils_suite, update_block_header, .timeout = TEST_TIMEOUT) {
     // Initialize test memory block
 	void *ptr1 = sf_malloc(50); // 64 bytes
 	void *ptr2 = sf_malloc(20); // 32 bytes
@@ -286,7 +286,7 @@ Test(sfmm_utils_suite, update_block_header) {
 /*----------------------------------------------*/
 
 
-Test(sfmm_memalign_suite, sf_memalign_invalid_alignment) {
+Test(sfmm_memalign_suite, memalign_invalid_alignment, .timeout = TEST_TIMEOUT) {
 	// Invalid alignment, not a power of 2 and < 32
     sf_errno = 0;
     void *result = sf_memalign(100, 20);
@@ -300,7 +300,7 @@ Test(sfmm_memalign_suite, sf_memalign_invalid_alignment) {
     cr_assert_eq(sf_errno, EINVAL, "Expected sf_errno to be set to EINVAL");					// Test if sf_errno is set correctly for invalid arguments
 }
 
-Test(sfmm_memalign_suite, sf_memalign_small_allocation_valid_alignment) {
+Test(sfmm_memalign_suite, memalign_small_allocation_valid_alignment, .timeout = TEST_TIMEOUT) {
 	// Request memory with valid alignment
     sf_errno = 0;
     size_t align = 64;
@@ -312,7 +312,7 @@ Test(sfmm_memalign_suite, sf_memalign_small_allocation_valid_alignment) {
     cr_assert_eq(sf_errno, 0, "Expected sf_errno to be 0 for successful allocation");					// Test if sf_errno is 0
 }
 
-Test(sfmm_memalign_suite, sf_memalign_large_allocation_valid_alignment) {
+Test(sfmm_memalign_suite, memalign_large_allocation_valid_alignment, .timeout = TEST_TIMEOUT) {
 	// Request memory with valid alignment
     sf_errno = 0;  // Reset errno
     size_t align = 128;
@@ -328,7 +328,7 @@ Test(sfmm_memalign_suite, sf_memalign_large_allocation_valid_alignment) {
     cr_assert_geq(BLOCKSIZE(bp), size, "Expected allocated block size to be at least %ld bytes", size);	// Test if returned block is of sufficient size
 }
 
-Test(sfmm_memalign_suite, sf_memalign_small_allocation_large_alignment) {
+Test(sfmm_memalign_suite, memalign_small_allocation_large_alignment, .timeout = TEST_TIMEOUT) {
 	// Request memory with valid alignment
     sf_errno = 0;
     size_t align = 4096;
@@ -340,11 +340,42 @@ Test(sfmm_memalign_suite, sf_memalign_small_allocation_large_alignment) {
     cr_assert_eq(sf_errno, 0, "Expected sf_errno to be 0 for successful allocation");					// Test if sf_errno is 0
 }
 
+Test(sfmm_memalign_suite, memalign_zero, .timeout = TEST_TIMEOUT) {
+	sf_errno = 0;
+	void *x = sf_memalign(0, 128);
+
+	cr_assert_null(x, "x is not NULL!");
+	assert_free_block_count(0, 1);
+	assert_free_block_count(1984, 1);
+	cr_assert(sf_errno == 0, "sf_errno is not 0!");
+}
+
+Test(sfmm_memalign_suite, memalign_too_large, .timeout = TEST_TIMEOUT) {
+	sf_errno = 0;
+	void *x = sf_memalign(100281, 128);
+
+	cr_assert_null(x, "x is not NULL!");
+	assert_free_block_count(0, 1);
+	assert_free_block_count(100288, 1);
+	cr_assert(sf_errno == ENOMEM, "sf_errno is not ENOMEM!");
+}
+
+Test(sfmm_memalign_suite, memalign_align_32, .timeout = TEST_TIMEOUT) {
+	sf_errno = 0;
+	void *x = sf_memalign(100, 32);
+
+	cr_assert_not_null(x, "x is NULL!");
+	assert_free_block_count(0, 1);
+	assert_free_block_count(1856, 1);
+	cr_assert(sf_errno == 0, "sf_errno is not 0!");
+}
+
+
 /*----------------------------------------------*/
 /*		      sf_realloc test suite				*/
 /*----------------------------------------------*/
 
-Test(sfmm_realloc_suite, realloc_content_intact) {
+Test(sfmm_realloc_suite, realloc_content_intact, .timeout = TEST_TIMEOUT) {
     // Allocate initial memory block and fill with data
     size_t original_size = 64;
     char *original_data = sf_malloc(original_size);
@@ -377,6 +408,29 @@ Test(sfmm_realloc_suite, realloc_content_intact) {
             "Content was not intact at byte %zu after shrinking with sf_realloc!", i);
     }
 }
+
+Test(sfmm_realloc_suite, realloc_zero, .timeout = TEST_TIMEOUT) {
+	sf_errno = 0;
+	void *x = sf_malloc(1000);
+	void *y = sf_realloc(x, 0);
+
+	cr_assert_null(y, "y is not NULL!");
+	assert_free_block_count(0, 1);
+	assert_free_block_count(1984, 1);
+	cr_assert(sf_errno == 0, "sf_errno is not 0!");
+}
+
+Test(sfmm_realloc_suite, realloc_too_large, .timeout = TEST_TIMEOUT) {
+	sf_errno = 0;
+	void *x = sf_malloc(1000);
+	void *y = sf_realloc(x, 100281);
+
+	cr_assert_null(y, "y is not NULL!");
+	assert_free_block_count(0, 1);
+	assert_free_block_count(99264, 1);
+	cr_assert(sf_errno == ENOMEM, "sf_errno is not ENOMEM!");
+}
+
 
 /*----------------------------------------------*/
 /*		        stress test suite				*/
@@ -436,11 +490,11 @@ void stress_test_malloc_realloc_free_memalign() {
     }
 }
 
-Test(sfmm_stress_suite, stress_test_malloc_realloc_free_memalign) {
+Test(sfmm_stress_suite, stress_test_malloc_realloc_free_memalign, .timeout = TEST_TIMEOUT) {
     stress_test_malloc_realloc_free_memalign();
 }
 
-Test(sfmm_stress_suite, stress_test_heap_correctness) {
+Test(sfmm_stress_suite, stress_test_heap_correctness, .timeout = TEST_TIMEOUT) {
     stress_test_malloc_realloc_free_memalign();
 	sf_block *bp = PROLOGUE_POINTER;
 	int allocated = 0;
