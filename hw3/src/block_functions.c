@@ -4,7 +4,7 @@
  * Helper function to break a block and return pointer to remainder block
  */
 sf_block *break_block(sf_block *bp, size_t rsize) {
-    info("breaking block %p to size %ld...", bp, rsize);
+    info("breaking block %p to size %zu...", bp, rsize);
     // Validate block pointer 
     if (bp == NULL) {
         error("NULL pointer passed!");
