@@ -10,7 +10,7 @@
 #include "sfmm_utils.h"
 
 void *sf_malloc(size_t size) {
-    // Initialize the sf_malloc
+    // Initialize the heap
     if (init_flag != 0x1) {
         if (sf_init() != 0) return NULL;
     }
@@ -107,6 +107,9 @@ void *sf_realloc(void *pp, size_t rsize) {
     } else if (new_blocksize > blocksize) {
         // If block is to be reallocated to larger size then call sf_malloc, copy contents and call sf_free
         void *npp = sf_malloc(rsize);
+        if (npp == NULL) {
+            return NULL;
+        }
         memcpy(npp, pp, blocksize - MEMROWSIZE);
         sf_free(pp);
         return npp;
@@ -122,6 +125,10 @@ void *sf_realloc(void *pp, size_t rsize) {
 
 void *sf_memalign(size_t size, size_t align) {
     info("Allocating memory of alignment %ld...", align);
+    // Initialize the heap
+    if (init_flag != 0x1) {
+        if (sf_init() != 0) return NULL;
+    }
     info("Validating the alignment arg...");
     // Validate if align is > 2^5
     if (align < 32) {
@@ -132,6 +139,13 @@ void *sf_memalign(size_t size, size_t align) {
     if ((align & (align - 1)) != 0) {
         sf_errno = EINVAL;
         return NULL;
+    }
+    // Check if requested size is 0; return NULL if true
+    if (size == 0) {
+        debug("sf_memalign: request size is 0; returning NULL");
+        return NULL;
+    } else {
+        debug("sf_memalign: request size is %ld", size);
     }
 
     // Calculate min required block size from malloc
