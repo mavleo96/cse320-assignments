@@ -3,6 +3,7 @@
 #include <signal.h>
 #include "debug.h"
 #include "sfmm.h"
+#include "sfmm_utils.h"
 #define TEST_TIMEOUT 15
 
 /*
@@ -180,7 +181,7 @@ Test(sfmm_basecode_suite, realloc_smaller_block_splinter, .timeout = TEST_TIMEOU
 }
 
 Test(sfmm_basecode_suite, realloc_smaller_block_free_block, .timeout = TEST_TIMEOUT) {
-        size_t sz_x = sizeof(double) * 8, sz_y = sizeof(int);
+	size_t sz_x = sizeof(double) * 8, sz_y = sizeof(int);
 	void *x = sf_malloc(sz_x);
 	void *y = sf_realloc(x, sz_y);
 
@@ -203,5 +204,33 @@ Test(sfmm_basecode_suite, realloc_smaller_block_free_block, .timeout = TEST_TIME
 //DO NOT DELETE OR MANGLE THESE COMMENTS
 //############################################
 
-//Test(sfmm_student_suite, student_test_1, .timeout = TEST_TIMEOUT) {
-//}
+// Unit test for validate_pointer function
+Test(sfmm_utils_suite, validate_pointer) {
+	// Simulating malloc operations
+	// Valid allocated block
+	void *ptr1 = sf_malloc(32);
+	// Corrupted allocated block
+	void *ptr2 = sf_malloc(32);
+	sf_block *cbp = (sf_block *)((sf_header *)ptr2 - 1);
+	cbp->header = 0x1;
+	// Free block
+	void *ptr3 = sf_malloc(32);
+	sf_free(ptr3);
+	// Offset by 1 byte to misalign
+    void *unaligned_ptr = (void *)((char *)ptr1 + 1);
+	void *out_of_bounds_ptr = (void *)((char *)sf_mem_end() + 32);
+
+
+    cr_assert_eq(validate_pointer(NULL), -1, "Expected -1 for NULL pointer");                  	// Test NULL pointer
+    cr_assert_eq(validate_pointer(unaligned_ptr), -1, "Expected -1 for unaligned pointer");    	// Test unaligned pointer (e.g., not 32-byte aligned)
+    cr_assert_eq(validate_pointer((char *)PROLOGUE_POINTER + MEMROWSIZE), -1,					// Test pointer to prologue area
+		"Expected -1 for prologue pointer"); 
+    cr_assert_eq(validate_pointer((char *)EPILOGUE_POINTER - MEMROWSIZE), -1,					// Test pointer to epilogue area
+		"Expected -1 for epilogue pointer");
+	cr_assert_eq(validate_pointer(out_of_bounds_ptr), -1,										// Test pointer out of heap bounds (greater than sf_mem_end)
+		"Expected -1 for pointer out of heap bounds");
+    cr_assert_eq(validate_pointer(ptr3), -1, "Expected -1 for pointer to free block");    		// Test pointer to free block (not allocated)
+	cr_assert_eq(validate_pointer(ptr2), -1,													// Test pointer to block with invalid header (corrupted header)
+		"Expected -1 for pointer with corrupted header");
+    cr_assert_eq(validate_pointer(ptr1), 0, "Expected 0 for valid pointer");					// Test valid block
+}
