@@ -4,7 +4,7 @@
  * Helper function to break a block and return pointer to remainder block
  */
 sf_block *break_block(sf_block *bp, size_t rsize) {
-    info("Breaking block...");
+    info("breaking block %p to size %ld...", bp, rsize);
     // Validate block pointer 
     if (bp == NULL) {
         error("NULL pointer passed!");
@@ -34,7 +34,7 @@ sf_block *expand_heap() {
     sf_block *bp = EPILOGUE_POINTER;
  
     // Expand heap and update epilogue
-    info("Expanding heap...");
+    debug("expanding heap...");
     if (sf_mem_grow() == NULL) {
         sf_errno = ENOMEM;
         error("not enough memory!");
@@ -51,7 +51,7 @@ sf_block *expand_heap() {
  * Helper function to coalesce block return the free block created
  */
 sf_block *coalesce_block(sf_block *bp) {
-    info("Coalescing the block...");
+    debug("coalescing the block...");
     // Validate block pointer 
     if (bp == NULL) {
         error("NULL pointer passed!");
