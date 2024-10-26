@@ -141,9 +141,9 @@ void *sf_memalign(size_t size, size_t align) {
     }
 
     // Calculate min required block size from malloc
+    sf_block *bp;
     size_t blocksize = MIN_REQUIRED_BLOCKSIZE(size);
     size_t larger_blocksize = blocksize + align - MINBLOCKSIZE;
-    size_t precede_blocksize = align - MINBLOCKSIZE;
 
     // Allocate memory for larger block
     info("Calling sf_malloc for larger block of size %ld...", larger_blocksize);
@@ -153,13 +153,18 @@ void *sf_memalign(size_t size, size_t align) {
     }
 
     // Split block in the beginning
-    info("Breaking the block to size %ld...", precede_blocksize);
+    size_t precede_blocksize = ((size_t)pp % align) ? align - (size_t)pp % align : 0;
     sf_block *lbp = (sf_block *)((sf_header *)pp - 1);
-    sf_block *bp = break_block(lbp, precede_blocksize);
-    update_block_header(lbp, lbp->header & ~ 0b10000);
-    update_block_header(bp, bp->header | 0b10000);
-    lbp = coalesce_block(lbp);
-    add_block_to_free_list(lbp);
+    if (precede_blocksize > 0) {
+        info("Breaking the block to size %ld...", precede_blocksize);
+        bp = break_block(lbp, precede_blocksize);
+        update_block_header(lbp, lbp->header & ~ 0b10000);
+        update_block_header(bp, bp->header | 0b10000);
+        lbp = coalesce_block(lbp);
+        add_block_to_free_list(lbp);
+    } else {
+        bp = lbp;
+    }
 
     // Split block in the beginning
     if (BLOCKSIZE(bp) - blocksize >= MINBLOCKSIZE) {
