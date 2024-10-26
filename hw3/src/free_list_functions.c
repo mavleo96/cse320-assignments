@@ -54,16 +54,6 @@ void remove_block_from_free_list(sf_block *bp) {
         error("Pointer with NULL links passed!");
         return;
     }
-    // TODO: clean up below code
-    size_t blocksize = BLOCKSIZE(bp);
-    // Allocated bit change
-    bp->header |= 0b10000;
-
-    // Prev allocated bit change
-    // TODO: what if this is a free block?
-    *(sf_header *)((char *) bp + blocksize) |= 0b1000;
-
-    // TODO: next and prev should not be NULL here
     // Update the links in next and prev block
     bp->body.links.next->body.links.prev = bp->body.links.prev;
     bp->body.links.prev->body.links.next = bp->body.links.next;
