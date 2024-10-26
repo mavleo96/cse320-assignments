@@ -240,26 +240,46 @@ Test(sfmm_utils_suite, validate_pointer) {
 }
 
 Test(sfmm_utils_suite, expand_heap) {
-	// Simulating malloc operations
-	// Valid allocated block
+	// Initializing the heap
 	sf_malloc(0);
 	sf_block *nfbp = expand_heap();
-	cr_assert_eq(BLOCKSIZE(nfbp), PAGE_SZ, "Expected free block of size %ld; got %d", PAGE_SZ, BLOCKSIZE(nfbp));
-	cr_assert_eq(EPILOGUE_POINTER->header, 0x10, "Epilogue is not updated correctly!");
+	cr_assert_eq(BLOCKSIZE(nfbp), PAGE_SZ, "Expected free block of size %ld; got %d",			// Test if returned free block is of correc size
+		PAGE_SZ, BLOCKSIZE(nfbp));
+	cr_assert_eq(EPILOGUE_POINTER->header, 0x10, "Epilogue is not updated correctly!");			// Test if epilogue is set correctly
 }
 
 Test(sfmm_utils_suite, expand_heap_error) {
-	// Simulating malloc operations
-	// Valid allocated block
+	// Initializing the heap
 	sf_malloc(0);
 	sf_block *bp;
+	// Expanding the heap until memory exhausts
 	do {
 		bp = expand_heap();
 	} while (bp != NULL);
-
-	cr_assert_eq(sf_errno, ENOMEM, "sf_errno not set to ENOMEM!");
+	cr_assert_eq(sf_errno, ENOMEM, "sf_errno not set to ENOMEM!");								// Test if sf_errno is set correctly
 }
 
+Test(sfmm_utils_suite, update_block_header) {
+    // Initialize test memory block
+	void *ptr1 = sf_malloc(50); // 64 bytes
+	void *ptr2 = sf_malloc(20); // 32 bytes
+    sf_block *bp = (sf_block *)((sf_header *)ptr1 - 1);
+    sf_block *nbp = (sf_block *)((sf_header *)ptr2 - 1);
+	sf_footer *fp = FOOTER_POINTER(bp);
+	sf_footer *nfp = FOOTER_POINTER(nbp);
+
+	// Free test block
+    update_block_header(nbp, nbp->header & ~ 0b10000);
+	sf_header new_header = bp->header & ~ 0b10000;
+    update_block_header(bp, new_header);
+
+	cr_assert_eq(bp->header, new_header, "Footer not updated correctly!");            			// Test if header of test block is updated to match the new header
+	cr_assert_eq(*fp, new_header, "Footer not updated correctly!");				            	// Test if footer of test block is updated to match the new header
+    cr_assert_eq(PREV_ALLOCATED_BIT(nbp), 0, 													// Test if prev_allocated_bit is set correctly in next block
+		"Next block's prev_allocated bit was not set correctly!");
+    cr_assert_eq(PREV_ALLOCATED_BIT((sf_block *)nfp), 0,										// Test if prev_allocated_bit is set correctly in next block footer
+		"Next block's prev_allocated bit was not set in footer correctly!");
+}
 
 /*----------------------------------------------*/
 /*		      sf_memalign test suite			*/
