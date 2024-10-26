@@ -286,7 +286,7 @@ Test(sfmm_utils_suite, update_block_header, .timeout = TEST_TIMEOUT) {
 /*----------------------------------------------*/
 
 
-Test(sfmm_memalign_suite, sf_memalign_invalid_alignment, .timeout = TEST_TIMEOUT) {
+Test(sfmm_memalign_suite, memalign_invalid_alignment, .timeout = TEST_TIMEOUT) {
 	// Invalid alignment, not a power of 2 and < 32
     sf_errno = 0;
     void *result = sf_memalign(100, 20);
@@ -300,7 +300,7 @@ Test(sfmm_memalign_suite, sf_memalign_invalid_alignment, .timeout = TEST_TIMEOUT
     cr_assert_eq(sf_errno, EINVAL, "Expected sf_errno to be set to EINVAL");					// Test if sf_errno is set correctly for invalid arguments
 }
 
-Test(sfmm_memalign_suite, sf_memalign_small_allocation_valid_alignment, .timeout = TEST_TIMEOUT) {
+Test(sfmm_memalign_suite, memalign_small_allocation_valid_alignment, .timeout = TEST_TIMEOUT) {
 	// Request memory with valid alignment
     sf_errno = 0;
     size_t align = 64;
@@ -312,7 +312,7 @@ Test(sfmm_memalign_suite, sf_memalign_small_allocation_valid_alignment, .timeout
     cr_assert_eq(sf_errno, 0, "Expected sf_errno to be 0 for successful allocation");					// Test if sf_errno is 0
 }
 
-Test(sfmm_memalign_suite, sf_memalign_large_allocation_valid_alignment, .timeout = TEST_TIMEOUT) {
+Test(sfmm_memalign_suite, memalign_large_allocation_valid_alignment, .timeout = TEST_TIMEOUT) {
 	// Request memory with valid alignment
     sf_errno = 0;  // Reset errno
     size_t align = 128;
@@ -328,7 +328,7 @@ Test(sfmm_memalign_suite, sf_memalign_large_allocation_valid_alignment, .timeout
     cr_assert_geq(BLOCKSIZE(bp), size, "Expected allocated block size to be at least %ld bytes", size);	// Test if returned block is of sufficient size
 }
 
-Test(sfmm_memalign_suite, sf_memalign_small_allocation_large_alignment, .timeout = TEST_TIMEOUT) {
+Test(sfmm_memalign_suite, memalign_small_allocation_large_alignment, .timeout = TEST_TIMEOUT) {
 	// Request memory with valid alignment
     sf_errno = 0;
     size_t align = 4096;
@@ -358,6 +358,16 @@ Test(sfmm_memalign_suite, memalign_too_large, .timeout = TEST_TIMEOUT) {
 	assert_free_block_count(0, 1);
 	assert_free_block_count(100288, 1);
 	cr_assert(sf_errno == ENOMEM, "sf_errno is not ENOMEM!");
+}
+
+Test(sfmm_memalign_suite, memalign_align_32, .timeout = TEST_TIMEOUT) {
+	sf_errno = 0;
+	void *x = sf_memalign(100, 32);
+
+	cr_assert_not_null(x, "x is NULL!");
+	assert_free_block_count(0, 1);
+	assert_free_block_count(1856, 1);
+	cr_assert(sf_errno == 0, "sf_errno is not 0!");
 }
 
 
