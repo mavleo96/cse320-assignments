@@ -239,6 +239,28 @@ Test(sfmm_utils_suite, validate_pointer) {
     cr_assert_eq(validate_pointer(ptr1), 0, "Expected 0 for valid pointer");					// Test valid block
 }
 
+Test(sfmm_utils_suite, expand_heap) {
+	// Simulating malloc operations
+	// Valid allocated block
+	sf_malloc(0);
+	sf_block *nfbp = expand_heap();
+	cr_assert_eq(BLOCKSIZE(nfbp), PAGE_SZ, "Expected free block of size %ld; got %d", PAGE_SZ, BLOCKSIZE(nfbp));
+	cr_assert_eq(EPILOGUE_POINTER->header, 0x10, "Epilogue is not updated correctly!");
+}
+
+Test(sfmm_utils_suite, expand_heap_error) {
+	// Simulating malloc operations
+	// Valid allocated block
+	sf_malloc(0);
+	sf_block *bp;
+	do {
+		bp = expand_heap();
+	} while (bp != NULL);
+
+	cr_assert_eq(sf_errno, ENOMEM, "sf_errno not set to ENOMEM!");
+}
+
+
 /*----------------------------------------------*/
 /*		      sf_memalign test suite			*/
 /*----------------------------------------------*/
