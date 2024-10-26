@@ -445,6 +445,7 @@ Test(sfmm_stress_suite, stress_test_heap_correctness) {
 	sf_block *bp = PROLOGUE_POINTER;
 	int allocated = 0;
 	int block_count = 1;
+	int early_exit_flag = 0;
 
 	do {
 		cr_assert_not_null(bp, "Block pointer is NULL at %d position!", block_count);				// Test if links are not NULL		
@@ -458,5 +459,39 @@ Test(sfmm_stress_suite, stress_test_heap_correctness) {
 			cr_assert_not_null(bp->body.links.prev, "Block at %d position has NULL prev link!");	// Test if links are not NULL
 		}
 		bp = NEXT_BLOCK_POINTER(bp);
-	} while (bp != EPILOGUE_POINTER);
+		block_count++;
+		if (bp > (sf_block *)sf_mem_end()) {
+			early_exit_flag = 1;
+			break;
+		}
+	} while ((bp != EPILOGUE_POINTER) && (block_count < NUM_ITERATIONS));
+	cr_assert(early_exit_flag == 0, "Accesing a block out of sf_mem_end");
+}
+
+Test(sfmm_stress_suite, stress_test_coalesce_correctness) {
+    stress_test_malloc_realloc_free_memalign();
+	sf_block *bp = PROLOGUE_POINTER;
+	int block_count = 1;
+	int early_exit_flag = 0;
+
+	do {
+		cr_assert_not_null(bp, "Block pointer is NULL at %d position!", block_count);
+		if ((bp == PROLOGUE_POINTER) || (bp == EPILOGUE_POINTER)) {
+			block_count++;
+			continue;
+		}
+		if (!ALLOCATED_BIT(bp)) {
+			cr_assert_eq(PREV_ALLOCATED_BIT(bp), 1,
+				"Found uncoalesced free block at position %d & %d!", block_count - 1, block_count);
+			cr_assert_eq(ALLOCATED_BIT(NEXT_BLOCK_POINTER(bp)), 1,
+				"Found uncoalesced free block at position %d & %d!", block_count, block_count + 1);
+		}
+		bp = NEXT_BLOCK_POINTER(bp);
+		block_count++;
+		if (bp > (sf_block *)sf_mem_end()) {
+			early_exit_flag = 1;
+			break;
+		}
+	} while ((bp != EPILOGUE_POINTER) && (block_count < NUM_ITERATIONS));
+	cr_assert(early_exit_flag == 0, "Accesing a block out of sf_mem_end");
 }
