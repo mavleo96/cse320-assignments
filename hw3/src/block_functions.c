@@ -43,7 +43,7 @@ sf_block *expand_heap() {
     update_epilogue();
 
     // Update header and footer of free block and return pointer
-    update_block_header(bp, bp->header + PAGE_SZ);
+    update_block_header(bp, (bp->header & ~ 0b10000) + PAGE_SZ);
     return bp;
 }
 
