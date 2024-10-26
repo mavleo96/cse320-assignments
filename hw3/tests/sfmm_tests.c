@@ -25,7 +25,7 @@ void assert_free_block_count(size_t size, int count) {
 	cr_assert_eq(cnt, count, "Wrong number of free blocks (exp=%d, found=%d)",
 		     count, cnt);
     } else {
-	cr_assert_eq(cnt, count, "Wrong number of free blocks of size %ld (exp=%d, found=%d)",
+	cr_assert_eq(cnt, count, "Wrong number of free blocks of size %zu (exp=%d, found=%d)",
 		     size, count, cnt);
     }
 }
@@ -154,7 +154,7 @@ Test(sfmm_basecode_suite, realloc_larger_block, .timeout = TEST_TIMEOUT) {
 	sf_block *bp = (sf_block *)((char *)x - 8);
 	cr_assert(bp->header & 0x10, "Allocated bit is not set!");
 	cr_assert((bp->header & ~0x1f) == 96,
-		  "Realloc'ed block size (%ld) not what was expected (%ld)!",
+		  "Realloc'ed block size (%zu) not what was expected (%d)!",
 		  bp->header & ~0x1f, 96);
 
 	assert_free_block_count(0, 2);
@@ -173,7 +173,7 @@ Test(sfmm_basecode_suite, realloc_smaller_block_splinter, .timeout = TEST_TIMEOU
 	sf_block *bp = (sf_block *)((char *)y - 8);
 	cr_assert(bp->header & 0x10, "Allocated bit is not set!");
 	cr_assert((bp->header & ~0x1f) == 96,
-		  "Block size (%ld) not what was expected (%ld)!",
+		  "Block size (%zu) not what was expected (%d)!",
 		  bp->header & ~0x1f, 96);
 
 	// There should be only one free block.
@@ -191,7 +191,7 @@ Test(sfmm_basecode_suite, realloc_smaller_block_free_block, .timeout = TEST_TIME
 	sf_block *bp = (sf_block *)((char *)y - 8);
 	cr_assert(bp->header & 0x10, "Allocated bit is not set!");
 	cr_assert((bp->header & ~0x1f) == 32,
-		  "Realloc'ed block size (%ld) not what was expected (%ld)!",
+		  "Realloc'ed block size (%zu) not what was expected (%d)!",
 		  bp->header & ~0x1f, 32);
 
 	// After realloc'ing x, we can return a block of size ADJUSTED_BLOCK_SIZE(sz_x) - ADJUSTED_BLOCK_SIZE(sz_y)
@@ -243,7 +243,7 @@ Test(sfmm_utils_suite, expand_heap, .timeout = TEST_TIMEOUT) {
 	// Initializing the heap
 	sf_malloc(0);
 	sf_block *nfbp = expand_heap();
-	cr_assert_eq(BLOCKSIZE(nfbp), PAGE_SZ, "Expected free block of size %ld; got %d",			// Test if returned free block is of correc size
+	cr_assert_eq(BLOCKSIZE(nfbp), PAGE_SZ, "Expected free block of size %zu; got %zu",			// Test if returned free block is of correc size
 		PAGE_SZ, BLOCKSIZE(nfbp));
 	cr_assert_eq(EPILOGUE_POINTER->header, 0x10, "Epilogue is not updated correctly!");			// Test if epilogue is set correctly
 }
@@ -308,7 +308,7 @@ Test(sfmm_memalign_suite, memalign_small_allocation_valid_alignment, .timeout = 
     void *result = sf_memalign(size, align);
 
     cr_assert_not_null(result, "Expected non-NULL result for valid alignment and allocation");			// Test if sf_memalign return non-NULL pointer 
-    cr_assert((long int)result % align == 0, "Expected pointer to be aligned to %ld bytes", align);		// Test if returned pointer is aligned
+    cr_assert((long int)result % align == 0, "Expected pointer to be aligned to %zu bytes", align);		// Test if returned pointer is aligned
     cr_assert_eq(sf_errno, 0, "Expected sf_errno to be 0 for successful allocation");					// Test if sf_errno is 0
 }
 
@@ -320,12 +320,12 @@ Test(sfmm_memalign_suite, memalign_large_allocation_valid_alignment, .timeout = 
     void *result = sf_memalign(size, align);
 
     cr_assert_not_null(result, "Expected non-NULL result for large allocation with valid alignment");	// Test if sf_memalign return non-NULL pointer 
-    cr_assert((long int)result % align == 0, "Expected pointer to be aligned to %ld bytes", align);		// Test if returned pointer is aligned
+    cr_assert((long int)result % align == 0, "Expected pointer to be aligned to %zu bytes", align);		// Test if returned pointer is aligned
     cr_assert_eq(sf_errno, 0, "Expected sf_errno to be 0 for successful allocation");					// Test if sf_errno is 0
 
     // Verify that the block size is greater than or equal to the requested size
     sf_block *bp = (sf_block *)((sf_header *)result - 1);
-    cr_assert_geq(BLOCKSIZE(bp), size, "Expected allocated block size to be at least %ld bytes", size);	// Test if returned block is of sufficient size
+    cr_assert_geq(BLOCKSIZE(bp), size, "Expected allocated block size to be at least %zu bytes", size);	// Test if returned block is of sufficient size
 }
 
 Test(sfmm_memalign_suite, memalign_small_allocation_large_alignment, .timeout = TEST_TIMEOUT) {
@@ -336,7 +336,7 @@ Test(sfmm_memalign_suite, memalign_small_allocation_large_alignment, .timeout = 
     void *result = sf_memalign(size, align);
 
     cr_assert_not_null(result, "Expected non-NULL result for valid alignment and allocation");			// Test if sf_memalign return non-NULL pointer 
-    cr_assert((long int)result % align == 0, "Expected pointer to be aligned to %ld bytes", align);		// Test if returned pointer is aligned
+    cr_assert((long int)result % align == 0, "Expected pointer to be aligned to %zu bytes", align);		// Test if returned pointer is aligned
     cr_assert_eq(sf_errno, 0, "Expected sf_errno to be 0 for successful allocation");					// Test if sf_errno is 0
 }
 
