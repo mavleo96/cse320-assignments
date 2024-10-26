@@ -3,23 +3,44 @@
 /*
  * Helper function to validate pointer for sf_free and sf_realloc function
  */
-void validate_pointer(void *pp, int mode) {
-    if ((pp == NULL) || ((long int) pp % ALIGNMENT != 0)) abort();
-
-    sf_block *bp = (sf_block *)((char *) pp - MEMROWSIZE);
-
-    if ((bp <= PROLOGUE_POINTER) || (bp >= EPILOGUE_POINTER)) abort();
-    if ((sf_block *) FOOTER_POINTER(bp) >= (sf_block *) sf_mem_end()) abort();
-
-    size_t block_size = BLOCKSIZE(bp);
-
-    if (mode) {
-        if ((block_size < 32) || (block_size % 32 != 0)) abort();
-        if (!ALLOCATED_BIT(bp)) abort();
-    } else {
-        if (block_size % 32 != 0) abort();
+int validate_pointer(void *pp) {
+    // Check is pointer is NULL or not aligned
+    if (pp == NULL) {
+        error("NULL pointer passed!");
+        return -1;
     }
-    if ((!PREV_ALLOCATED_BIT(bp)) && (ALLOCATED_BIT((sf_block *)((sf_header *) bp - 1)))) abort();
-    
-    return;
+    if ((long int) pp % ALIGNMENT != 0) {
+        error("pointer passed is not 32 byte aligned!");
+        return -1;
+    }
+
+    // Check if block pointer is within heap
+    sf_block *bp = (sf_block *)((char *) pp - MEMROWSIZE);
+    if (bp <= PROLOGUE_POINTER) {
+        error("prologue pointer passed!");
+        return -1;
+    }
+    if (bp >= EPILOGUE_POINTER) {
+        error("epilogue pointer passed!");
+        return -1;
+    }
+    if ((sf_block *) FOOTER_POINTER(bp) >= (sf_block *) sf_mem_end()) {
+        error("pointer passed is not within heap!");
+        return -1;
+    }
+
+    // Check if block header is valid
+    if (!ALLOCATED_BIT(bp)) {
+        error("pointer to free block passed!");
+        return -1;
+    }
+    if ((!PREV_ALLOCATED_BIT(bp)) && (ALLOCATED_BIT((sf_block *)((sf_header *) bp - 1)))) {
+        error("pointer to block with corrupted header passed!");
+        return -1;
+    }
+    if ((BLOCKSIZE(bp) < 32) || (BLOCKSIZE(bp) % 32 != 0)) {
+        error("pointer to block with invalid size passed!");
+        return -1;
+    }
+    return 0;
 }

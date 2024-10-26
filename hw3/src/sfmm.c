@@ -61,7 +61,7 @@ void *sf_malloc(size_t size) {
 void sf_free(void *pp) {
     // Validate the pointer to be freed
     info("Validating the pointer to be freed...");
-    validate_pointer(pp, 0);
+    if (validate_pointer(pp) != 0) abort();
 
     // Free the block by updating header & footer
     info("Freeing the memory allocated at %p", pp);
@@ -84,8 +84,7 @@ void sf_free(void *pp) {
 void *sf_realloc(void *pp, size_t rsize) {
     // Validate the pointer to be reallocated
     info("Validating the pointer to be reallocated...");
-    // TODO: update mode arg below
-    validate_pointer(pp, 0);
+    if (validate_pointer(pp) != 0) abort();
 
     info("Reallocating the memory at %p...", pp);
     // Calculate block pointer and block sizes

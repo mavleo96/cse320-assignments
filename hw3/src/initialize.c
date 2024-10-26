@@ -51,7 +51,7 @@ void sf_init() {
     // Assert that heap is aligned
     info("Getting heap start pointer...");
     void *heap_start = sf_mem_start();
-    if ((long int) heap_start % 16 != 0) error("Heap start is not 16 byte aligned!");
+    if ((long int) heap_start % 16 != 0) error("heap start is not 16 byte aligned!");
     if ((long int) heap_start % 32 == 0) offset = (3 * MEMROWSIZE); else offset = (1 * MEMROWSIZE);
 
     // Expand heap

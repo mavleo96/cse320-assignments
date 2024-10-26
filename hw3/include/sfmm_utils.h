@@ -24,7 +24,8 @@ int offset;
 #define MIN_REQUIRED_BLOCKSIZE(size) \
     (((size) + MEMROWSIZE + ((ALIGNMENT - ((size) + MEMROWSIZE) % ALIGNMENT) % ALIGNMENT)))
 
-void validate_pointer(void *pp, int mode);
+// Auxillary Functions
+int validate_pointer(void *pp);
 
 // Block Functions
 sf_block *break_block(sf_block *bp, size_t required_size);
@@ -37,7 +38,7 @@ sf_block *find_in_free_list_i(int index, size_t size);
 void remove_block_from_free_list(sf_block *bp);
 void add_block_to_free_list(sf_block *bp);
 
-// Initialise Functions
+// Initialize Functions
 void update_prologue();
 void update_epilogue();
 void add_wilderness_block();
