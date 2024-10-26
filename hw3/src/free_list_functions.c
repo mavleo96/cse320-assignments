@@ -45,13 +45,14 @@ sf_block *find_in_free_list_i(int index, size_t size) {
  * Helper function to remove a block from free list
  */
 void remove_block_from_free_list(sf_block *bp) {
+    debug("removing %p from free list...", bp);
     // Validate block pointer 
     if (bp == NULL) {
         error("NULL pointer passed!");
         return;
     }
     if ((bp->body.links.next == NULL) || (bp->body.links.prev == NULL)) {
-        error("Pointer with NULL links passed!");
+        error("pointer with NULL links passed!");
         return;
     }
     // Update the links in next and prev block
@@ -64,13 +65,14 @@ void remove_block_from_free_list(sf_block *bp) {
  * Helper function to add a block to appropriate free list
  */
 void add_block_to_free_list(sf_block *bp) {
+    debug("adding %p to free list...", bp);
     // Validate block pointer 
     if (bp == NULL) {
         error("NULL pointer passed!");
         return;
     }
     if (ALLOCATED_BIT(bp)) {
-        error("Allocated block passed!");
+        error("allocated block passed!");
     }
 
     // Check if the free block passed is wilderness block
@@ -90,6 +92,5 @@ void add_block_to_free_list(sf_block *bp) {
     // Update the links in next and prev block
     bp->body.links.next->body.links.prev = bp;
     bp->body.links.prev->body.links.next = bp;
-
     return;
 }
