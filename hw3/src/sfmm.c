@@ -52,9 +52,11 @@ void *sf_malloc(size_t size) {
         } else {
             info("Free block of size %ld found...", BLOCKSIZE(bp));
             remove_block_from_free_list(bp);
-            if (BLOCKSIZE(bp) - rsize >= ALIGNMENT) {
+            update_block_header(bp, bp->header | 0b10000);
+            if (BLOCKSIZE(bp) - rsize >= MINBLOCKSIZE) {
                 // If free block found can be broken without splinter
                 sf_block *rbp = break_block(bp, rsize);
+                // update_block_header(bp, bp->header | 0b10000);
                 add_block_to_free_list(rbp);
             }
         }
@@ -98,25 +100,26 @@ void *sf_realloc(void *pp, size_t rsize) {
     info("Reallocating the memory at %p...", pp);
     // Calculate block pointer and block sizes
     sf_block *bp = (sf_block *)((char *) pp - MEMROWSIZE);
-    size_t block_size = BLOCKSIZE(bp);
-    size_t new_block_size = MIN_REQUIRED_BLOCKSIZE(rsize);
+    size_t blocksize = BLOCKSIZE(bp);
+    size_t new_blocksize = MIN_REQUIRED_BLOCKSIZE(rsize);
 
     if (rsize == 0) {
         // If block is to be reallocated to size 0 then call sf_free and return null
         sf_free(pp);
         return NULL;
-    } else if (new_block_size == block_size) {
+    } else if (new_blocksize == blocksize) {
         // If block is to be reallocated to same size then return pp
         return pp;
-    } else if (new_block_size > block_size) {
+    } else if (new_blocksize > blocksize) {
         // If block is to be reallocated to larger size then call sf_malloc, copy contents and call sf_free
         void *npp = sf_malloc(rsize);
-        memcpy(npp, pp, block_size - MEMROWSIZE);
+        memcpy(npp, pp, blocksize - MEMROWSIZE);
         sf_free(pp);
         return npp;
     } else {
         // If block is to be reallocated to smaller size then break block, coalesce remainder contents and add to free list
-        sf_block *rbp = break_block(bp, new_block_size);
+        sf_block *rbp = break_block(bp, new_blocksize);
+        update_block_header(bp, bp->header | 0b10000);
         rbp = coalesce_block(rbp);
         add_block_to_free_list(rbp);
         return pp;

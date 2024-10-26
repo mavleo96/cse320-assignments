@@ -44,3 +44,18 @@ int validate_pointer(void *pp) {
     }
     return 0;
 }
+
+/*
+ * Helper function to update block header and footers
+ */
+ void update_block_header(sf_block *bp, sf_header header) {
+    // Update header and footer of block
+    bp->header = header;
+    if (!ALLOCATED_BIT(bp)) *FOOTER_POINTER(bp) = bp->header;
+
+    // Update prev_allocated_bit in next block
+    sf_block *nbp = NEXT_BLOCK_POINTER(bp);
+    if (ALLOCATED_BIT(bp)) nbp->header |= 0b01000;
+    else nbp->header &= ~ 0b01000;
+    if (!ALLOCATED_BIT(nbp)) *FOOTER_POINTER(nbp) = nbp->header;
+ }

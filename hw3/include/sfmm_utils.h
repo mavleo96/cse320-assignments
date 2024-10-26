@@ -28,6 +28,7 @@ int offset;
 
 // Auxillary Functions
 int validate_pointer(void *pp);
+ void update_block_header(sf_block *bp, sf_header header);
 
 // Block Functions
 sf_block *break_block(sf_block *bp, size_t required_size);

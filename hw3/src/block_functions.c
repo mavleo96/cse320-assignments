@@ -15,24 +15,14 @@ sf_block *break_block(sf_block *bp, size_t rsize) {
         return NULL;
     }
 
-
     // Calculate pointer of remainder block and blocksize
     size_t blocksize = BLOCKSIZE(bp);
     sf_block *rbp = (sf_block *)((char *)bp + (sf_header)rsize);
     
-    // Update header and footer of block
-    bp->header = (bp->header & 0b11111) + (sf_header)rsize;  // (blocksize, allocated, prev_allocated) -> (rsize, 0/1, 0/1)
-    if (!ALLOCATED_BIT(bp)) *FOOTER_POINTER(bp) = bp->header;
+    // Update header and footer of new blocks
+    update_block_header(rbp, (sf_header)(blocksize - rsize + 0b00000));  // (blocksize, allocated, prev_allocated) -> (blocksize - rsize, 0, 0/1)
+    update_block_header(bp, (bp->header & 0b11111) + (sf_header)rsize);  // (blocksize, allocated, prev_allocated) -> (rsize, 0/1, 0/1)
 
-    // Update header and footer of remainder block
-    // TODO: check if previous block is always allocated
-    rbp->header = (sf_header)(blocksize - rsize + 0b01000);  // (blocksize, allocated, prev_allocated) -> (blocksize - rsize, 0, 1)
-    *FOOTER_POINTER(rbp) = rbp->header;
-
-    // Update prev_allocated_bit in next block
-    sf_block *nbp = NEXT_BLOCK_POINTER(rbp);
-    nbp->header &= ~ 0b01000;
-    if (!ALLOCATED_BIT(nbp)) *FOOTER_POINTER(nbp) = nbp->header;
     return rbp;
 }
 
@@ -53,8 +43,7 @@ sf_block *expand_heap() {
     update_epilogue();
 
     // Update header and footer of free block and return pointer
-    bp->header += PAGE_SZ;
-    *FOOTER_POINTER(bp) = bp->header;
+    update_block_header(bp, bp->header + PAGE_SZ);
     return bp;
 }
 
