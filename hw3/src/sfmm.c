@@ -75,13 +75,7 @@ void sf_free(void *pp) {
     // Free the block by updating header & footer
     info("Freeing the memory allocated at %p", pp);
     sf_block *bp = (sf_block *)((char *) pp - MEMROWSIZE);
-    bp->header &= ~ 0b10000;
-    *FOOTER_POINTER(bp) = bp->header;
-
-    // Update prev_allocated_bit in next block
-    sf_block *nbp = NEXT_BLOCK_POINTER(bp);
-    nbp->header &= ~ 0b1000;
-    if (!ALLOCATED_BIT(nbp)) *FOOTER_POINTER(nbp) = nbp->header;
+    update_block_header(bp, bp->header & ~ 0b10000);
 
     // Coalesce the block and add to free list
     bp = coalesce_block(bp);
