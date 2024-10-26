@@ -1,49 +1,82 @@
 #include "sfmm_utils.h"
 
-sf_block *break_block(sf_block *bp, size_t required_size) {
+/*
+ * Helper function to break a block and return pointer to remainder block
+ */
+sf_block *break_block(sf_block *bp, size_t rsize) {
+    info("Breaking block...");
+    // Validate block pointer 
+    if (bp == NULL) {
+        error("NULL pointer passed!");
+        return NULL;
+    }
+    if (BLOCKSIZE(bp) < rsize) {
+        error("blocksize is smaller than rsize arg passed!");
+        return NULL;
+    }
 
-    size_t block_size = get_blocksize(bp);
-
-    sf_block *rbp = (sf_block *)((char *) bp + required_size);
-
-    bp->header = required_size + (bp->header & 0b11111);
-    rbp->header = (sf_header) (block_size - required_size + 0b01000);
-    *get_footer(rbp) = rbp->header;
-
-    *(sf_header *)((char *) bp + block_size) &= ~ 0b1000;
+    // Calculate pointer of remainder block and blocksize
+    size_t blocksize = BLOCKSIZE(bp);
+    sf_block *rbp = (sf_block *)((char *)bp + (sf_header)rsize);
+    
+    // Update header and footer of new blocks
+    update_block_header(rbp, (sf_header)(blocksize - rsize + 0b00000));  // (blocksize, allocated, prev_allocated) -> (blocksize - rsize, 0, 0/1)
+    update_block_header(bp, (bp->header & 0b11111) + (sf_header)rsize);  // (blocksize, allocated, prev_allocated) -> (rsize, 0/1, 0/1)
 
     return rbp;
 }
 
+/*
+ * Helper function to expand heap and return the free block created
+ */
 sf_block *expand_heap() {
-    sf_block *bp = (sf_block *)((char *) sf_mem_end() - MEMROWSIZE);
+    // Save the epilogue pointer which will be header to free block and heap expand
+    sf_block *bp = EPILOGUE_POINTER;
+ 
+    // Expand heap and update epilogue
     info("Expanding heap...");
-    sf_mem_grow();
+    if (sf_mem_grow() == NULL) {
+        sf_errno = ENOMEM;
+        error("not enough memory!");
+        return NULL;
+    }
     update_epilogue();
-    bp->header += PAGE_SZ;
-    *get_footer(bp) = bp->header;
-    
+
+    // Update header and footer of free block and return pointer
+    update_block_header(bp, (bp->header & ~ 0b10000) + PAGE_SZ);
     return bp;
 }
 
+/*
+ * Helper function to coalesce block return the free block created
+ */
 sf_block *coalesce_block(sf_block *bp) {
-    int prev_allocated = get_prev_allocated_bit(bp);
-    int next_allocated = get_allocated_bit(get_next_block(bp));
-    if (prev_allocated & next_allocated) return bp;
+    info("Coalescing the block...");
+    // Validate block pointer 
+    if (bp == NULL) {
+        error("NULL pointer passed!");
+        return NULL;
+    }
+
+    // Coalesce with next block
+    int next_allocated = ALLOCATED_BIT(NEXT_BLOCK_POINTER(bp));
     if (!next_allocated) {
-        size_t next_block_size = get_blocksize(get_next_block(bp));
-        remove_block_from_free_list(get_next_block(bp));
-        bp->header += next_block_size;
+        size_t next_blocksize = BLOCKSIZE(NEXT_BLOCK_POINTER(bp));
+        remove_block_from_free_list(NEXT_BLOCK_POINTER(bp));
+        bp->header += next_blocksize;
         bp->header &= ~ 0b10000;
     }
+
+    // Coalesce with previous block
+    int prev_allocated = PREV_ALLOCATED_BIT(bp);
     if (!prev_allocated) {
-        size_t prev_block_size = get_blocksize((sf_block *)((sf_header *) bp - 1));
-        size_t block_size = get_blocksize(bp);
-        bp = (sf_block *)((char *) bp - prev_block_size);
+        size_t prev_blocksize = BLOCKSIZE((sf_block *)((sf_header *) bp - 1));
+        size_t blocksize = BLOCKSIZE(bp);
+        bp = (sf_block *)((char *) bp - prev_blocksize);
         remove_block_from_free_list(bp);
-        bp->header += block_size;
+        bp->header += blocksize;
         bp->header &= ~ 0b10000;
     }
-    *get_footer(bp) = bp->header;
+    *FOOTER_POINTER(bp) = bp->header;
     return bp;
 }

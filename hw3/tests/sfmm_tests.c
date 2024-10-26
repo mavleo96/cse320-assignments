@@ -3,6 +3,8 @@
 #include <signal.h>
 #include "debug.h"
 #include "sfmm.h"
+#include "sfmm_utils.h"
+#include "math.h"
 #define TEST_TIMEOUT 15
 
 /*
@@ -180,7 +182,7 @@ Test(sfmm_basecode_suite, realloc_smaller_block_splinter, .timeout = TEST_TIMEOU
 }
 
 Test(sfmm_basecode_suite, realloc_smaller_block_free_block, .timeout = TEST_TIMEOUT) {
-        size_t sz_x = sizeof(double) * 8, sz_y = sizeof(int);
+	size_t sz_x = sizeof(double) * 8, sz_y = sizeof(int);
 	void *x = sf_malloc(sz_x);
 	void *y = sf_realloc(x, sz_y);
 
@@ -203,5 +205,158 @@ Test(sfmm_basecode_suite, realloc_smaller_block_free_block, .timeout = TEST_TIME
 //DO NOT DELETE OR MANGLE THESE COMMENTS
 //############################################
 
-//Test(sfmm_student_suite, student_test_1, .timeout = TEST_TIMEOUT) {
-//}
+/*----------------------------------------------*/
+/*			  sfmm_utils test suite				*/
+/*----------------------------------------------*/
+
+Test(sfmm_utils_suite, validate_pointer) {
+	// Simulating malloc operations
+	// Valid allocated block
+	void *ptr1 = sf_malloc(32);
+	// Corrupted allocated block
+	void *ptr2 = sf_malloc(32);
+	sf_block *cbp = (sf_block *)((sf_header *)ptr2 - 1);
+	cbp->header = 0x1;
+	// Free block
+	void *ptr3 = sf_malloc(32);
+	sf_free(ptr3);
+	// Offset by 1 byte to misalign
+    void *unaligned_ptr = (void *)((char *)ptr1 + 1);
+	void *out_of_bounds_ptr = (void *)((char *)sf_mem_end() + 32);
+
+
+    cr_assert_eq(validate_pointer(NULL), -1, "Expected -1 for NULL pointer");                  	// Test NULL pointer
+    cr_assert_eq(validate_pointer(unaligned_ptr), -1, "Expected -1 for unaligned pointer");    	// Test unaligned pointer (e.g., not 32-byte aligned)
+    cr_assert_eq(validate_pointer((char *)PROLOGUE_POINTER + MEMROWSIZE), -1,					// Test pointer to prologue area
+		"Expected -1 for prologue pointer"); 
+    cr_assert_eq(validate_pointer((char *)EPILOGUE_POINTER - MEMROWSIZE), -1,					// Test pointer to epilogue area
+		"Expected -1 for epilogue pointer");
+	cr_assert_eq(validate_pointer(out_of_bounds_ptr), -1,										// Test pointer out of heap bounds (greater than sf_mem_end)
+		"Expected -1 for pointer out of heap bounds");
+    cr_assert_eq(validate_pointer(ptr3), -1, "Expected -1 for pointer to free block");    		// Test pointer to free block (not allocated)
+	cr_assert_eq(validate_pointer(ptr2), -1,													// Test pointer to block with invalid header (corrupted header)
+		"Expected -1 for pointer with corrupted header");
+    cr_assert_eq(validate_pointer(ptr1), 0, "Expected 0 for valid pointer");					// Test valid block
+}
+
+/*----------------------------------------------*/
+/*		      sf_memalign test suite			*/
+/*----------------------------------------------*/
+
+
+Test(sfmm_memalign_suite, sf_memalign_invalid_alignment) {
+	// Invalid alignment, not a power of 2 and < 32
+    sf_errno = 0;
+    void *result = sf_memalign(100, 20);
+    cr_assert_null(result, "Expected NULL for invalid alignment < 32 or not a power of 2");
+    cr_assert_eq(sf_errno, EINVAL, "Expected sf_errno to be set to EINVAL");
+
+	// Invalid alignment, not a power of 2
+    sf_errno = 0;
+    result = sf_memalign(100, 18);
+    cr_assert_null(result, "Expected NULL for invalid alignment that is not a power of 2");
+    cr_assert_eq(sf_errno, EINVAL, "Expected sf_errno to be set to EINVAL");
+}
+
+Test(sfmm_memalign_suite, sf_memalign_small_allocation_valid_alignment) {
+	// Request memory with valid alignment
+    sf_errno = 0;
+    size_t align = 64;
+    size_t size = 50;
+    void *result = sf_memalign(size, align);
+
+    cr_assert_not_null(result, "Expected non-NULL result for valid alignment and allocation");
+    cr_assert((long int)result % align == 0, "Expected pointer to be aligned to %ld bytes", align);
+    cr_assert_eq(sf_errno, 0, "Expected sf_errno to be 0 for successful allocation");
+}
+
+Test(sfmm_memalign_suite, sf_memalign_large_allocation_valid_alignment) {
+	// Request memory with valid alignment
+    sf_errno = 0;  // Reset errno
+    size_t align = 128;
+    size_t size = 4000;
+    void *result = sf_memalign(size, align);
+
+    cr_assert_not_null(result, "Expected non-NULL result for large allocation with valid alignment");
+    cr_assert((long int)result % align == 0, "Expected pointer to be aligned to %ld bytes", align);
+    cr_assert_eq(sf_errno, 0, "Expected sf_errno to be 0 for successful allocation");
+
+    // Verify that the block size is greater than or equal to the requested size
+    sf_block *bp = (sf_block *)((sf_header *)result - 1);
+    cr_assert_geq(BLOCKSIZE(bp), size, "Expected allocated block size to be at least %ld bytes", size);
+}
+
+Test(sfmm_memalign_suite, sf_memalign_small_allocation_large_alignment) {
+	// Request memory with valid alignment
+    sf_errno = 0;
+    size_t align = 4096;
+    size_t size = 50;
+    void *result = sf_memalign(size, align);
+
+    cr_assert_not_null(result, "Expected non-NULL result for valid alignment and allocation");
+    cr_assert((long int)result % align == 0, "Expected pointer to be aligned to %ld bytes", align);
+    cr_assert_eq(sf_errno, 0, "Expected sf_errno to be 0 for successful allocation");
+}
+
+
+/*----------------------------------------------*/
+/*		        stress test suite				*/
+/*----------------------------------------------*/
+
+
+Test(sfmm_stress, stress_test_malloc_realloc_free_memalign) {
+    int NUM_ITERATIONS = 300, MAX_SIZE = 1000;
+
+    void *pointers[NUM_ITERATIONS];  	     	// Array to store pointers for validation
+    size_t sizes[NUM_ITERATIONS];       	   	// Store sizes for each allocation
+    size_t alignments[NUM_ITERATIONS];    		// Store alignments used in memalign
+    for (int i = 0; i < NUM_ITERATIONS; i++) {
+		pointers[i] = NULL;
+		sizes[i] = 0;
+		alignments[i] = 0;
+	}
+
+    // Random seed for consistent test runs
+    srand(0);
+
+    for (int i = 0; i < NUM_ITERATIONS; i++) {
+        int op = rand() % 4;  // Choose a random operation: 0=malloc, 1=realloc, 2=free, 3=memalign
+        switch (op) {
+            case 0:  // sf_malloc
+                sizes[i] = rand() % MAX_SIZE + 1;
+                pointers[i] = sf_malloc(sizes[i]);
+                cr_assert_not_null(pointers[i], "sf_malloc returned NULL at iteration %d", i);
+                break;
+
+            case 1:  // sf_realloc
+                if (pointers[i]) {
+                    sizes[i] = rand() % MAX_SIZE + 1;
+                    pointers[i] = sf_realloc(pointers[i], sizes[i]);
+                    cr_assert_not_null(pointers[i], "sf_realloc returned NULL at iteration %d", i);
+                }
+                break;
+
+            case 2:  // sf_free
+                if (pointers[i]) {
+                    sf_free(pointers[i]);
+                    pointers[i] = NULL;  // Mark as freed
+                }
+                break;
+
+            case 3:  // sf_memalign
+                sizes[i] = rand() % MAX_SIZE + 1;
+                alignments[i] = (int)pow(2, 5 + rand() % 5);
+                pointers[i] = sf_memalign(sizes[i], alignments[i]);
+                cr_assert_not_null(pointers[i], "sf_memalign returned NULL at iteration %d", i);
+                cr_assert((long int)pointers[i] % alignments[i] == 0, "Pointer not aligned to %zu at iteration %d", alignments[i], i);
+                break;
+        }
+    }
+
+    // Free any remaining allocated memory
+    for (int i = 0; i < NUM_ITERATIONS; i++) {
+        if (pointers[i]) {
+            sf_free(pointers[i]);
+        }
+    }
+}
