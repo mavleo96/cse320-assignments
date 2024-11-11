@@ -1,0 +1,88 @@
+Graded Commit:af05c4020cbd68a7fe4e7896cd2f4a995237a437
+
+TEST NAME, POINTS,OUT OF
+basecode_suite/free_coalesce,1,1,
+basecode_suite/free_coalesce_alt,0,1,The test crashed.: None
+basecode_suite/free_no_coalesce,1,1,
+basecode_suite/free_no_coalesce_alt,0,1,The test crashed.: None
+basecode_suite/freelist,1,1,
+basecode_suite/freelist_alt,0,1,The test crashed.: None
+basecode_suite/malloc_an_int,1,1,
+basecode_suite/malloc_an_int_alt,0,1,"1 assertion(s) failed.: tests/__grading_helpers.c:177: Wrong number of free blocks (exp=1, found=3)"
+basecode_suite/malloc_four_pages,1,1,
+basecode_suite/malloc_four_pages_alt,0,1,"1 assertion(s) failed.: tests/__grading_helpers.c:177: Wrong number of free blocks (exp=0, found=3)"
+basecode_suite/malloc_too_large,1,1,
+basecode_suite/malloc_too_large_alt,0,1,"1 assertion(s) failed.: tests/__grading_helpers.c:177: Wrong number of free blocks (exp=1, found=3)"
+basecode_suite/realloc_larger_block,1,1,
+basecode_suite/realloc_larger_block_alt,0,1,1 assertion(s) failed.: tests/sfmm_tests_alt.c:115: x is NULL!
+basecode_suite/realloc_smaller_block_free_block,1,1,
+basecode_suite/realloc_smaller_block_free_block_alt,0,1,1 assertion(s) failed.: tests/sfmm_tests_alt.c:151: y is NULL!
+basecode_suite/realloc_smaller_block_splinter,1,1,
+basecode_suite/realloc_smaller_block_splinter_alt,0,1,1 assertion(s) failed.: tests/sfmm_tests_alt.c:132: y is NULL!
+illegal_pointer_suite/free_block_too_small,1,1,
+illegal_pointer_suite/free_block_too_small_alt,1,1,
+illegal_pointer_suite/free_null,1,1,
+illegal_pointer_suite/free_null_alt,1,1,
+illegal_pointer_suite/free_prev_alloc,0,1,1 assertion(s) failed.: tests/grading_tests_p2.c:206: SIGABRT should have been received
+illegal_pointer_suite/free_prev_alloc_alt,1,1,
+illegal_pointer_suite/free_unallocated,1,1,
+illegal_pointer_suite/free_unallocated_alt,1,1,
+initialization_suite/initialization,1,1,
+initialization_suite/initialization_alt,0,1,1 assertion(s) failed.: tests/__grading_helpers.c:77: Block size is invalid for 0x57e3deb8ddd8. Got: 0
+lifo_suite/malloc_free_lifo,0,1,1 assertion(s) failed.: tests/grading_tests_p2.c:47: malloc/free does not follow LIFO discipline
+lifo_suite/malloc_free_lifo_alt,0,1,The test crashed.: None
+malloc_free_suite/coalesce_both,1,1,
+malloc_free_suite/coalesce_both_alt,0,1,The test crashed.: None
+malloc_free_suite/coalesce_lower,1,1,
+malloc_free_suite/coalesce_lower_alt,0,1,The test crashed.: None
+malloc_free_suite/coalesce_upper,1,1,
+malloc_free_suite/coalesce_upper_alt,0,1,The test crashed.: None
+malloc_free_suite/first_block,1,1,
+malloc_free_suite/first_block_alt,0,1,The test crashed.: None
+malloc_free_suite/last_block,1,1,
+malloc_free_suite/last_block_alt,0,1,The test crashed.: None
+malloc_free_suite/no_coalesce,1,1,
+malloc_free_suite/no_coalesce_alt,0,1,The test crashed.: None
+memalign_suite/test_1a,1,1,
+memalign_suite/test_1a_alt,1,1,
+memalign_suite/test_1b,1,1,
+memalign_suite/test_1b_alt,1,1,
+memalign_suite/test_1c,1,1,
+memalign_suite/test_1c_alt,1,1,
+memalign_suite/test_2,1,1,
+memalign_suite/test_2_alt,1,1,
+memalign_suite/test_3,1,1,
+memalign_suite/test_3_alt,0,1,1 assertion(s) failed.: tests/__grading_helpers.c:77: Block size is invalid for 0x609e8a8a3d18. Got: 0
+realloc_suite/realloc_larger,1,1,
+realloc_suite/realloc_larger_alt,0,1,1 assertion(s) failed.: tests/__grading_helpers.c:142: Payload pointer should not be NULL
+realloc_suite/realloc_preserves_payload,1,1,
+realloc_suite/realloc_preserves_payload_alt,0,1,1 assertion(s) failed.: tests/__grading_helpers.c:142: Payload pointer should not be NULL
+realloc_suite/realloc_same,1,1,
+realloc_suite/realloc_same_alt,0,1,1 assertion(s) failed.: tests/__grading_helpers.c:142: Payload pointer should not be NULL
+realloc_suite/realloc_size_0,1,1,
+realloc_suite/realloc_size_0_alt,0,1,"1 assertion(s) failed.: tests/__grading_helpers.c:126: Block 0x603279b3b5e8 has wrong allocation status (got 1, expected 0)"
+realloc_suite/realloc_smaller,1,1,
+realloc_suite/realloc_smaller_alt,0,1,1 assertion(s) failed.: tests/__grading_helpers.c:142: Payload pointer should not be NULL
+realloc_suite/realloc_splinter,1,1,
+realloc_suite/realloc_splinter_alt,0,1,1 assertion(s) failed.: tests/__grading_helpers.c:142: Payload pointer should not be NULL
+single_malloc_suite/exactly_one_page,1,1,
+single_malloc_suite/exactly_one_page_alt,0,1,1 assertion(s) failed.: tests/__grading_helpers.c:77: Block size is invalid for 0x5aea05825d78. Got: 0
+single_malloc_suite/malloc_1,1,1,
+single_malloc_suite/malloc_16,1,1,
+single_malloc_suite/malloc_16_alt,0,1,1 assertion(s) failed.: tests/__grading_helpers.c:77: Block size is invalid for 0x6342525d0d18. Got: 0
+single_malloc_suite/malloc_1_alt,0,1,1 assertion(s) failed.: tests/__grading_helpers.c:77: Block size is invalid for 0x5d92441b2d18. Got: 0
+single_malloc_suite/malloc_32,1,1,
+single_malloc_suite/malloc_32_alt,0,1,1 assertion(s) failed.: tests/__grading_helpers.c:77: Block size is invalid for 0x5ce68803ed18. Got: 0
+single_malloc_suite/malloc_max,1,1,
+single_malloc_suite/malloc_max_alt,0,1,1 assertion(s) failed.: tests/__grading_helpers.c:93: Allocated block at 0x64bf41a6b558 is also in the free list
+single_malloc_suite/more_than_one_page,1,1,
+single_malloc_suite/more_than_one_page_alt,0,1,1 assertion(s) failed.: tests/__grading_helpers.c:93: Allocated block at 0x616f3810b5b8 is also in the free list
+single_malloc_suite/splinter,1,1,
+single_malloc_suite/splinter_alt,0,1,1 assertion(s) failed.: tests/__grading_helpers.c:77: Block size is invalid for 0x613bc8872d18. Got: 0
+single_malloc_suite/three_pages,1,1,
+single_malloc_suite/three_pages_alt,0,1,1 assertion(s) failed.: tests/__grading_helpers.c:93: Allocated block at 0x5af40d830558 is also in the free list
+stress_suite/malloc_to_exhaustion,1,1,
+stress_suite/malloc_to_exhaustion_alt,0,1,"1 assertion(s) failed.: tests/grading_tests_p1_alt.c:291: Allocation succeeded, but heap should be exhausted."
+stress_suite/stress_test,1,1,
+stress_suite/stress_test_alt,0,1,The test crashed.: None
+total,48,84
