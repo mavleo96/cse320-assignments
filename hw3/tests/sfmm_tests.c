@@ -7,45 +7,9 @@
 #include "math.h"
 #define TEST_TIMEOUT 15
 
-/*
- * Assert the total number of free blocks of a specified size.
- * If size == 0, then assert the total number of all free blocks.
- */
-void assert_free_block_count(size_t size, int count) {
-    int cnt = 0;
-    for(int i = 0; i < NUM_FREE_LISTS; i++) {
-	sf_block *bp = sf_free_list_heads[i].body.links.next;
-	while(bp != &sf_free_list_heads[i]) {
-	    if(size == 0 || size == (bp->header & ~0x1f))
-		cnt++;
-	    bp = bp->body.links.next;
-	}
-    }
-    if(size == 0) {
-	cr_assert_eq(cnt, count, "Wrong number of free blocks (exp=%d, found=%d)",
-		     count, cnt);
-    } else {
-	cr_assert_eq(cnt, count, "Wrong number of free blocks of size %zu (exp=%d, found=%d)",
-		     size, count, cnt);
-    }
-}
+#include "__grading_helpers.h"
 
-/*
- * Assert that the free list with a specified index has the specified number of
- * blocks in it.
- */
-void assert_free_list_size(int index, int size) {
-    int cnt = 0;
-    sf_block *bp = sf_free_list_heads[index].body.links.next;
-    while(bp != &sf_free_list_heads[index]) {
-	cnt++;
-	bp = bp->body.links.next;
-    }
-    cr_assert_eq(cnt, size, "Free list %d has wrong number of free blocks (exp=%d, found=%d)",
-		 index, size, cnt);
-}
-
-Test(sfmm_basecode_suite, malloc_an_int, .timeout = TEST_TIMEOUT) {
+Test(basecode_suite, malloc_an_int, .timeout = TEST_TIMEOUT) {
 	sf_errno = 0;
 	size_t sz = sizeof(int);
 	int *x = sf_malloc(sz);
@@ -56,35 +20,35 @@ Test(sfmm_basecode_suite, malloc_an_int, .timeout = TEST_TIMEOUT) {
 
 	cr_assert(*x == 4, "sf_malloc failed to give proper space for an int!");
 
-	assert_free_block_count(0, 1);
-	assert_free_block_count(1952, 1);
+	_assert_free_block_count(0, 1);
+	_assert_free_block_count(1952, 1);
 
 	cr_assert(sf_errno == 0, "sf_errno is not zero!");
 	cr_assert(sf_mem_start() + PAGE_SZ == sf_mem_end(), "Allocated more than necessary!");
 }
 
-Test(sfmm_basecode_suite, malloc_four_pages, .timeout = TEST_TIMEOUT) {
+Test(basecode_suite, malloc_four_pages, .timeout = TEST_TIMEOUT) {
 	sf_errno = 0;
 
 	// We want to allocate up to exactly four pages, so there has to be space
 	// for the header and the link pointers.
 	void *x = sf_malloc(8092);
 	cr_assert_not_null(x, "x is NULL!");
-	assert_free_block_count(0, 0);
+	_assert_free_block_count(0, 0);
 	cr_assert(sf_errno == 0, "sf_errno is not 0!");
 }
 
-Test(sfmm_basecode_suite, malloc_too_large, .timeout = TEST_TIMEOUT) {
+Test(basecode_suite, malloc_too_large, .timeout = TEST_TIMEOUT) {
 	sf_errno = 0;
-	void *x = sf_malloc(100281);
+	void *x = sf_malloc(128953);
 
 	cr_assert_null(x, "x is not NULL!");
-	assert_free_block_count(0, 1);
-	assert_free_block_count(100288, 1);
+	_assert_free_block_count(0, 1);
+	_assert_free_block_count(128960, 1);
 	cr_assert(sf_errno == ENOMEM, "sf_errno is not ENOMEM!");
 }
 
-Test(sfmm_basecode_suite, free_no_coalesce, .timeout = TEST_TIMEOUT) {
+Test(basecode_suite, free_no_coalesce, .timeout = TEST_TIMEOUT) {
 	sf_errno = 0;
 	size_t sz_x = 8, sz_y = 200, sz_z = 1;
 	/* void *x = */ sf_malloc(sz_x);
@@ -93,15 +57,15 @@ Test(sfmm_basecode_suite, free_no_coalesce, .timeout = TEST_TIMEOUT) {
 
 	sf_free(y);
 
-	assert_free_block_count(0, 2);
-	assert_free_block_count(0, 2);
-	assert_free_block_count(224, 1);
-	assert_free_block_count(1696, 1);
+	_assert_free_block_count(0, 2);
+	_assert_free_block_count(0, 2);
+	_assert_free_block_count(224, 1);
+	_assert_free_block_count(1696, 1);
 
 	cr_assert(sf_errno == 0, "sf_errno is not zero!");
 }
 
-Test(sfmm_basecode_suite, free_coalesce, .timeout = TEST_TIMEOUT) {
+Test(basecode_suite, free_coalesce, .timeout = TEST_TIMEOUT) {
 	sf_errno = 0;
 	size_t sz_w = 8, sz_x = 200, sz_y = 300, sz_z = 4;
 	/* void *w = */ sf_malloc(sz_w);
@@ -112,14 +76,14 @@ Test(sfmm_basecode_suite, free_coalesce, .timeout = TEST_TIMEOUT) {
 	sf_free(y);
 	sf_free(x);
 
-	assert_free_block_count(0, 2);
-	assert_free_block_count(544, 1);
-	assert_free_block_count(1376, 1);
+	_assert_free_block_count(0, 2);
+	_assert_free_block_count(544, 1);
+	_assert_free_block_count(1376, 1);
 
 	cr_assert(sf_errno == 0, "sf_errno is not zero!");
 }
 
-Test(sfmm_basecode_suite, freelist, .timeout = TEST_TIMEOUT) {
+Test(basecode_suite, freelist, .timeout = TEST_TIMEOUT) {
         size_t sz_u = 200, sz_v = 300, sz_w = 200, sz_x = 400, sz_y = 200, sz_z = 500;
 	void *u = sf_malloc(sz_u);
 	/* void *v = */ sf_malloc(sz_v);
@@ -132,9 +96,9 @@ Test(sfmm_basecode_suite, freelist, .timeout = TEST_TIMEOUT) {
 	sf_free(w);
 	sf_free(y);
 
-	assert_free_block_count(0, 4);
-	assert_free_block_count(224, 3);
-	assert_free_block_count(64, 1);
+	_assert_free_block_count(0, 4);
+	_assert_free_block_count(224, 3);
+	_assert_free_block_count(64, 1);
 
 	// First block in list should be the most recently freed block.
 	int i = 4;
@@ -144,7 +108,7 @@ Test(sfmm_basecode_suite, freelist, .timeout = TEST_TIMEOUT) {
                      i, bp, (char *)y - 8);
 }
 
-Test(sfmm_basecode_suite, realloc_larger_block, .timeout = TEST_TIMEOUT) {
+Test(basecode_suite, realloc_larger_block, .timeout = TEST_TIMEOUT) {
         size_t sz_x = sizeof(int), sz_y = 10, sz_x1 = sizeof(int) * 20;
 	void *x = sf_malloc(sz_x);
 	/* void *y = */ sf_malloc(sz_y);
@@ -157,12 +121,12 @@ Test(sfmm_basecode_suite, realloc_larger_block, .timeout = TEST_TIMEOUT) {
 		  "Realloc'ed block size (%zu) not what was expected (%d)!",
 		  bp->header & ~0x1f, 96);
 
-	assert_free_block_count(0, 2);
-	assert_free_block_count(32, 1);
-	assert_free_block_count(1824, 1);
+	_assert_free_block_count(0, 2);
+	_assert_free_block_count(32, 1);
+	_assert_free_block_count(1824, 1);
 }
 
-Test(sfmm_basecode_suite, realloc_smaller_block_splinter, .timeout = TEST_TIMEOUT) {
+Test(basecode_suite, realloc_smaller_block_splinter, .timeout = TEST_TIMEOUT) {
         size_t sz_x = sizeof(int) * 20, sz_y = sizeof(int) * 16;
 	void *x = sf_malloc(sz_x);
 	void *y = sf_realloc(x, sz_y);
@@ -177,12 +141,12 @@ Test(sfmm_basecode_suite, realloc_smaller_block_splinter, .timeout = TEST_TIMEOU
 		  bp->header & ~0x1f, 96);
 
 	// There should be only one free block.
-	assert_free_block_count(0, 1);
-	assert_free_block_count(1888, 1);
+	_assert_free_block_count(0, 1);
+	_assert_free_block_count(1888, 1);
 }
 
-Test(sfmm_basecode_suite, realloc_smaller_block_free_block, .timeout = TEST_TIMEOUT) {
-	size_t sz_x = sizeof(double) * 8, sz_y = sizeof(int);
+Test(basecode_suite, realloc_smaller_block_free_block, .timeout = TEST_TIMEOUT) {
+        size_t sz_x = sizeof(double) * 8, sz_y = sizeof(int);
 	void *x = sf_malloc(sz_x);
 	void *y = sf_realloc(x, sz_y);
 
@@ -196,8 +160,8 @@ Test(sfmm_basecode_suite, realloc_smaller_block_free_block, .timeout = TEST_TIME
 
 	// After realloc'ing x, we can return a block of size ADJUSTED_BLOCK_SIZE(sz_x) - ADJUSTED_BLOCK_SIZE(sz_y)
 	// to the freelist.  This block will go into the main freelist and be coalesced.
-	assert_free_block_count(0, 1);
-	assert_free_block_count(1952, 1);
+	_assert_free_block_count(0, 1);
+	_assert_free_block_count(1952, 1);
 }
 
 //############################################
