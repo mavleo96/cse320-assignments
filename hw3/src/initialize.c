@@ -57,6 +57,7 @@ int sf_init() {
         return -1;
     }
     if ((long int) heap_start % 32 == 0) offset = (3 * MEMROWSIZE); else offset = (1 * MEMROWSIZE);
+    if ((long int) heap_start % 32 == 0) offset2 = (0 * MEMROWSIZE); else offset2 = (2 * MEMROWSIZE);
 
     // Expand heap
     debug("expanding heap...");

@@ -12,6 +12,7 @@ int init_flag;
 #define MINBLOCKSIZE 32
 #define MEMROWSIZE 8
 int offset;
+int offset2;
 
 // Macros to parse information from block header
 #define BLOCKSIZE(bp)          ((bp)->header & ~0b11111)    // Mask 5 LSB to get the block size
@@ -21,7 +22,7 @@ int offset;
 #define NEXT_BLOCK_POINTER(bp) ((sf_block *)((char *)(bp) + BLOCKSIZE(bp)))
 #define FOOTER_POINTER(bp)     ((sf_footer *)((char *)(bp) + BLOCKSIZE(bp) - MEMROWSIZE))
 #define PROLOGUE_POINTER       ((sf_block *)((char *)sf_mem_start() + offset))
-#define EPILOGUE_POINTER       ((sf_block *)((char *)sf_mem_end() - MEMROWSIZE))
+#define EPILOGUE_POINTER       ((sf_block *)((char *)sf_mem_end() - MEMROWSIZE - offset2))
 // Macro to calculate minimum required block size from payload size
 #define MIN_REQUIRED_BLOCKSIZE(size) \
     (((size) + MEMROWSIZE + ((ALIGNMENT - ((size) + MEMROWSIZE) % ALIGNMENT) % ALIGNMENT)))
