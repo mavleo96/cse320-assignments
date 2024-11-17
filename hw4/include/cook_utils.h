@@ -4,8 +4,14 @@
 #include "cookbook.h"
 #include "debug.h"
 
-/*
- * Function to validate args and set parameters; return -1 on error
- * TODO: more edge case error handling needed
- */
-int validargs(int argc, char *argv[], char *argrecipe[], char *argfile[], int *argmaxcooks);
+// Auxillary functions
+void validargs(int argc, char *argv[], char *argrecipe[], char *argfile[], int *argmaxcooks);
+
+// Cooking functions
+void cook_program(COOKBOOK *cbp, RECIPE *main_rp);
+
+// Traversal functions
+RECIPE *get_recipe(COOKBOOK *cbp, char *name);
+void initialise_dependency_count(COOKBOOK *cbp);
+void update_dependency_count(RECIPE *rp);
+void queue_leaves(COOKBOOK *cbp, RECIPE_LINK **qp);

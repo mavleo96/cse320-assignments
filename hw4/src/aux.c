@@ -1,6 +1,10 @@
 #include "cook_utils.h"
 
-int validargs(int argc, char *argv[], char *argrecipe[], char *argfile[], int *argmaxcooks) {
+/*
+ * Function to validate args and set parameters; return -1 on error
+ * TODO: more edge case error handling needed
+ */
+void validargs(int argc, char *argv[], char *argrecipe[], char *argfile[], int *argmaxcooks) {
     int i = 1;
 
     // Initialize variables for default values
@@ -11,7 +15,7 @@ int validargs(int argc, char *argv[], char *argrecipe[], char *argfile[], int *a
 
     while (i < argc) {
         // Handle '-c' option for max_cooks
-        if (strcmp(argv[i], "-c") == 0) {
+        if (!strcmp(argv[i], "-c")) {
             // TODO: Check if you need to exit with failure for multiple -c
             if (i + 1 < argc) {
                 // TODO: Fail for c <0 or invalid case
@@ -19,11 +23,11 @@ int validargs(int argc, char *argv[], char *argrecipe[], char *argfile[], int *a
                 i++;
             } else {
                 error("missing value for '-c' option");
-                return -1;
+                exit(EXIT_FAILURE);
             }
         }
         // Handle '-f' option for cookbook filename
-        else if (strcmp(argv[i], "-f") == 0) {
+        else if (!strcmp(argv[i], "-f")) {
             // TODO: Check if you need to exit with failure for multiple -f
             if (i + 1 < argc) {
                 // TODO: Fail for empty string
@@ -31,7 +35,7 @@ int validargs(int argc, char *argv[], char *argrecipe[], char *argfile[], int *a
                 i++;
             } else {
                 error("missing filename for '-f' option");
-                return -1;
+                exit(EXIT_FAILURE);
             }
         } 
         // TODO: Below code if you can't defaualt main recipe with static assignment
@@ -45,11 +49,9 @@ int validargs(int argc, char *argv[], char *argrecipe[], char *argfile[], int *a
         // If no valid argument is found
         else {
             error("invalid argument: %s", argv[i + 1]);
-            return -1;
+            exit(EXIT_FAILURE);
         }
         // Increment i
         i++;
     }
-
-    return 0;
 }
