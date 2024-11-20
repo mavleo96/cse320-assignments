@@ -37,13 +37,14 @@ void initialise_dependency_count(COOKBOOK *cbp) {
 }
 
 /*
- * Function to initialise dependency count
+ * Function to update dependency count
  */
 void update_dependency_count(RECIPE *rp) {
     if (!rp) {
         error("null recipe pointer passed!");
         exit(EXIT_FAILURE);
     }
+    rp->state = (void *) -1;
     RECIPE_LINK *dlist = rp->depend_on_this;
     while (dlist != NULL) {
         dlist->recipe->state--;
@@ -55,11 +56,20 @@ void update_dependency_count(RECIPE *rp) {
  * Function to queue leaves
  * TODO: change this function to work for given main_rp
  */
-void queue_leaves(COOKBOOK *cbp, RECIPE_LINK **qp) {
-    RECIPE_LINK *qtp = *qp;
-    if (qtp != NULL) {
-        while (qtp->next != NULL) {
-            qtp = qtp->next;
+void queue_leaves(COOKBOOK *cbp, RECIPE_LINK **queue) {
+    if (!cbp) {
+        error("null cookbook pointer passed!");
+        exit(EXIT_FAILURE);
+    }
+    if (!queue) {
+        error("null queue pointer passed!");
+        exit(EXIT_FAILURE);
+    }
+
+    RECIPE_LINK *tail = *queue;
+    if (tail != NULL) {
+        while (tail->next != NULL) {
+            tail = tail->next;
         }
     }
     RECIPE *rp = cbp->recipes;
@@ -76,14 +86,14 @@ void queue_leaves(COOKBOOK *cbp, RECIPE_LINK **qp) {
             new_np->next = NULL;
             rp->state = (void *) -1;
 
-            debug("adding %s to queue...", new_np->name);
-            if (*qp == NULL) {
-                *qp = new_np;
-                qtp = *qp;
+            debug("add to queue: %s", new_np->name);
+            if (*queue == NULL) {
+                *queue = new_np;
+                tail = *queue;
             } else {
-                qtp->next = new_np;
+                tail->next = new_np;
             }
-            qtp = new_np;
+            tail = new_np;
         }
         rp = rp->next;
     }

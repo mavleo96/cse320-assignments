@@ -3,6 +3,7 @@
 /*
  * Function to validate args and set parameters; return -1 on error
  * TODO: more edge case error handling needed
+ # TODO: change behaviour kwargs can appear anywhere
  */
 void validargs(int argc, char *argv[], char *argrecipe[], char *argfile[], int *argmaxcooks) {
     int i = 1;

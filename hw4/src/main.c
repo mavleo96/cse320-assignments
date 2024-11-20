@@ -6,6 +6,15 @@
 #include "cookbook.h"
 #include "cook_utils.h"
 
+void test(COOKBOOK *cbp) {
+    RECIPE *main_rp;
+    if ((main_rp = get_recipe(cbp, "get_gas")) == NULL) {
+        exit(EXIT_FAILURE);
+    }
+    sous_chef(main_rp);
+    exit(EXIT_SUCCESS);
+}
+
 int main(int argc, char *argv[]) {
     // Intialize variables
     char *cookbook;
@@ -36,8 +45,9 @@ int main(int argc, char *argv[]) {
     	error("could not find %s in cookbook at %s", main_recipe_name, cookbook);
         exit(EXIT_FAILURE);
     }
+    // test(cbp);
     // Cook the recipe
-    cook_program(cbp, main_rp);
+    master_chef(cbp, main_rp);
 
     return EXIT_SUCCESS;
 }
