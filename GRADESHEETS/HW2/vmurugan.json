@@ -1,0 +1,136 @@
+{
+  "vmurugan": {
+    "input_file": "/home/gene/grader-s19/tests/rsrc/gettysburg.txt",
+    "compress_command": "./bin/huff -c -b 1024 < /home/gene/grader-s19/tests/rsrc/gettysburg.txt > /home/gene/grader-s19/hw2/repos/vmurugan/hw2/tests/rsrc/hard_case_compressed.out",
+    "decompress_command": "/home/gene/grader-s19/hw2/dev_repo/basecode/hw2/tests/ref_huff -d < /home/gene/grader-s19/hw2/repos/vmurugan/hw2/tests/rsrc/hard_case_compressed.out > /home/gene/grader-s19/hw2/repos/vmurugan/hw2/tests/rsrc/hard_case_decompressed.out",
+    "hard_compress_times": [
+      0.008714914321899414,
+      0.01463007926940918,
+      0.00696873664855957,
+      0.01209402084350586,
+      0.0065042972564697266
+    ],
+    "average_compress_time": 0.00978240966796875,
+    "hard_decompress_times": [
+      0.008850574493408203,
+      0.010765552520751953,
+      0.0060577392578125,
+      0.010764837265014648,
+      0.0061054229736328125
+    ],
+    "average_decompress_time": 0.008508825302124023,
+    "status": "pass",
+    "compress_errors": [],
+    "decompress_errors": []
+  }
+}
+{}
+{
+  "vmurugan": {
+    "input_file": "/home/gene/grader-s19/tests/rsrc/large_ascii_file.txt",
+    "compress_command": "./bin/huff -c -b 1024 < /home/gene/grader-s19/tests/rsrc/large_ascii_file.txt > /home/gene/grader-s19/hw2/repos/vmurugan/hw2/tests/rsrc/hard_case_compressed.out",
+    "decompress_command": "/home/gene/grader-s19/hw2/dev_repo/basecode/hw2/tests/ref_huff -d < /home/gene/grader-s19/hw2/repos/vmurugan/hw2/tests/rsrc/hard_case_compressed.out > /home/gene/grader-s19/hw2/repos/vmurugan/hw2/tests/rsrc/hard_case_decompressed.out",
+    "hard_compress_times": [
+      25.44287109375,
+      25.805830478668213,
+      25.648419857025146,
+      25.65605592727661,
+      25.520203351974487
+    ],
+    "average_compress_time": 25.61467614173889,
+    "hard_decompress_times": [
+      3.0039801597595215,
+      3.005544424057007,
+      3.006657838821411,
+      2.9906187057495117,
+      3.009366750717163
+    ],
+    "average_decompress_time": 3.0032335758209228,
+    "status": "pass",
+    "compress_errors": [],
+    "decompress_errors": []
+  }
+}
+{}
+{
+  "vmurugan": {
+    "input_file": "/home/gene/grader-s19/tests/rsrc/large_binary_file.bin",
+    "compress_command": "./bin/huff -c -b 1024 < /home/gene/grader-s19/tests/rsrc/large_binary_file.bin > /home/gene/grader-s19/hw2/repos/vmurugan/hw2/tests/rsrc/hard_case_compressed.out",
+    "decompress_command": "/home/gene/grader-s19/hw2/dev_repo/basecode/hw2/tests/ref_huff -d < /home/gene/grader-s19/hw2/repos/vmurugan/hw2/tests/rsrc/hard_case_compressed.out > /home/gene/grader-s19/hw2/repos/vmurugan/hw2/tests/rsrc/hard_case_decompressed.out",
+    "hard_compress_times": [
+      56.2847056388855,
+      56.23912310600281,
+      56.316750288009644,
+      56.6326162815094,
+      56.278395652770996
+    ],
+    "average_compress_time": 56.35031819343567,
+    "hard_decompress_times": [
+      3.7680437564849854,
+      3.783609390258789,
+      3.794583320617676,
+      3.7826335430145264,
+      3.7730462551116943
+    ],
+    "average_decompress_time": 3.780383253097534,
+    "status": "pass",
+    "compress_errors": [],
+    "decompress_errors": []
+  }
+}
+{}
+{}
+{
+  "vmurugan": {
+    "input_file": "/home/gene/grader-s19/tests/rsrc/large_ascii_file.txt",
+    "compress_command": "/home/gene/grader-s19/hw2/dev_repo/basecode/hw2/tests/ref_huff -c -b 1024 < /home/gene/grader-s19/tests/rsrc/large_ascii_file.txt > /home/gene/grader-s19/hw2/repos/vmurugan/hw2/tests/rsrc/hard_case_compressed.out",
+    "decompress_command": "./bin/huff -d < /home/gene/grader-s19/hw2/repos/vmurugan/hw2/tests/rsrc/hard_case_compressed.out > /home/gene/grader-s19/hw2/repos/vmurugan/hw2/tests/rsrc/hard_case_decompressed.out",
+    "hard_compress_times": [
+      5.702844142913818,
+      5.860878229141235,
+      5.7550928592681885,
+      5.729411602020264,
+      5.7563159465789795
+    ],
+    "average_compress_time": 5.760908555984497,
+    "hard_decompress_times": [
+      2.8521645069122314,
+      2.8781352043151855,
+      2.833627223968506,
+      2.836432695388794,
+      2.90635347366333
+    ],
+    "average_decompress_time": 2.8613426208496096,
+    "status": "pass",
+    "compress_errors": [],
+    "decompress_errors": []
+  }
+}
+{}
+{
+  "vmurugan": {
+    "input_file": "/home/gene/grader-s19/tests/rsrc/large_binary_file.bin",
+    "compress_command": "/home/gene/grader-s19/hw2/dev_repo/basecode/hw2/tests/ref_huff -c -b 1024 < /home/gene/grader-s19/tests/rsrc/large_binary_file.bin > /home/gene/grader-s19/hw2/repos/vmurugan/hw2/tests/rsrc/hard_case_compressed.out",
+    "decompress_command": "./bin/huff -d < /home/gene/grader-s19/hw2/repos/vmurugan/hw2/tests/rsrc/hard_case_compressed.out > /home/gene/grader-s19/hw2/repos/vmurugan/hw2/tests/rsrc/hard_case_decompressed.out",
+    "hard_compress_times": [
+      8.972575187683105,
+      8.999968528747559,
+      8.970145225524902,
+      9.036866188049316,
+      9.279267072677612
+    ],
+    "average_compress_time": 9.051764440536498,
+    "hard_decompress_times": [
+      3.714693069458008,
+      3.7359392642974854,
+      3.7345306873321533,
+      4.065565824508667,
+      3.7138614654541016
+    ],
+    "average_decompress_time": 3.792918062210083,
+    "status": "pass",
+    "compress_errors": [],
+    "decompress_errors": []
+  }
+}
+{}

@@ -1,0 +1,206 @@
+Graded Commit:4cc49809e4f1f6d2cd382fd0b66ccf7c8134a7b5
+
+
+[----] Criterion v2.4.2
+[====] Running 4 tests from basecode_tests_suite:
+[RUN ] basecode_tests_suite::help_system_test
+USAGE: bin/huff [-h] [-c|-d] [-b BLOCKSIZE]
+    -h       Help: displays this help menu.
+    -c       Compress: read raw data, output compressed data
+    -d       Decompress: read compressed data, output raw data
+    -b       For compression, specify blocksize in bytes (range [1024, 65536])
+
+[PASS] basecode_tests_suite::help_system_test: (0.01s)
+[RUN ] basecode_tests_suite::validargs_compress_test
+[PASS] basecode_tests_suite::validargs_compress_test: (0.00s)
+[RUN ] basecode_tests_suite::validargs_error_test
+[PASS] basecode_tests_suite::validargs_error_test: (0.00s)
+[RUN ] basecode_tests_suite::validargs_help_test
+[PASS] basecode_tests_suite::validargs_help_test: (0.00s)
+[====] Running 11 tests from compress_system_suite:
+[RUN ] compress_system_suite::compress_emoji
+[PASS] compress_system_suite::compress_emoji: (0.03s)
+[RUN ] compress_system_suite::compress_emoji_ascii
+[PASS] compress_system_suite::compress_emoji_ascii: (0.05s)
+[RUN ] compress_system_suite::compress_empty
+[PASS] compress_system_suite::compress_empty: (0.02s)
+[RUN ] compress_system_suite::compress_large
+[PASS] compress_system_suite::compress_large: (0.23s)
+[RUN ] compress_system_suite::compress_pipe_test
+[PASS] compress_system_suite::compress_pipe_test: (0.02s)
+[RUN ] compress_system_suite::compress_single_byte
+[PASS] compress_system_suite::compress_single_byte: (0.02s)
+[RUN ] compress_system_suite::compress_test0
+[PASS] compress_system_suite::compress_test0: (0.02s)
+[RUN ] compress_system_suite::compress_test1
+[PASS] compress_system_suite::compress_test1: (0.03s)
+[RUN ] compress_system_suite::compress_test2
+[PASS] compress_system_suite::compress_test2: (0.03s)
+[RUN ] compress_system_suite::compress_test3
+[PASS] compress_system_suite::compress_test3: (0.03s)
+[RUN ] compress_system_suite::compress_test4
+[PASS] compress_system_suite::compress_test4: (0.02s)
+[====] Running 10 tests from compress_test_suite:
+[RUN ] compress_test_suite::compress_block_1024_test
+[PASS] compress_test_suite::compress_block_1024_test: (0.01s)
+[RUN ] compress_test_suite::compress_block_test0
+[PASS] compress_test_suite::compress_block_test0: (0.01s)
+[RUN ] compress_test_suite::compress_block_test1
+[PASS] compress_test_suite::compress_block_test1: (0.01s)
+[RUN ] compress_test_suite::compress_block_test2
+[PASS] compress_test_suite::compress_block_test2: (0.02s)
+[RUN ] compress_test_suite::compress_block_test3
+[PASS] compress_test_suite::compress_block_test3: (0.02s)
+[RUN ] compress_test_suite::compress_block_test4
+[PASS] compress_test_suite::compress_block_test4: (0.02s)
+[RUN ] compress_test_suite::compress_block_test5
+[PASS] compress_test_suite::compress_block_test5: (0.02s)
+[RUN ] compress_test_suite::compress_block_test6
+[PASS] compress_test_suite::compress_block_test6: (0.02s)
+[RUN ] compress_test_suite::compress_block_test7
+[PASS] compress_test_suite::compress_block_test7: (0.26s)
+[RUN ] compress_test_suite::compress_test0
+[PASS] compress_test_suite::compress_test0: (0.00s)
+[====] Running 17 tests from decompress_system_suite:
+[RUN ] decompress_system_suite::decompress_empty
+[PASS] decompress_system_suite::decompress_empty: (0.00s)
+[RUN ] decompress_system_suite::decompress_invalid_num_nodes
+[PASS] decompress_system_suite::decompress_invalid_num_nodes: (0.01s)
+[RUN ] decompress_system_suite::decompress_no_end_block
+[PASS] decompress_system_suite::decompress_no_end_block: (0.02s)
+[RUN ] decompress_system_suite::decompress_no_end_symbol
+[PASS] decompress_system_suite::decompress_no_end_symbol: (0.00s)
+[RUN ] decompress_system_suite::decompress_no_internal_nodes
+[PASS] decompress_system_suite::decompress_no_internal_nodes: (0.01s)
+[RUN ] decompress_system_suite::decompress_no_leaf_nodes
+[PASS] decompress_system_suite::decompress_no_leaf_nodes: (0.01s)
+[RUN ] decompress_system_suite::decompress_pipe_test
+[PASS] decompress_system_suite::decompress_pipe_test: (0.02s)
+[RUN ] decompress_system_suite::decompress_single_byte
+[PASS] decompress_system_suite::decompress_single_byte: (0.00s)
+[RUN ] decompress_system_suite::decompress_test0
+[PASS] decompress_system_suite::decompress_test0: (0.01s)
+[RUN ] decompress_system_suite::decompress_test1
+[PASS] decompress_system_suite::decompress_test1: (0.04s)
+[RUN ] decompress_system_suite::decompress_test2
+[PASS] decompress_system_suite::decompress_test2: (0.03s)
+[RUN ] decompress_system_suite::decompress_test3
+[PASS] decompress_system_suite::decompress_test3: (0.02s)
+[RUN ] decompress_system_suite::decompress_test4
+[PASS] decompress_system_suite::decompress_test4: (0.02s)
+[RUN ] decompress_system_suite::decompress_test5
+[PASS] decompress_system_suite::decompress_test5: (0.04s)
+[RUN ] decompress_system_suite::decompress_test6
+[PASS] decompress_system_suite::decompress_test6: (0.02s)
+[RUN ] decompress_system_suite::decompress_trunc_at_symbols
+[PASS] decompress_system_suite::decompress_trunc_at_symbols: (0.00s)
+[RUN ] decompress_system_suite::decompress_trunc_at_traversal
+[PASS] decompress_system_suite::decompress_trunc_at_traversal: (0.01s)
+[====] Running 18 tests from decompress_test_suite:
+[RUN ] decompress_test_suite::decompress_block_empty
+[----] tests/decompress_tests.c:288: Assertion Failed
+[----]   
+[----]   Invalid return for decompress block. Got 1 | Expected: -1
+[----]   
+[FAIL] decompress_test_suite::decompress_block_empty: (0.00s)
+[RUN ] decompress_test_suite::decompress_block_invalid_num_nodes
+[PASS] decompress_test_suite::decompress_block_invalid_num_nodes: (0.00s)
+[RUN ] decompress_test_suite::decompress_block_no_end_block
+[PASS] decompress_test_suite::decompress_block_no_end_block: (0.00s)
+[RUN ] decompress_test_suite::decompress_block_no_end_symbol
+[PASS] decompress_test_suite::decompress_block_no_end_symbol: (0.00s)
+[RUN ] decompress_test_suite::decompress_block_no_internal_nodes
+[PASS] decompress_test_suite::decompress_block_no_internal_nodes: (0.00s)
+[RUN ] decompress_test_suite::decompress_block_no_leaf_nodes
+[PASS] decompress_test_suite::decompress_block_no_leaf_nodes: (0.00s)
+[RUN ] decompress_test_suite::decompress_block_single_byte
+[PASS] decompress_test_suite::decompress_block_single_byte: (0.00s)
+[RUN ] decompress_test_suite::decompress_block_test0
+[PASS] decompress_test_suite::decompress_block_test0: (0.02s)
+[RUN ] decompress_test_suite::decompress_block_test1
+[PASS] decompress_test_suite::decompress_block_test1: (0.01s)
+[RUN ] decompress_test_suite::decompress_block_test2
+[PASS] decompress_test_suite::decompress_block_test2: (0.02s)
+[RUN ] decompress_test_suite::decompress_block_test3
+[PASS] decompress_test_suite::decompress_block_test3: (0.02s)
+[RUN ] decompress_test_suite::decompress_block_test4
+[PASS] decompress_test_suite::decompress_block_test4: (0.01s)
+[RUN ] decompress_test_suite::decompress_block_test5
+[PASS] decompress_test_suite::decompress_block_test5: (0.04s)
+[RUN ] decompress_test_suite::decompress_block_test6
+[PASS] decompress_test_suite::decompress_block_test6: (0.02s)
+[RUN ] decompress_test_suite::decompress_block_trunc_at_symbols
+[PASS] decompress_test_suite::decompress_block_trunc_at_symbols: (0.00s)
+[RUN ] decompress_test_suite::decompress_block_trunc_at_traversal
+[PASS] decompress_test_suite::decompress_block_trunc_at_traversal: (0.00s)
+[RUN ] decompress_test_suite::decompress_test0
+[PASS] decompress_test_suite::decompress_test0: (0.00s)
+[RUN ] decompress_test_suite::decompress_test1
+[PASS] decompress_test_suite::decompress_test1: (0.00s)
+[====] Running 4 tests from emit_huffman_tree_suite:
+[RUN ] emit_huffman_tree_suite::emit_huffman_tree_test0
+NUM OF SYMBOLS:	257
+[PASS] emit_huffman_tree_suite::emit_huffman_tree_test0: (0.00s)
+[RUN ] emit_huffman_tree_suite::emit_huffman_tree_test1
+NUM OF SYMBOLS:	2
+[PASS] emit_huffman_tree_suite::emit_huffman_tree_test1: (0.00s)
+[RUN ] emit_huffman_tree_suite::emit_huffman_tree_test2
+NUM OF SYMBOLS:	257
+[PASS] emit_huffman_tree_suite::emit_huffman_tree_test2: (0.00s)
+[RUN ] emit_huffman_tree_suite::emit_huffman_tree_test3
+NUM OF SYMBOLS:	257
+[PASS] emit_huffman_tree_suite::emit_huffman_tree_test3: (0.00s)
+[====] Running 8 tests from read_huffman_tree_suite:
+[RUN ] read_huffman_tree_suite::read_huff_tree_empty
+[PASS] read_huffman_tree_suite::read_huff_tree_empty: (0.00s)
+[RUN ] read_huffman_tree_suite::read_huff_tree_no_leaf_nodes
+[PASS] read_huffman_tree_suite::read_huff_tree_no_leaf_nodes: (0.00s)
+[RUN ] read_huffman_tree_suite::read_huff_tree_single_byte
+[PASS] read_huffman_tree_suite::read_huff_tree_single_byte: (0.00s)
+[RUN ] read_huffman_tree_suite::read_huff_tree_test0
+[PASS] read_huffman_tree_suite::read_huff_tree_test0: (0.00s)
+[RUN ] read_huffman_tree_suite::read_huff_tree_test1
+[PASS] read_huffman_tree_suite::read_huff_tree_test1: (0.00s)
+[RUN ] read_huffman_tree_suite::read_huff_tree_test2
+[PASS] read_huffman_tree_suite::read_huff_tree_test2: (0.00s)
+[RUN ] read_huffman_tree_suite::read_huff_tree_trunc_at_symbols
+[PASS] read_huffman_tree_suite::read_huff_tree_trunc_at_symbols: (0.00s)
+[RUN ] read_huffman_tree_suite::read_huff_tree_trunc_at_traversal
+[PASS] read_huffman_tree_suite::read_huff_tree_trunc_at_traversal: (0.00s)
+[====] Running 17 tests from validargs_test_suite:
+[RUN ] validargs_test_suite::validargs_compress_invalid_block_test0
+[PASS] validargs_test_suite::validargs_compress_invalid_block_test0: (0.00s)
+[RUN ] validargs_test_suite::validargs_compress_invalid_block_test1
+[PASS] validargs_test_suite::validargs_compress_invalid_block_test1: (0.00s)
+[RUN ] validargs_test_suite::validargs_compress_test0
+[PASS] validargs_test_suite::validargs_compress_test0: (0.00s)
+[RUN ] validargs_test_suite::validargs_compress_test1
+[PASS] validargs_test_suite::validargs_compress_test1: (0.00s)
+[RUN ] validargs_test_suite::validargs_compress_test2
+[PASS] validargs_test_suite::validargs_compress_test2: (0.00s)
+[RUN ] validargs_test_suite::validargs_decompress_test
+[PASS] validargs_test_suite::validargs_decompress_test: (0.00s)
+[RUN ] validargs_test_suite::validargs_default_compress_test
+[PASS] validargs_test_suite::validargs_default_compress_test: (0.00s)
+[RUN ] validargs_test_suite::validargs_help_test0
+[PASS] validargs_test_suite::validargs_help_test0: (0.00s)
+[RUN ] validargs_test_suite::validargs_help_test1
+[PASS] validargs_test_suite::validargs_help_test1: (0.00s)
+[RUN ] validargs_test_suite::validargs_help_test2
+[PASS] validargs_test_suite::validargs_help_test2: (0.00s)
+[RUN ] validargs_test_suite::validargs_help_test3
+[PASS] validargs_test_suite::validargs_help_test3: (0.00s)
+[RUN ] validargs_test_suite::validargs_invalid_combination_test0
+[PASS] validargs_test_suite::validargs_invalid_combination_test0: (0.00s)
+[RUN ] validargs_test_suite::validargs_invalid_compress_test
+[PASS] validargs_test_suite::validargs_invalid_compress_test: (0.00s)
+[RUN ] validargs_test_suite::validargs_invalid_order_test
+[PASS] validargs_test_suite::validargs_invalid_order_test: (0.00s)
+[RUN ] validargs_test_suite::validargs_invalid_test0
+[PASS] validargs_test_suite::validargs_invalid_test0: (0.00s)
+[RUN ] validargs_test_suite::validargs_invalid_test1
+[PASS] validargs_test_suite::validargs_invalid_test1: (0.00s)
+[RUN ] validargs_test_suite::validargs_invalid_test2
+[PASS] validargs_test_suite::validargs_invalid_test2: (0.00s)
+[----] Writing xml report in `crit.xml`.
+[====] Synthesis: Tested: 89 | Passing: 88 | Failing: 1 | Crashing: 0 
