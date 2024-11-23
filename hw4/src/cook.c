@@ -18,7 +18,8 @@ void perform_tasks(TASK *task) {
     int output_fd = -1;
     if (task->output_file != NULL) {
         // TODO: check what permissions are needed for new file
-        int output_fd = open(task->output_file, O_WRONLY | O_CREAT);
+        // TODO: output is not redirected correctly
+        int output_fd = open(task->output_file, O_WRONLY | O_CREAT, 0744);
         if (output_fd == -1) {
             error("can't open output file %s: %s", task->output_file, strerror(errno));
             exit(EXIT_FAILURE);
@@ -145,6 +146,7 @@ void sous_chef(RECIPE *rp) {
         else if (!pid) {
             debug("start task: task %d of %s by (pid %d, ppid %d)", task_count, rp->name, getpid(), getppid());
             perform_tasks(task);
+            exit(100);
         }
         else {
             int status;
@@ -171,33 +173,38 @@ void sous_chef(RECIPE *rp) {
 /*
  * Main cooking function
  */
-void master_chef(COOKBOOK *cbp, RECIPE *main_rp) {
-    // TODO: change to cook main_rp
-    // RECIPE_LINK *recipe_subset;
-    RECIPE_LINK *queue = NULL;
-    queue_leaves(cbp, &queue);
+void master_chef(RECIPE *main_rp, RECIPE_LINK *subset, int max_cooks) {
+    QUEUE queue = {NULL, NULL};
+    if (queue_leaves(&queue, subset) == -1) {
+        // TODO: handle this gracefully
+        abort();
+    }
 
-    while (queue != NULL) {
-        RECIPE* cooking_rp = queue->recipe;
-        queue = queue->next;
+    while (queue.head != NULL) {
+        RECIPE* cooking_rp = queue.head->recipe;
+        if (dequeue(&queue) == -1) {
+            // TODO: handle this gracefully
+            abort();
+        }
 
         pid_t pid = fork();
         if (pid < 0) {
             // TODO: program should exit after reaping child processes
             error("fork failed with error: %s", strerror(errno));
-            exit(EXIT_FAILURE);
+            abort();
         }
         else if (!pid) {
             debug("start cook: %s by (pid %d)", cooking_rp->name, getpid());
             sous_chef(cooking_rp);
+            // exit(EXIT_SUCCESS);
         }
         else {
-            debug("wait cook: %s by (pid %d)", cooking_rp->name, pid);
+            // debug("wait cook: %s by (pid %d)", cooking_rp->name, pid);
             int status;
             waitpid(pid, &status, 0);
             if (WIFEXITED(status)) {
                 if (!WEXITSTATUS(status)) {
-                    debug("finish cook: %s by (pid %d, status %d)", cooking_rp->name, pid, WEXITSTATUS(status));
+                    // debug("finish cook: %s by (pid %d, status %d)", cooking_rp->name, pid, WEXITSTATUS(status));
                 }
                 else {
                     error("finish cook: %s by (pid %d, status %d)", cooking_rp->name, pid, WEXITSTATUS(status));
@@ -208,6 +215,9 @@ void master_chef(COOKBOOK *cbp, RECIPE *main_rp) {
             }
         }
         update_dependency_count(cooking_rp);
-        queue_leaves(cbp, &queue);
+        if (queue_leaves(&queue, subset) == -1) {
+            // TODO: handle this gracefully
+            abort();
+        }
     }
 }
