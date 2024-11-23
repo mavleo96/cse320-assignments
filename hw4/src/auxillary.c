@@ -15,11 +15,13 @@ void validargs(int argc, char *argv[], char *argrecipe[], char *argfile[], int *
     while (i < argc) {
         // Handle '-c' option for max_cooks
         if (!strcmp(argv[i], "-c")) {
-            // TODO: Check if you need to exit with failure for multiple -c
             if (i + 1 < argc) {
-                // TODO: Fail for c <0 or invalid case
                 i++;
                 *argmaxcooks = atoi(argv[i]);
+                if (*argmaxcooks < 1) {
+                    error("invalid value for '-c' option: %d", *argmaxcooks);
+                    exit(EXIT_FAILURE);
+                }
             } else {
                 error("missing value for '-c' option");
                 exit(EXIT_FAILURE);
@@ -27,26 +29,20 @@ void validargs(int argc, char *argv[], char *argrecipe[], char *argfile[], int *
         }
         // Handle '-f' option for cookbook filename
         else if (!strcmp(argv[i], "-f")) {
-            // TODO: Check if you need to exit with failure for multiple -f
             if (i + 1 < argc) {
-                // TODO: Fail for empty string
                 i++;
                 *argfile = argv[i];
             } else {
                 error("missing filename for '-f' option");
                 exit(EXIT_FAILURE);
             }
-        } 
-        // TODO: Below code if you can't defaualt main recipe with static assignment
+        }
         // Assign recipe if not already assigned
         else if (*argrecipe == NULL) {
             *argrecipe = argv[i];
+            // All arguments after recipe name are ignore
             return;
         }
-        // else if (argc == i + 1) {
-        //     *argrecipe = argv[i];
-        // }
-        // If no valid argument is found
         else {
             error("invalid argument: %s", argv[i + 1]);
             exit(EXIT_FAILURE);
