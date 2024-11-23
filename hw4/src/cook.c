@@ -1,49 +1,6 @@
 #include "cook_utils.h"
 
-/*
- * Function to simulate task processing
- */
-void sous_chef(RECIPE *rp) {
-    if (!rp) {
-        error("null pointer passed!");
-        exit(EXIT_FAILURE);
-    }
-
-    TASK *task = rp->tasks;
-    int task_count = 1;
-
-    while (task != NULL) {
-        pid_t pid = fork();
-        if (pid < 0) {
-            // TODO: program should exit after reaping child processes
-            error("fork failed with error: %s", strerror(errno));
-            exit(EXIT_FAILURE);
-        }
-        else if (!pid) {
-            debug("start task: task %d of %s by (pid %d, ppid %d)", task_count, rp->name, getpid(), getppid());
-            perform_tasks(task);
-        }
-        else {
-            int status;
-            waitpid(pid, &status, 0);
-            if (WIFEXITED(status)) {
-                if (!WEXITSTATUS(status)) {
-                    debug("finish task: task %d of %s by (pid %d, ppid %d, status %d)", task_count, rp->name, getpid(), getppid(), WEXITSTATUS(status));
-                }
-                else {
-                    error("finish task: task %d of %s by (pid %d, ppid %d, status %d)", task_count, rp->name, getpid(), getppid(), WEXITSTATUS(status));
-                    exit(EXIT_FAILURE);
-                }
-            } else if (WIFSIGNALED(status)) {
-                error("child terminated by signal %d", WTERMSIG(status));
-            }
-        }
-        task = task->next;
-        task_count++;
-    }
-    exit(EXIT_SUCCESS);
-}
-
+void sous_chef(RECIPE *rp);
 
 /*
  * Main cooking function
@@ -95,4 +52,48 @@ void master_chef(RECIPE *main_rp, RECIPE_LINK *subset, int max_cooks) {
             abort();
         }
     }
+}
+
+/*
+ * Function to simulate task processing
+ */
+void sous_chef(RECIPE *rp) {
+    if (!rp) {
+        error("null pointer passed!");
+        exit(EXIT_FAILURE);
+    }
+
+    TASK *task = rp->tasks;
+    int task_count = 1;
+
+    while (task != NULL) {
+        pid_t pid = fork();
+        if (pid < 0) {
+            // TODO: program should exit after reaping child processes
+            error("fork failed with error: %s", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+        else if (!pid) {
+            debug("start task: task %d of %s by (pid %d, ppid %d)", task_count, rp->name, getpid(), getppid());
+            perform_tasks(task);
+        }
+        else {
+            int status;
+            waitpid(pid, &status, 0);
+            if (WIFEXITED(status)) {
+                if (!WEXITSTATUS(status)) {
+                    debug("finish task: task %d of %s by (pid %d, ppid %d, status %d)", task_count, rp->name, getpid(), getppid(), WEXITSTATUS(status));
+                }
+                else {
+                    error("finish task: task %d of %s by (pid %d, ppid %d, status %d)", task_count, rp->name, getpid(), getppid(), WEXITSTATUS(status));
+                    exit(EXIT_FAILURE);
+                }
+            } else if (WIFSIGNALED(status)) {
+                error("child terminated by signal %d", WTERMSIG(status));
+            }
+        }
+        task = task->next;
+        task_count++;
+    }
+    exit(EXIT_SUCCESS);
 }
