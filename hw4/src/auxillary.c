@@ -2,8 +2,6 @@
 
 /*
  * Function to validate args and set parameters; return -1 on error
- * TODO: more edge case error handling needed
- # TODO: change behaviour kwargs can appear anywhere
  */
 void validargs(int argc, char *argv[], char *argrecipe[], char *argfile[], int *argmaxcooks) {
     int i = 1;
@@ -11,6 +9,7 @@ void validargs(int argc, char *argv[], char *argrecipe[], char *argfile[], int *
     // Initialize variables for default values
     *argfile = "rsrc/cookbook.ckb";
     *argmaxcooks = 1;  // Default to 1 cook if not specified
+    *argrecipe = NULL;
 
     while (i < argc) {
         // Handle '-c' option for max_cooks
@@ -44,7 +43,7 @@ void validargs(int argc, char *argv[], char *argrecipe[], char *argfile[], int *
             return;
         }
         else {
-            error("invalid argument: %s", argv[i + 1]);
+            error("invalid argument: %s", argv[i]);
             exit(EXIT_FAILURE);
         }
         // Increment i
