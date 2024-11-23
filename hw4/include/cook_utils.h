@@ -13,8 +13,15 @@
 void master_chef(RECIPE *main_rp, RECIPE_LINK *subset, int max_cooks);
 void sous_chef(RECIPE *rp);
 
+// Cooking task functions
+void perform_tasks(TASK *task);
+
 // Cooking auxillary functions
-void execute_step(STEP *step);
+void setup_file_descriptors(TASK *task, int *input_fd, int *output_fd);
+void setup_io_redirection(int input_fd, int output_fd, int pipe_fd[], int count, int n);
+void initialize_pipes(int *pipe_fd, int pipe_size);
+void close_pipes(int pipe_fd[], int n);
+int step_count(STEP *step);
 
 // Queue functions
 typedef struct queue {
