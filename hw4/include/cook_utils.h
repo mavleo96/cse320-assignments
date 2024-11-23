@@ -45,4 +45,5 @@ RECIPE *get_main_recipe(COOKBOOK *cbp, char *name);
 int recipe_link_length(RECIPE_LINK *rlp);
 
 // Debugging functions
-void print_linked_list(RECIPE_LINK *rlp);
+void print_recipe_link(RECIPE_LINK *rlp);
+void print_queue(QUEUE *qp);
