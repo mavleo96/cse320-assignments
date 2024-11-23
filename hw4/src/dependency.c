@@ -16,7 +16,7 @@ RECIPE_LINK *dependency_analysis(RECIPE *rp, RECIPE_LINK *subset) {
     }
     
     // Initialize state / dependency count
-    debug("dependency intialise: %s", rp->name);
+    debug("dependency intialize: %s", rp->name);
     if (rp->state){
         error("state field for recipe %s already initialized!", rp->name);
         exit(EXIT_FAILURE);

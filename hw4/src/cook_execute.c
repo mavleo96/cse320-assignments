@@ -14,7 +14,7 @@ void perform_tasks(TASK *task) {
     STEP *step = task->steps;
     int n = step_count(step);
     if (!n) {
-        warn("no steps to execute");
+        warn("no steps to execute in (pid %d)", getpid());
         exit(EXIT_SUCCESS);
     }
 
@@ -33,7 +33,7 @@ void perform_tasks(TASK *task) {
         pid_t pid = fork();
         if (pid < 0) {
             // TODO: program should exit after reaping child processes
-            error("fork failed with error: %s", strerror(errno));
+            error("fork failed with error in (pid %d): %s", getpid(), strerror(errno));
             rstatus = 1;
             break;
         }
@@ -62,15 +62,17 @@ void perform_tasks(TASK *task) {
     while ((pid = waitpid(-1, &status, 0)) > 0) {
         if (WIFEXITED(status)) {
             if (WEXITSTATUS(status)) {
-                error("child (pid %d) exited with status %d", pid, WEXITSTATUS(status));
+                error("(child %d) exited with status %d", pid, WEXITSTATUS(status));
                 rstatus = 1;
             }
-        } else if (WIFSIGNALED(status)) {
-            error("child (pid %d) terminated by signal %d", pid, WTERMSIG(status));
+        }
+        else if (WIFSIGNALED(status)) {
+            error("(child %d) terminated by signal %d", pid, WTERMSIG(status));
             rstatus = 1;
 
-        } else {
-            error("child (pid %d) terminated abnormally", pid);
+        }
+        else {
+            error("(child %d) terminated abnormally", pid);
             rstatus  = 1;
         }
     }
@@ -82,12 +84,12 @@ void perform_tasks(TASK *task) {
             exit(EXIT_FAILURE);
         }
         else {
-            debug("(pid %d) exiting successfully", getpid());
+            success("(pid %d) exiting successfully", getpid());
             exit(EXIT_SUCCESS);
         }
     }
     else {
-        error("error while waiting for child processes: %s", strerror(errno));
+        error("error in (pid %d) while waiting for child processes: %s", getpid(), strerror(errno));
         exit(EXIT_FAILURE);
     }
 }

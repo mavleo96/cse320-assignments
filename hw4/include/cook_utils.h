@@ -43,6 +43,7 @@ typedef struct state {
 #define DEP_COUNT(rp)    (((STATE *) rp->state)->dcount)
 #define CSTATUS(rp)      (((STATE *) rp->state)->cstatus)
 #define QSTATUS(rp)      (((STATE *) rp->state)->qstatus)
+
 void update_dependency_count(RECIPE *rp);
 RECIPE_LINK *dependency_analysis(RECIPE *rp, RECIPE_LINK *rlp);
 
