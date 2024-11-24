@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <criterion/criterion.h>
+#include "test.h"
 
 void assert_success(int code) {
     cr_assert_eq(code, EXIT_SUCCESS,

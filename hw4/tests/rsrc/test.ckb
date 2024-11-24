@@ -1,0 +1,34 @@
+pipes:
+  echo "The Ultimate Question of Life, the Universe, and Everything is 42." | tests/test_util/copy
+
+in_pass: out_pass
+  tests/test_util/copy < tmp/fortytwo.txt
+
+in_fail:
+  tests/test_util/copy < doesntexist
+
+out_fail:
+  echo "The Ultimate Question of Life, the Universe, and Everything is 42." > dirdoesntexist/fortytwo.txt
+
+out_pass:
+  echo "The Ultimate Question of Life, the Universe, and Everything is 42." > tmp/fortytwo.txt
+
+test_abort_fail: dummy1 abort
+  echo "I ran!" > tmp/a.out
+
+test_input_abort_fail: dummy1 abort
+  echo "I ran!" > tmp/a.out
+
+abort:
+  tests/test_util/abort
+
+dummy1:
+  ls | wc > tmp/a.out
+
+dummy2:
+  tests/test_util/copy < tmp/fortytwo.txt > tmp/a.out
+
+dummy3:
+  cat tests/rsrc/hello_world.out > tmp/a.out
+
+dummy4:

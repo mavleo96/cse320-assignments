@@ -8,38 +8,89 @@ static void execute_step(STEP *step);
 void perform_tasks(TASK *task) {
     if (!task) {
         error("null pointer passed!");
-        exit(EXIT_FAILURE);
+        _exit(EXIT_FAILURE);
     }
 
     STEP *step = task->steps;
     int n = step_count(step);
     if (!n) {
         warn("no steps to execute in (pid %d)", getpid());
-        exit(EXIT_SUCCESS);
+        _exit(EXIT_SUCCESS);
     }
 
     // Setup input and output file descriptors
-    int input_fd = -1, output_fd = -1;
-    setup_file_descriptors(task, &input_fd, &output_fd);
+    int input_fd = -1;
+    if (task->input_file) {
+        if ((input_fd = open(task->input_file, O_RDONLY, 0)) == -1) {
+            error("can't open input file %s: %s", task->input_file, strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+    }
+
+    int output_fd = -1;
+    if (task->output_file) {
+        if ((output_fd = open(task->output_file, O_WRONLY | O_CREAT | O_TRUNC, 0755)) == -1) {
+            error("can't open output file %s: %s", task->output_file, strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+    }
 
     // Initialize pipes
     int pipe_size = 2 * (n - 1);
     int pipe_fd[pipe_size];
-    initialize_pipes(pipe_fd, pipe_size);
+    // initialize_pipes(pipe_fd, pipe_size);
+    memset(pipe_fd, 0, pipe_size);
+    for (int i = 0; i < pipe_size; i += 2) {
+        if (pipe(&pipe_fd[i]) == -1) {
+            error("error in creating pipe: %s", strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+    }
 
-    int rstatus = 0;  // Flag to mark error
-    int count = 0;    // Step processing count
+    int error_status = 0;  // Flag to mark error
+    int count = 0;         // Step processing count
     while (step != NULL) {
+        // error("DEBUGGING @ 1");
         pid_t pid = fork();
         if (pid < 0) {
-            // TODO: program should exit after reaping child processes
             error("fork failed with error in (pid %d): %s", getpid(), strerror(errno));
-            rstatus = 1;
+            error_status = 1;
             break;
         }
         else if (!pid) {
-            setup_io_redirection(input_fd, output_fd, pipe_fd, count, n);
-            close_pipes(pipe_fd, n);
+            if (input_fd != -1) {
+                if (dup2(input_fd, STDIN_FILENO) == -1) {
+                    error("dup2 failed for input file: %s", strerror(errno));
+                    _exit(EXIT_FAILURE);
+                }
+                close(input_fd);
+            }
+            else if (count > 0) {
+                if (dup2(pipe_fd[2 * (count - 1)], STDIN_FILENO) == -1) {
+                    error("dup2 failed for pipe input: %s", strerror(errno));
+                    _exit(EXIT_FAILURE);
+                }
+            }
+
+            if (count == n - 1) {
+                if (output_fd != -1) {
+                    if (dup2(output_fd, STDOUT_FILENO) == -1) {
+                        error("dup2 failed for output file: %s", strerror(errno));
+                        _exit(EXIT_FAILURE);
+                    }
+                    close(output_fd);
+                }
+            }
+            else {
+                if (dup2(pipe_fd[2 * count + 1], STDOUT_FILENO) == -1) {
+                    error("dup2 failed for stdout pipe: %s", strerror(errno));
+                    _exit(EXIT_FAILURE);
+                }
+            }
+
+            for (int i = 0; i < pipe_size; i++) {
+                close(pipe_fd[i]);
+            }
             execute_step(step);
         }
         // Close file descriptors
@@ -63,25 +114,28 @@ void perform_tasks(TASK *task) {
         if (WIFEXITED(status)) {
             if (WEXITSTATUS(status)) {
                 error("(child %d) exited with status %d", pid, WEXITSTATUS(status));
-                rstatus = 1;
+                error_status = 1;
+            }
+            else {
+                success("(child %d) exited with status %d", pid, WEXITSTATUS(status));
             }
         }
         else if (WIFSIGNALED(status)) {
             error("(child %d) terminated by signal %d", pid, WTERMSIG(status));
-            rstatus = 1;
+            error_status = 1;
 
         }
         else {
             error("(child %d) terminated abnormally", pid);
-            rstatus  = 1;
+            error_status  = 1;
         }
     }
 
     // Exit process
     if (pid == -1 && errno == ECHILD) {
-        if (rstatus) {
+        if (error_status) {
             error("(pid %d) exiting with failure", getpid());
-            exit(EXIT_FAILURE);
+            _exit(EXIT_FAILURE);
         }
         else {
             success("(pid %d) exiting successfully", getpid());
@@ -90,7 +144,7 @@ void perform_tasks(TASK *task) {
     }
     else {
         error("error in (pid %d) while waiting for child processes: %s", getpid(), strerror(errno));
-        exit(EXIT_FAILURE);
+        _exit(EXIT_FAILURE);
     }
 }
 
