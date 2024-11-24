@@ -97,9 +97,15 @@ int master_chef(RECIPE *main_rp) {
 
     // Exit as per main recipe status
     if (CSTATUS(main_rp) != 1) {
+        if (!CSTATUS(main_rp)) {
+            error("main recipe '%s' was not cooked", main_rp->name);
+        } else {
+            error("main recipe '%s' failed during cook process", main_rp->name);
+        }
         return -1;
     }
     else {
+        success("main recipe '%s' has been successfully cooked", main_rp->name);
         return 0;
     }
 }
