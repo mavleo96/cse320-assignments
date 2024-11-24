@@ -47,14 +47,14 @@ void perform_tasks(TASK *task) {
         }
     }
 
-    int rstatus = 0;  // Flag to mark error
-    int count = 0;    // Step processing count
+    int error_status = 0;  // Flag to mark error
+    int count = 0;         // Step processing count
     while (step != NULL) {
         // error("DEBUGGING @ 1");
         pid_t pid = fork();
         if (pid < 0) {
             error("fork failed with error in (pid %d): %s", getpid(), strerror(errno));
-            rstatus = 1;
+            error_status = 1;
             break;
         }
         else if (!pid) {
@@ -88,7 +88,6 @@ void perform_tasks(TASK *task) {
                 }
             }
 
-            // close_pipes(pipe_fd, n);
             for (int i = 0; i < pipe_size; i++) {
                 close(pipe_fd[i]);
             }
@@ -115,23 +114,26 @@ void perform_tasks(TASK *task) {
         if (WIFEXITED(status)) {
             if (WEXITSTATUS(status)) {
                 error("(child %d) exited with status %d", pid, WEXITSTATUS(status));
-                rstatus = 1;
+                error_status = 1;
+            }
+            else {
+                success("(child %d) exited with status %d", pid, WEXITSTATUS(status));
             }
         }
         else if (WIFSIGNALED(status)) {
             error("(child %d) terminated by signal %d", pid, WTERMSIG(status));
-            rstatus = 1;
+            error_status = 1;
 
         }
         else {
             error("(child %d) terminated abnormally", pid);
-            rstatus  = 1;
+            error_status  = 1;
         }
     }
 
     // Exit process
     if (pid == -1 && errno == ECHILD) {
-        if (rstatus) {
+        if (error_status) {
             error("(pid %d) exiting with failure", getpid());
             _exit(EXIT_FAILURE);
         }
