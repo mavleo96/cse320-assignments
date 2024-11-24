@@ -1,0 +1,26 @@
+poached_eggs: eggs chicken pepper
+  boil -d water | reduce -d heat to simmer | cook -d eggs | remove -d eggs from water
+
+eggs: chicken
+  generic_step -d lay eggs
+
+butter: cream
+  churn -d cream into butter
+
+lime_juice:
+  buy -d juice from store
+
+cream:
+  milk -d cow
+  skim -d cream from milk
+
+salt:
+  buy -d salt from store
+
+pepper:
+  buy -d pepper from store
+
+chicken: eggs
+  generic_step -d hatch eggs
+
+get_gas:

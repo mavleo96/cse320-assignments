@@ -1,0 +1,43 @@
+eggs_benedict: hollandaise_sauce poached_eggs english_muffin canadian_bacon
+  assemble -d muffin eggs bacon
+  pour_on -d sauce
+  serve -d guests
+
+hollandaise_sauce: butter egg_yolks lime_juice cream salt pepper
+  melt -d butter
+  beat -d yolks
+  add -d juice cream salt pepper
+  cook -d mixture
+  
+poached_eggs: eggs
+  boil -d water | reduce -d heat to simmer | cook -d eggs | remove -d eggs from water
+
+english_muffin: get_gas
+  buy -d muffins from store
+
+canadian_bacon: get_gas
+  buy -d bacon from store
+
+egg_yolks: eggs
+  separate -d yolks from eggs > tmp/yolks
+
+eggs: get_gas
+  buy -d eggs from store
+
+butter: cream
+  churn -d cream into butter
+
+lime_juice:
+  buy -d juice from store
+
+cream:
+  milk -d cow
+  skim -d cream from milk
+
+salt:
+  buy -d salt from store
+
+pepper:
+  buy -d pepper from store
+
+get_gas:
