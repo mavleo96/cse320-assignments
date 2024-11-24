@@ -4,7 +4,7 @@
 void sous_chef(RECIPE *rp);
 void sigchld_handler(int sig);
 
-volatile int error_status = 0;
+volatile int global_error_status = 0;
 
 /*
  * Main cooking function
@@ -41,7 +41,8 @@ int master_chef(RECIPE *main_rp) {
                     debug("sigsuspend returned with errno: %s", strerror(errno));
                 } else {
                     error("sigsuspend failed with error: %s", strerror(errno));
-                    error_status = 1;
+                    queue.head = NULL;
+                    global_error_status = 1;
                 }
             }
         }
@@ -53,49 +54,58 @@ int master_chef(RECIPE *main_rp) {
         // Block SIGCHLD
         if (sigprocmask(SIG_BLOCK, &block_set, NULL) == -1) {
             error("sigprocmask failed with error: %s", strerror(errno));
-            error_status = 1;
-            // TODO: use free_queue function
+            global_error_status = 1;
             queue.head = NULL;
         }
 
         //-----CRITICAL SECTION-----//
         RECIPE* cooking_rp = queue.head->recipe;
         if (dequeue(&queue) == -1) {
-            error_status = 1;
+            global_error_status = 1;
+            continue;
         }
         ACTIVE_COOKS++;
         info("active cooks %d out of %d", ACTIVE_COOKS, MAX_COOKS);
+
         pid_t pid = fork();
         PID(cooking_rp) = pid;
+        if (pid < 0) {
+            error("fork failed with error in (pid %d): %s", getpid(), strerror(errno));
+            global_error_status = 1;
+            queue.head = NULL;
+            ACTIVE_COOKS--;
+            continue;
+        }
+
         //-----CRITICAL SECTION-----//
 
         // Unblock SIGCHLD
         if (sigprocmask(SIG_UNBLOCK, &block_set, NULL) == -1) {
             error("sigprocmask failed with error: %s", strerror(errno));
-            exit(EXIT_FAILURE);
+            global_error_status = 1;
+            queue.head = NULL;
         }
 
-        if (pid < 0) {
-            error("fork failed with error in (pid %d): %s", getpid(), strerror(errno));
-            // TODO: handle this better
-            break;
-        }
         // Child Process
         else if (!pid) {
+            debug("start cook: %s by (pid %d)", cooking_rp->name, getpid());
             // Restore default SIGCHLD handler
             struct sigaction sa_child;
-            sa_child.sa_handler = SIG_DFL;  // Set the default handler
+            sa_child.sa_handler = SIG_DFL;
             sa_child.sa_flags = 0;
             if (sigaction(SIGCHLD, &sa_child, NULL) == -1) {
-                perror("sigaction failed in child");
-                exit(EXIT_FAILURE);
+                error("sigaction failed with error: %s", strerror(errno));
+                _exit(EXIT_FAILURE);
             }
-            debug("start cook: %s by (pid %d)", cooking_rp->name, getpid());
             sous_chef(cooking_rp);
         }
     }
 
     // Exit as per main recipe status
+    if (global_error_status) {
+        error("exiting with error since global_error_status is set");
+        return -1;
+    }
     if (CSTATUS(main_rp) != 1) {
         if (!CSTATUS(main_rp)) {
             error("main recipe '%s' was not cooked", main_rp->name);
@@ -116,7 +126,7 @@ int master_chef(RECIPE *main_rp) {
 void sous_chef(RECIPE *rp) {
     if (!rp) {
         error("null pointer passed!");
-        exit(EXIT_FAILURE);
+        _exit(EXIT_FAILURE);
     }
 
     TASK *task = rp->tasks;
@@ -128,7 +138,7 @@ void sous_chef(RECIPE *rp) {
         pid_t pid = fork();
         if (pid < 0) {
             error("fork failed with error in (pid %d, ppid %d): %s", getpid(), getppid(), strerror(errno));
-            exit(EXIT_FAILURE);
+            _exit(EXIT_FAILURE);
         }
         // Child process
         else if (!pid) {
@@ -143,12 +153,12 @@ void sous_chef(RECIPE *rp) {
             int status;
             if (waitpid(pid, &status, 0) < 0) {
                 error("error while waiting for (child %d): %s", pid, strerror(errno));
-                exit(EXIT_FAILURE);
+                _exit(EXIT_FAILURE);
             }
             if (WIFEXITED(status)) {
                 if (WEXITSTATUS(status)) {
                     error("(child %d) exited with status %d", pid, WEXITSTATUS(status));
-                    exit(EXIT_FAILURE);
+                    _exit(EXIT_FAILURE);
                 }
                 else {
                     success("task %d of '%s' done", task_count, rp->name);
@@ -156,11 +166,11 @@ void sous_chef(RECIPE *rp) {
             }
             else if (WIFSIGNALED(status)) {
                 error("(child %d) terminated by signal %d", pid, WTERMSIG(status));
-                exit(EXIT_FAILURE);
+                _exit(EXIT_FAILURE);
             }
             else {
                 error("(child pid %d) terminated abnormally", pid);
-                exit(EXIT_FAILURE);
+                _exit(EXIT_FAILURE);
             }
         }
         // Update task and count
@@ -168,7 +178,7 @@ void sous_chef(RECIPE *rp) {
         task_count++;
     }
     success("(pid %d) exiting successfully", getpid());
-    exit(EXIT_SUCCESS);
+    _exit(EXIT_SUCCESS);
 }
 
 /*
@@ -186,8 +196,8 @@ void sigchld_handler(int sig) {
         RECIPE *rp = get_recipe_from_pid(pid);
         if (!rp) {
             error("cannot identify (pid %d)!", pid);
-            abort();
-            // handler_error_status = 1;
+            global_error_status = 1;
+            ACTIVE_COOKS--;
             return;
         }
 
@@ -200,23 +210,30 @@ void sigchld_handler(int sig) {
             else {
                 CSTATUS(rp) = 2;
                 error("(pid %d) finished cooking recipe '%s' with exit status %d", pid, rp->name, WEXITSTATUS(status));
+                global_error_status = 1;
             }
         }
         else if (WIFSIGNALED(status)) {
             CSTATUS(rp) = 2;
             error("(pid %d) terminated cooking recipe '%s' by signal %d", pid, rp->name, WTERMSIG(status));
+            global_error_status = 1;
         }
         else {
             CSTATUS(rp) = 2;
             error("(pid %d) terminated cooking recipe '%s' abnormally", pid, rp->name);
+            global_error_status = 1;
         }
 
         // Update dependencies and queue
-        update_dependency_count(rp);
-        if (queue_leaves(&queue, subset_rlp) == -1) {
-            // handler_error_status = 1;
-        }
         ACTIVE_COOKS--;
+        if (!global_error_status) {
+            update_dependency_count(rp);
+            if (queue_leaves(&queue, subset_rlp) == -1) {
+                global_error_status = 1;
+            }
+        } else {
+            error("not updating dependencies since global_error_status is set");
+        }
     }
     debug("exiting sigchld_handler");
     return;
