@@ -58,9 +58,12 @@ void perform_tasks(TASK *task) {
             break;
         }
         else if (!pid) {
-            if (input_fd != -1 && dup2(input_fd, STDIN_FILENO) == -1) {
-                error("dup2 failed for input file: %s", strerror(errno));
-                _exit(EXIT_FAILURE);
+            if (input_fd != -1) {
+                if (dup2(input_fd, STDIN_FILENO) == -1) {
+                    error("dup2 failed for input file: %s", strerror(errno));
+                    _exit(EXIT_FAILURE);
+                }
+                close(input_fd);
             }
             else if (count > 0) {
                 if (dup2(pipe_fd[2 * (count - 1)], STDIN_FILENO) == -1) {
@@ -70,11 +73,14 @@ void perform_tasks(TASK *task) {
             }
 
             if (count == n - 1) {
-                if (output_fd != -1 && dup2(output_fd, STDOUT_FILENO) == -1) {
-                    error("dup2 failed for output file: %s", strerror(errno));
-                    _exit(EXIT_FAILURE);
+                if (output_fd != -1) {
+                    if (dup2(output_fd, STDOUT_FILENO) == -1) {
+                        error("dup2 failed for output file: %s", strerror(errno));
+                        _exit(EXIT_FAILURE);
+                    }
+                    close(output_fd);
                 }
-            } 
+            }
             else {
                 if (dup2(pipe_fd[2 * count + 1], STDOUT_FILENO) == -1) {
                     error("dup2 failed for stdout pipe: %s", strerror(errno));
