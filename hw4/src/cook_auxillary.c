@@ -99,3 +99,18 @@ int step_count(STEP *step) {
     }
     return len;
 }
+
+/*
+ * Helper function to retrive pointer of recipe run by a given process
+ */
+RECIPE *get_recipe_from_pid(pid_t pid) {
+    RECIPE_LINK *rlp = subset_rlp;
+    while (rlp) {
+        RECIPE *rp = rlp->recipe;
+        if (PID(rp) == pid) {
+            return rp;
+        }
+        rlp = rlp->next;
+    }
+    return NULL;
+}

@@ -8,12 +8,13 @@
 #include <sys/wait.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #include "cookbook.h"
 #include "debug.h"
 
 // Cooking functions
-void master_chef(RECIPE *main_rp, RECIPE_LINK *subset);
+int master_chef(RECIPE *main_rp);
 void sous_chef(RECIPE *rp);
 
 // Cooking task functions
@@ -25,6 +26,7 @@ void setup_io_redirection(int input_fd, int output_fd, int pipe_fd[], int count,
 void initialize_pipes(int *pipe_fd, int pipe_size);
 void close_pipes(int pipe_fd[], int n);
 int step_count(STEP *step);
+RECIPE *get_recipe_from_pid(pid_t pid);
 
 // Queue functions
 typedef struct queue {
@@ -39,13 +41,15 @@ int queue_leaves(QUEUE *qp, RECIPE_LINK *subset);
 // Dependency & state functions / macros
 typedef struct state {
     int dcount;
-    int cstatus;      // not cooked (0), cooking (1), cooked (2)
+    int cstatus;      // not cooked (0), cooked (1), cook failed (2)
     int qstatus;      // not in queue (0), in queue(1), dequeued(2)
+    pid_t pid;        // cooked by pid
 } STATE;
 
 #define DEP_COUNT(rp)    (((STATE *) rp->state)->dcount)
 #define CSTATUS(rp)      (((STATE *) rp->state)->cstatus)
 #define QSTATUS(rp)      (((STATE *) rp->state)->qstatus)
+#define PID(rp)          (((STATE *) rp->state)->pid)
 
 void update_dependency_count(RECIPE *rp);
 RECIPE_LINK *dependency_analysis(RECIPE *rp, RECIPE_LINK *rlp);
