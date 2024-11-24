@@ -5,17 +5,17 @@
 
 #include "cookbook.h"
 #include "cook_utils.h"
+#include "globals.h"
 
 int main(int argc, char *argv[]) {
     // Intialize variables
     char *cookbook;
-    int max_cooks;
     char *main_recipe_name;
     RECIPE *main_rp;
     RECIPE_LINK *subset_rlp;
 
     // Validate args and set variables
-    validargs(argc, argv, &main_recipe_name, &cookbook, &max_cooks);
+    validargs(argc, argv, &main_recipe_name, &cookbook);
 
     // Parse cookbook and get recipe to cook
     COOKBOOK *cbp;
@@ -42,13 +42,13 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
     }
-    debug("cooking %s from %s with %d cooks", main_recipe_name, cookbook, max_cooks);
+    debug("cooking %s from %s with %d cooks", main_recipe_name, cookbook, MAX_COOKS);
 
     // Dependency analysis
     subset_rlp = dependency_analysis(main_rp, NULL);
 
     // Cook the recipe
-    master_chef(main_rp, subset_rlp, max_cooks);
+    master_chef(main_rp, subset_rlp);
 
     // TODO: Need to free the cookbook
     // free(cbp);

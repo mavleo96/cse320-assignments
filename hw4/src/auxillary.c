@@ -1,14 +1,14 @@
 #include "cook_utils.h"
+#include "globals.h"
 
 /*
  * Function to validate args and set parameters; return -1 on error
  */
-void validargs(int argc, char *argv[], char *argrecipe[], char *argfile[], int *argmaxcooks) {
+void validargs(int argc, char *argv[], char *argrecipe[], char *argfile[]) {
     int i = 1;
 
     // Initialize variables for default values
     *argfile = "rsrc/cookbook.ckb";
-    *argmaxcooks = 1;  // Default to 1 cook if not specified
     *argrecipe = NULL;
 
     while (i < argc) {
@@ -16,9 +16,9 @@ void validargs(int argc, char *argv[], char *argrecipe[], char *argfile[], int *
         if (!strcmp(argv[i], "-c")) {
             if (i + 1 < argc) {
                 i++;
-                *argmaxcooks = atoi(argv[i]);
-                if (*argmaxcooks < 1) {
-                    error("invalid value for '-c' option: %d", *argmaxcooks);
+                MAX_COOKS = atoi(argv[i]);
+                if (MAX_COOKS < 1) {
+                    error("invalid value for '-c' option: %d", MAX_COOKS);
                     exit(EXIT_FAILURE);
                 }
             } else {

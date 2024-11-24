@@ -1,3 +1,6 @@
+#ifndef COOK_UTILS_H
+#define COOK_UTILS_H
+
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -10,7 +13,7 @@
 #include "debug.h"
 
 // Cooking functions
-void master_chef(RECIPE *main_rp, RECIPE_LINK *subset, int max_cooks);
+void master_chef(RECIPE *main_rp, RECIPE_LINK *subset);
 void sous_chef(RECIPE *rp);
 
 // Cooking task functions
@@ -48,10 +51,12 @@ void update_dependency_count(RECIPE *rp);
 RECIPE_LINK *dependency_analysis(RECIPE *rp, RECIPE_LINK *rlp);
 
 // Auxillary functions
-void validargs(int argc, char *argv[], char *argrecipe[], char *argfile[], int *argmaxcooks);
+void validargs(int argc, char *argv[], char *argrecipe[], char *argfile[]);
 RECIPE *get_main_recipe(COOKBOOK *cbp, char *name);
 int recipe_link_length(RECIPE_LINK *rlp);
 
 // Debugging functions
 void print_recipe_link(RECIPE_LINK *rlp);
 void print_queue(QUEUE *qp);
+
+#endif

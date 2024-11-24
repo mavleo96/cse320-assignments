@@ -1,11 +1,12 @@
 #include "cook_utils.h"
+#include "globals.h"
 
 void sous_chef(RECIPE *rp);
 
 /*
  * Main cooking function
  */
-void master_chef(RECIPE *main_rp, RECIPE_LINK *subset, int max_cooks) {
+void master_chef(RECIPE *main_rp, RECIPE_LINK *subset) {
     QUEUE queue = {NULL, NULL};
     if (queue_leaves(&queue, subset) == -1) {
         // TODO: handle this gracefully
@@ -74,7 +75,6 @@ void sous_chef(RECIPE *rp) {
             exit(EXIT_FAILURE);
         }
         else if (!pid) {
-            debug("start task: task %d of %s by (pid %d, ppid %d)", task_count, rp->name, getpid(), getppid());
             perform_tasks(task);
         }
         else {
