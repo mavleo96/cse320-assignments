@@ -12,7 +12,6 @@ int main(int argc, char *argv[]) {
     char *cookbook;
     char *main_recipe_name;
     RECIPE *main_rp;
-    RECIPE_LINK *subset_rlp;
 
     // Validate args and set variables
     validargs(argc, argv, &main_recipe_name, &cookbook);
@@ -48,11 +47,11 @@ int main(int argc, char *argv[]) {
     subset_rlp = dependency_analysis(main_rp, NULL);
 
     // Cook the recipe
-    master_chef(main_rp, subset_rlp);
+    if (master_chef(main_rp) == -1) exit(EXIT_FAILURE);
 
     // TODO: Need to free the cookbook
     // free(cbp);
     // free(subset);
 
-    return EXIT_SUCCESS;
+    exit(EXIT_SUCCESS);
 }
