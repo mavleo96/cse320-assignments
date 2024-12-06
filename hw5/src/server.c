@@ -28,7 +28,7 @@ void *pbx_client_service(void *arg) {
     // Detach the thread
     int status;
     if ((status = pthread_detach(pthread_self())) != 0) {
-        error("pthread_detach return %d with error for (tid %ld)!", status, pthread_self());
+        error("pthread_detach returned %d with error for (tid %ld)!", status, pthread_self());
         close(connfd);
         return NULL;
     }
