@@ -70,8 +70,6 @@ int main(int argc, char* argv[]){
             error("pthread_create failed with error: %s", strerror(errno));
             free(connfd_ptr);
             close(connfd);
-        } else {
-            pthread_detach(tid);
         }
     }
 
