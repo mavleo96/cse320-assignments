@@ -49,6 +49,7 @@ int main(int argc, char* argv[]){
         struct sockaddr_storage clientaddr;
         socklen_t clientlen = sizeof(clientaddr);
 
+        // TODO: resuse address
         int connfd = accept(listenfd, (struct sockaddr *)&clientaddr, &clientlen);
         if (connfd < 0) {
             error("accept failed with error: %s", strerror(errno));
