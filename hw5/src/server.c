@@ -7,6 +7,7 @@
 #include "server.h"
 #include "utils.h"
 
+// TODO: change these to static methods
 int fstrlen(char *str);
 int fstrcmp(char *str1, char *str2);
 int parse_command(char *buffer, TU_COMMAND *cmd);
@@ -100,6 +101,11 @@ void *pbx_client_service(void *arg) {
                 break;
 
             default:
+                // TODO: change this server will silently ignore syntactically incorrect commands,
+                // such as "dial" without an extension number.  If commands are issued when the
+                // TU at the server side is in an inappropriate state (for example, if "dial 5"
+                // is sent when the TU is "on hook"), then a response will be sent by the server
+                // that just repeats the state of the TU, which does not change.
                 error("unknown command received: %s", buffer);
                 break;
         }
