@@ -54,7 +54,7 @@ int main(int argc, char* argv[]){
             error("accept failed with error: %s", strerror(errno));
             continue;
         }
-        debug("accepted connection '%d'", connfd);
+        info("accepted connection '%d'", connfd);
 
         // Spawn a thread to handle the client connection
         pthread_t tid;
