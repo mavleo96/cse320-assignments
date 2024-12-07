@@ -42,7 +42,7 @@ TU *tu_init(int fd) {
     tu->ext = -1;
     tu->connfd = fd;
     tu->state = TU_ON_HOOK;
-    tu->ref_count = 1;  // TODO: should this be 0 or 1? // Ref wont log maybe 0
+    tu->ref_count = 1;
     tu->peer_tu = NULL;
 
     // Initialize mutex
@@ -324,6 +324,7 @@ int tu_pickup(TU *tu) {
 
         pthread_mutex_unlock(&peer->lock);
     }
+    // Case 3: Invalid state
     else {
         notify_state(tu);
     }
@@ -437,7 +438,7 @@ int tu_chat(TU *tu, char *msg) {
     }
 
     pthread_mutex_lock(&tu->lock);
-    // Invalide state to chat
+    // Invalid state to chat
     if (tu->state != TU_CONNECTED) {
         notify_state(tu);
         pthread_mutex_unlock(&tu->lock);
