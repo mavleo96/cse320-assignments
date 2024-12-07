@@ -12,6 +12,7 @@ typedef struct tu {
     int ext;
     int connfd;
     TU_STATE state;
+    TU *peer_tu;
     pthread_mutex_t lock;
     int ref_count;
 } TU;
@@ -39,7 +40,8 @@ TU *tu_init(int fd) {
     tu->ext = -1;
     tu->connfd = fd;
     tu->state = TU_ON_HOOK;
-    tu->ref_count = 0;
+    tu->ref_count = 1;  // TODO: should this be 0 or 1? // Ref wont log maybe 0
+    tu->peer_tu = NULL;
 
     // Initialize mutex
     int status;
