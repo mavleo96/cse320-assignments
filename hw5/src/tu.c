@@ -248,9 +248,14 @@ int tu_dial(TU *tu, TU *target) {
 
     // Establish peers
     tu->peer_tu = target;
-    tu_ref(target, "connect as peer");
+    // TODO: think about this
+    // tu_ref(target, "connect as peer");
+    tu->ref_count++;
+    debug("TU (ext %d) ref count inc to %d: tu_dial", tu->ext, tu->ref_count);
     target->peer_tu = tu;
-    tu_ref(tu, "connect as peer");
+    // tu_ref(tu, "connect as peer");
+    target->ref_count++;
+    debug("TU (ext %d) ref count inc to %d: tu_dial", target->ext, target->ref_count);
 
     // Transition states
     tu->state = TU_RING_BACK;
@@ -386,8 +391,13 @@ int tu_hangup(TU *tu) {
         tu->peer_tu = NULL;
         peer->peer_tu = NULL;
 
-        tu_unref(tu, "disconnect peer on hangup");
-        tu_unref(peer, "disconnect peer on hangup");
+        // TODO: think about this
+        // tu_unref(tu, "disconnect peer on hangup");
+        // tu_unref(peer, "disconnect peer on hangup");
+        tu->ref_count--;
+        debug("TU (ext %d) ref count inc to %d: tu_hangup", tu->ext, tu->ref_count);
+        peer->ref_count--;
+        debug("TU (ext %d) ref count inc to %d: tu_hangup", peer->ext, peer->ref_count);
 
         notify_state(peer);
         pthread_mutex_unlock(&peer->lock);
