@@ -202,24 +202,20 @@ int pbx_dial(PBX *pbx, TU *tu, int ext) {
     debug("pbx_dial routing TU (ext %d) to TU (ext %d)", tu_extension(tu), ext);
     //-------- CRTICAL SECTION --------//
     target = pbx->tu_array[ext];
-    if (!target) {
-        pthread_mutex_unlock(&pbx->lock);
-        error("cannot find TU from ext %d in PBX!", ext);
-        return -1;
-    }
-    tu_ref(target, "pbx_dial");
+    if (target) tu_ref(target, "pbx_dial");
     //-------- CRTICAL SECTION --------//
     pthread_mutex_unlock(&pbx->lock);
 
-    // Perform a hangup operation to terminate any ongoing call
+    // Perform a tu_dial operation
+    // TODO: current peer references are double counted
     if (tu_dial(tu, target) == -1) {
         tu_unref(tu, "pbx_dial fail");
-        tu_unref(target, "pbx_dial fail");
-        error("failed to dial TU at ext %d!", ext);
+        if (target) tu_unref(target, "pbx_dial fail");
+        error("failed to dial TU (ext %d)!", ext);
         return -1;
     }
-    tu_unref(tu, "pbx_dial success");
-    tu_unref(target, "pbx_dial success");
+    tu_unref(tu, "pbx_dial exit");
+    if (target) tu_unref(target, "pbx_dial exit");
 
     success("successfully dialed TU (ext %d)", ext);
     return 0;
