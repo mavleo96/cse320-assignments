@@ -447,13 +447,13 @@ int tu_chat(TU *tu, char *msg) {
     int ret_val = 0;
 
     // Prepare and send the chat message
-    char fmsg[1024]; // TODO: make this dynamic
+    char fmsg[5 + strlen(msg) + 2 + 1];
     int written_bytes = snprintf(fmsg, sizeof(fmsg), "CHAT %s%s", msg, EOL);
-    if (written_bytes < 0 || written_bytes >= sizeof(msg)) {
+    if (written_bytes < 0 || written_bytes >= sizeof(fmsg)) {
         error("message formatting failed!");
         ret_val = -1;
     }
-    else if (write(peer->connfd, msg, strlen(msg)) == -1) {
+    else if (write(peer->connfd, fmsg, strlen(fmsg)) == -1) {
         error("write failed with error: %s", strerror(errno));
         ret_val = -1;
     }
