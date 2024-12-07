@@ -158,19 +158,17 @@ int tu_set_extension(TU *tu, int ext) {
     }
 
     pthread_mutex_lock(&tu->lock);
-    tu->ext = ext;
-
-    // Notify client of the state
-    // TODO: this can be util function
-    char message[256];
-    snprintf(message, sizeof(message), "%s %d\r\n", tu_state_names[tu->state], ext);
-    if (write(tu->connfd, message, strlen(message)) == -1) {
-        error("write failed with error: %s", strerror(errno));
+    if (tu->ext != -1) {
+        error("tried setting ext %d to TU (ext %d)", ext, tu->ext);
         pthread_mutex_unlock(&tu->lock);
         return -1;
     }
 
+    tu->ext = ext;
+    success("ext %d set to TU", ext);
+    notify_state(tu);
     pthread_mutex_unlock(&tu->lock);
+
     return 0;
 }
 
@@ -282,3 +280,52 @@ int tu_chat(TU *tu, char *msg) {
     abort();
 }
 #endif
+
+
+/*
+ * Helper function to notify client about TU state
+ * MUST BE ACCESSED ONLY BY TU WHOSE MUTEX IS LOCKED
+ */
+static void notify_state(TU *tu) {
+    if (!tu) {
+        error("null pointer passed!");
+        return;
+    }
+
+    // TODO: check later if this is needed
+    // // Check if mutex is locked
+    // int check = pthread_mutex_trylock(&tu->lock);
+    // if (!check) {
+    //     pthread_mutex_unlock(&tu->lock);
+    //     warn("mutex is unlocked!");
+    //     abort();
+    // }
+    
+    // Retrieve fd, state and ext
+    int fd = tu_fileno(tu);
+    if (fd == -1) {
+        error("invalid connection fd!");
+        return;
+    }
+    int state = tu->state;
+    int ext = tu->ext;
+
+    // Write to connection fd notifying the state of TU
+    char msg[256];
+    int written_bytes = 0;
+
+    if (state == TU_ON_HOOK) {
+        written_bytes = snprintf(msg, sizeof(msg), "%s %d%s", tu_state_names[state], ext, EOL);
+    } else {
+        written_bytes = snprintf(msg, sizeof(msg), "%s%s", tu_state_names[state], EOL);
+    }
+    if (written_bytes < 0 || written_bytes >= sizeof(msg)) {
+        error("msg formatting failed!");
+        return;
+    }
+
+    if (write(fd, msg, strlen(msg)) == -1) {
+        error("write failed with error: %s", strerror(errno));
+        return;
+    }
+}
