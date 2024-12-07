@@ -485,7 +485,7 @@ static void notify_state(TU *tu) {
     // }
     
     // Retrieve fd, state and ext
-    int fd = tu_fileno(tu);
+    int fd = tu->connfd;
     if (fd == -1) {
         error("invalid connection fd!");
         return;
