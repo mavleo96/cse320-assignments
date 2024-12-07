@@ -125,11 +125,9 @@ int pbx_register(PBX *pbx, TU *tu, int ext) {
     
     // Initialize the TU state and increment its reference count
     tu_set_extension(tu, ext);
-    char ref_message[64];
-    snprintf(ref_message, sizeof(ref_message), "register TU (ext %d)", ext);
-    tu_ref(tu, ref_message);
+    tu_ref(tu, "pbx_register");
 
-    success("registered TU at ext %d", ext);
+    success("registered TU (ext %d) on PBX", ext);
     return 0;
 }
 
@@ -176,11 +174,9 @@ int pbx_unregister(PBX *pbx, TU *tu) {
     }
 
     // Release the reference to the TU
-    char ref_message[64];
-    snprintf(ref_message, sizeof(ref_message), "unregister TU (ext %d)", ext);
-    tu_unref(tu, ref_message);
+    tu_unref(tu, "pbx_unregister");
 
-    success("unregistered TU at ext %d", ext);
+    success("unregistered TU (ext %d) on PBX", ext);
     return 0;
 }
 
@@ -197,11 +193,13 @@ int pbx_dial(PBX *pbx, TU *tu, int ext) {
         error("invalid parameters passed!");
         return -1;
     }
+    tu_ref(tu, "pbx_dial");
 
     TU *target;
 
     // Locate the target TU
     pthread_mutex_lock(&pbx->lock);
+    debug("pbx_dial routing TU (ext %d) to TU (ext %d)", tu_extension(tu), ext);
     //-------- CRTICAL SECTION --------//
     target = pbx->tu_array[ext];
     if (!target) {
@@ -215,10 +213,12 @@ int pbx_dial(PBX *pbx, TU *tu, int ext) {
 
     // Perform a hangup operation to terminate any ongoing call
     if (tu_dial(tu, target) == -1) {
+        tu_unref(tu, "pbx_dial fail");
         tu_unref(target, "pbx_dial fail");
         error("failed to dial TU at ext %d!", ext);
         return -1;
     }
+    tu_unref(tu, "pbx_dial success");
     tu_unref(target, "pbx_dial success");
 
     success("successfully dialed TU (ext %d)", ext);
