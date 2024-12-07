@@ -1,10 +1,23 @@
 /*
  * TU: simulates a "telephone unit", which interfaces a client with the PBX.
  */
-#include <stdlib.h>
-
 #include "pbx.h"
 #include "debug.h"
+#include "utils.h"
+
+/*
+ * TU structure holds extension, connection fd, state and reference count of TU along with mutex lock
+ */
+typedef struct tu {
+    int ext;
+    int connfd;
+    TU_STATE state;
+    TU *peer_tu;
+    pthread_mutex_t lock;
+    int ref_count;
+} TU;
+
+static void notify_state(TU *tu);
 
 /*
  * Initialize a TU
@@ -13,12 +26,36 @@
  * @return  The TU, newly initialized and in the TU_ON_HOOK state, if initialization
  * was successful, otherwise NULL.
  */
-#if 0
 TU *tu_init(int fd) {
-    // TO BE IMPLEMENTED
-    abort();
+    if (fd < 0) {
+        error("invalid connection fd (%d) passed!", fd);
+        return NULL;
+    }
+    // Allocate memory for TU
+    TU *tu = malloc(sizeof(TU));
+    if (!tu) {
+        error("malloc failed with error: %s", strerror(errno));
+        return NULL;
+    }
+
+    // Initialize fields
+    tu->ext = -1;
+    tu->connfd = fd;
+    tu->state = TU_ON_HOOK;
+    tu->ref_count = 1;
+    tu->peer_tu = NULL;
+
+    // Initialize mutex
+    int status;
+    if ((status = pthread_mutex_init(&tu->lock, NULL)) != 0) {
+        error("pthread_mutex_init failed and returned status %d", status);
+        free(tu);
+        return NULL;
+    }
+
+    success("TU initialized successfully");
+    return tu;
 }
-#endif
 
 /*
  * Increment the reference count on a TU.
@@ -27,12 +64,21 @@ TU *tu_init(int fd) {
  * @param reason  A string describing the reason why the count is being incremented
  * (for debugging purposes).
  */
-#if 0
 void tu_ref(TU *tu, char *reason) {
-    // TO BE IMPLEMENTED
-    abort();
+    if (!tu) {
+        error("null TU pointer passed!");
+        return;
+    }
+    if (!reason) {
+        error("null reason pointer passed!");
+        return;
+    }
+
+    pthread_mutex_lock(&tu->lock);
+    tu->ref_count++;
+    debug("TU (ext %d) ref count inc to %d: %s", tu->ext, tu->ref_count, reason);
+    pthread_mutex_unlock(&tu->lock);
 }
-#endif
 
 /*
  * Decrement the reference count on a TU, freeing it if the count becomes 0.
@@ -41,12 +87,29 @@ void tu_ref(TU *tu, char *reason) {
  * @param reason  A string describing the reason why the count is being decremented
  * (for debugging purposes).
  */
-#if 0
 void tu_unref(TU *tu, char *reason) {
-    // TO BE IMPLEMENTED
-    abort();
+    if (!tu) {
+        error("null TU pointer passed!");
+        return;
+    }
+    if (!reason) {
+        warn("null reason pointer passed!");
+    }
+
+    pthread_mutex_lock(&tu->lock);
+    tu->ref_count--;
+    debug("TU (ext %d) ref count dec to %d: %s", tu->ext, tu->ref_count, reason ? reason : "null");
+
+    if (tu->ref_count == 0) {
+        pthread_mutex_unlock(&tu->lock);
+        pthread_mutex_destroy(&tu->lock);
+        int ext = tu->ext;
+        free(tu);
+        debug("TU (ext %d) freed", ext);
+        return;
+    }
+    pthread_mutex_unlock(&tu->lock);
 }
-#endif
 
 /*
  * Get the file descriptor for the network connection underlying a TU.
@@ -57,12 +120,13 @@ void tu_unref(TU *tu, char *reason) {
  * @param tu
  * @return the underlying file descriptor, if any, otherwise -1.
  */
-#if 0
 int tu_fileno(TU *tu) {
-    // TO BE IMPLEMENTED
-    abort();
+    if (!tu) {
+        error("null TU pointer passed!");
+        return -1;
+    }
+    return tu->connfd;
 }
-#endif
 
 /*
  * Get the extension number for a TU.
@@ -74,12 +138,13 @@ int tu_fileno(TU *tu) {
  * @param tu
  * @return the extension number, if any, otherwise -1.
  */
-#if 0
 int tu_extension(TU *tu) {
-    // TO BE IMPLEMENTED
-    abort();
+    if (!tu) {
+        error("null TU pointer passed!");
+        return -1;
+    }
+    return tu->ext;
 }
-#endif
 
 /*
  * Set the extension number for a TU.
@@ -88,12 +153,26 @@ int tu_extension(TU *tu) {
  *
  * @param tu  The TU whose extension is being set.
  */
-#if 0
 int tu_set_extension(TU *tu, int ext) {
-    // TO BE IMPLEMENTED
-    abort();
+    if (!tu || ext < 0) {
+        error("invalid arguments passed!");
+        return -1;
+    }
+
+    pthread_mutex_lock(&tu->lock);
+    if (tu->ext != -1) {
+        error("tried setting ext %d to TU (ext %d)", ext, tu->ext);
+        pthread_mutex_unlock(&tu->lock);
+        return -1;
+    }
+
+    tu->ext = ext;
+    success("ext %d set to TU", ext);
+    notify_state(tu);
+    pthread_mutex_unlock(&tu->lock);
+
+    return 0;
 }
-#endif
 
 /*
  * Initiate a call from a specified originating TU to a specified target TU.
@@ -125,12 +204,71 @@ int tu_set_extension(TU *tu, int ext) {
  * @return 0 if successful, -1 if any error occurs that results in the originating
  * TU transitioning to the TU_ERROR state. 
  */
-#if 0
 int tu_dial(TU *tu, TU *target) {
-    // TO BE IMPLEMENTED
-    abort();
+    if (!tu) {
+        error("null pointer passed!");
+        return 0;
+    }
+
+    pthread_mutex_lock(&tu->lock);
+
+    // Ensure the originating TU is in the TU_DIAL_TONE state
+    if (tu->state != TU_DIAL_TONE) {
+        notify_state(tu);
+        pthread_mutex_unlock(&tu->lock);
+        return 0;
+    }
+
+    // Handle invalid target case
+    if (!target) {
+        tu->state = TU_ERROR;
+        notify_state(tu);
+        pthread_mutex_unlock(&tu->lock);
+        return -1;
+    }
+
+    // Handle case where the originating TU is trying to call itself
+    if (tu == target) {
+        tu->state = TU_BUSY_SIGNAL;
+        notify_state(tu);
+        pthread_mutex_unlock(&tu->lock);
+        return 0;
+    }
+
+    pthread_mutex_unlock(&target->lock);
+
+    if (target->peer_tu || target->state != TU_ON_HOOK) {
+        // Target TU is busy or not available
+        tu->state = TU_BUSY_SIGNAL;
+        notify_state(tu);
+        pthread_mutex_unlock(&target->lock);
+        pthread_mutex_unlock(&tu->lock);
+        return 0;
+    }
+
+    // Establish peers
+    tu->peer_tu = target;
+    // TODO: think about this
+    // tu_ref(target, "connect as peer");
+    tu->ref_count++;
+    debug("TU (ext %d) ref count inc to %d: tu_dial", tu->ext, tu->ref_count);
+    target->peer_tu = tu;
+    // tu_ref(tu, "connect as peer");
+    target->ref_count++;
+    debug("TU (ext %d) ref count inc to %d: tu_dial", target->ext, target->ref_count);
+
+    // Transition states
+    tu->state = TU_RING_BACK;
+    target->state = TU_RINGING;
+
+    notify_state(tu);
+    notify_state(target);
+
+    pthread_mutex_unlock(&target->lock);
+    pthread_mutex_unlock(&tu->lock);
+
+    return 0;
 }
-#endif
 
 /*
  * Take a TU receiver off-hook (i.e. pick up the handset).
@@ -149,12 +287,51 @@ int tu_dial(TU *tu, TU *target) {
  * @return 0 if successful, -1 if any error occurs that results in the originating
  * TU transitioning to the TU_ERROR state. 
  */
-#if 0
 int tu_pickup(TU *tu) {
-    // TO BE IMPLEMENTED
-    abort();
+    // TODO: think why tu can go to error state 
+    if (!tu) {
+        error("null pointer passed!");
+        return -1;
+    }
+
+    pthread_mutex_lock(&tu->lock);
+
+    // Case 1: TU is 'on hook'
+    if (tu->state == TU_ON_HOOK) {
+        tu->state = TU_DIAL_TONE;
+        notify_state(tu);
+    }
+    // Case 2: TU is 'ringing'
+    else if (tu->state == TU_RINGING) {
+        TU *peer = tu->peer_tu;
+        if (!peer) {
+            error("peer_tu is NULL in RINGING state!");
+            tu->state = TU_ERROR;
+            notify_state(tu);
+            pthread_mutex_unlock(&tu->lock);
+            return -1;
+        }
+
+        pthread_mutex_lock(&peer->lock);
+
+        // Tranisition states
+        tu->state = TU_CONNECTED;
+        peer->state = TU_CONNECTED;
+
+        // Notify both TUs 
+        notify_state(tu);
+        notify_state(peer);
+
+        pthread_mutex_unlock(&peer->lock);
+    }
+    // Case 3: Invalid state
+    else {
+        notify_state(tu);
+    }
+
+    pthread_mutex_unlock(&tu->lock);
+    return 0;
 }
-#endif
 
 /*
  * Hang up a TU (i.e. replace the handset on the switchhook).
@@ -177,12 +354,65 @@ int tu_pickup(TU *tu) {
  * @return 0 if successful, -1 if any error occurs that results in the originating
  * TU transitioning to the TU_ERROR state. 
  */
-#if 0
 int tu_hangup(TU *tu) {
-    // TO BE IMPLEMENTED
-    abort();
+    if (!tu) {
+        error("null pointer passed!");
+        return -1;
+    }
+
+    pthread_mutex_lock(&tu->lock);
+
+    // Handle cases with a valid peer TU
+    if (tu->state == TU_CONNECTED || tu->state == TU_RINGING || tu->state == TU_RING_BACK) {
+        TU *peer = tu->peer_tu;
+
+        if (!peer) {
+            error("peer_tu is NULL in state requiring a peer!");
+            tu->state = TU_ERROR;
+            notify_state(tu);
+            pthread_mutex_unlock(&tu->lock);
+            return -1;
+        }
+
+        pthread_mutex_lock(&peer->lock);
+
+        // Transition states
+        // Case 1: TU is not calling
+        if (tu->state == TU_CONNECTED || tu->state == TU_RINGING) {
+            tu->state = TU_ON_HOOK;
+            peer->state = TU_DIAL_TONE;
+        }
+        // Case 2: TU is calling
+        else if (tu->state == TU_RING_BACK) {
+            tu->state = TU_ON_HOOK;
+            peer->state = TU_ON_HOOK;
+        }
+        
+        // Disconnect the peers
+        tu->peer_tu = NULL;
+        peer->peer_tu = NULL;
+
+        // TODO: think about this
+        // tu_unref(tu, "disconnect peer on hangup");
+        // tu_unref(peer, "disconnect peer on hangup");
+        tu->ref_count--;
+        debug("TU (ext %d) ref count inc to %d: tu_hangup", tu->ext, tu->ref_count);
+        peer->ref_count--;
+        debug("TU (ext %d) ref count inc to %d: tu_hangup", peer->ext, peer->ref_count);
+
+        notify_state(peer);
+        pthread_mutex_unlock(&peer->lock);
+    }
+    // Self contained states
+    else if (tu->state == TU_DIAL_TONE || tu->state == TU_BUSY_SIGNAL || tu->state == TU_ERROR) {
+        tu->state = TU_ON_HOOK;
+    }
+
+    notify_state(tu);
+    pthread_mutex_unlock(&tu->lock);
+
+    return 0;
 }
-#endif
 
 /*
  * "Chat" over a connection.
@@ -197,9 +427,99 @@ int tu_hangup(TU *tu) {
  * @return 0  If the chat was successfully sent, -1 if there is no call in progress
  * or some other error occurs.
  */
-#if 0
 int tu_chat(TU *tu, char *msg) {
-    // TO BE IMPLEMENTED
-    abort();
+    if (!tu) {
+        error("null TU pointer passed!");
+        return -1;
+    }
+    if (!msg) {
+        error("null msg pointer passed!");
+        return -1;
+    }
+
+    pthread_mutex_lock(&tu->lock);
+    // Invalid state to chat
+    if (tu->state != TU_CONNECTED) {
+        notify_state(tu);
+        pthread_mutex_unlock(&tu->lock);
+        return -1;
+    }
+
+    // Retrieve and validate the peer TU
+    TU *peer = tu->peer_tu;
+    if (!peer) {
+        error("Peer TU is NULL in TU_CONNECTED state.");
+        notify_state(tu);
+        pthread_mutex_unlock(&tu->lock);
+        return -1;
+    }
+
+    pthread_mutex_lock(&peer->lock);
+    int ret_val = 0;
+
+    // Prepare and send the chat message
+    char fmsg[5 + strlen(msg) + 2 + 1];
+    int written_bytes = snprintf(fmsg, sizeof(fmsg), "CHAT %s%s", msg, EOL);
+    if (written_bytes < 0 || written_bytes >= sizeof(fmsg)) {
+        error("message formatting failed!");
+        ret_val = -1;
+    }
+    else if (write(peer->connfd, fmsg, strlen(fmsg)) == -1) {
+        error("write failed with error: %s", strerror(errno));
+        ret_val = -1;
+    }
+
+    pthread_mutex_unlock(&peer->lock);
+    notify_state(tu);
+    pthread_mutex_unlock(&tu->lock);
+    
+    return ret_val;
 }
-#endif
+
+/*
+ * Helper function to notify client about TU state
+ * MUST BE ACCESSED ONLY BY TU WHOSE MUTEX IS LOCKED
+ */
+static void notify_state(TU *tu) {
+    if (!tu) {
+        error("null pointer passed!");
+        return;
+    }
+
+    // TODO: check later if this is needed
+    // // Check if mutex is locked
+    // int check = pthread_mutex_trylock(&tu->lock);
+    // if (!check) {
+    //     pthread_mutex_unlock(&tu->lock);
+    //     warn("mutex is unlocked!");
+    //     abort();
+    // }
+    
+    // Retrieve fd, state and ext
+    int fd = tu->connfd;
+    if (fd == -1) {
+        error("invalid connection fd!");
+        return;
+    }
+    int state = tu->state;
+    int ext = tu->ext;
+
+    // Write to connection fd notifying the state of TU
+    char msg[256];
+    int written_bytes = 0;
+
+    if (state == TU_ON_HOOK) {
+        written_bytes = snprintf(msg, sizeof(msg), "%s %d%s", tu_state_names[state], ext, EOL);
+    } else {
+        written_bytes = snprintf(msg, sizeof(msg), "%s%s", tu_state_names[state], EOL);
+    }
+    if (written_bytes < 0 || written_bytes >= sizeof(msg)) {
+        error("msg formatting failed!");
+        return;
+    }
+
+    if (write(fd, msg, strlen(msg)) == -1) {
+        error("write failed with error: %s", strerror(errno));
+        return;
+    }
+}

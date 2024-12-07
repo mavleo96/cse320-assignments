@@ -54,7 +54,7 @@ int main(int argc, char* argv[]){
             error("accept failed with error: %s", strerror(errno));
             continue;
         }
-        info("accepted connection '%d'", connfd);
+        info("accepted client connection on fd '%d'", connfd);
 
         // Spawn a thread to handle the client connection
         pthread_t tid;
@@ -82,7 +82,7 @@ int main(int argc, char* argv[]){
 static void terminate(int status) {
     debug("shutting down PBX...");
     pbx_shutdown(pbx);
-    debug("PBX server terminating");
+    info("PBX server terminating");
     exit(status);
 }
 
