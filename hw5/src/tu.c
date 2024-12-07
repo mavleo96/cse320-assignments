@@ -17,6 +17,8 @@ typedef struct tu {
     int ref_count;
 } TU;
 
+static void notify_state(TU *tu);
+
 /*
  * Initialize a TU
  *
