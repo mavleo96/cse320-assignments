@@ -204,12 +204,66 @@ int tu_set_extension(TU *tu, int ext) {
  * @return 0 if successful, -1 if any error occurs that results in the originating
  * TU transitioning to the TU_ERROR state. 
  */
-#if 0
 int tu_dial(TU *tu, TU *target) {
-    // TO BE IMPLEMENTED
-    abort();
+    if (!tu) {
+        error("null pointer passed!");
+        return 0;
+    }
+
+    pthread_mutex_lock(&tu->lock);
+
+    // Ensure the originating TU is in the TU_DIAL_TONE state
+    if (tu->state != TU_DIAL_TONE) {
+        notify_state(tu);
+        pthread_mutex_unlock(&tu->lock);
+        return 0;
+    }
+
+    // Handle invalid target case
+    if (!target) {
+        tu->state = TU_ERROR;
+        notify_state(tu);
+        pthread_mutex_unlock(&tu->lock);
+        return -1;
+    }
+
+    // Handle case where the originating TU is trying to call itself
+    if (tu == target) {
+        tu->state = TU_BUSY_SIGNAL;
+        notify_state(tu);
+        pthread_mutex_unlock(&tu->lock);
+        return 0;
+    }
+
+    pthread_mutex_unlock(&target->lock);
+
+    if (target->peer_tu || target->state != TU_ON_HOOK) {
+        // Target TU is busy or not available
+        tu->state = TU_BUSY_SIGNAL;
+        notify_state(tu);
+        pthread_mutex_unlock(&target->lock);
+        pthread_mutex_unlock(&tu->lock);
+        return 0;
+    }
+
+    // Establish peers
+    tu->peer_tu = target;
+    tu_ref(target, "connect as peer");
+    target->peer_tu = tu;
+    tu_ref(tu, "connect as peer");
+
+    // Transition states
+    tu->state = TU_RING_BACK;
+    target->state = TU_RINGING;
+
+    notify_state(tu);
+    notify_state(target);
+
+    pthread_mutex_unlock(&target->lock);
+    pthread_mutex_unlock(&tu->lock);
+
+    return 0;
 }
-#endif
 
 /*
  * Take a TU receiver off-hook (i.e. pick up the handset).
@@ -228,12 +282,50 @@ int tu_dial(TU *tu, TU *target) {
  * @return 0 if successful, -1 if any error occurs that results in the originating
  * TU transitioning to the TU_ERROR state. 
  */
-#if 0
 int tu_pickup(TU *tu) {
-    // TO BE IMPLEMENTED
-    abort();
+    // TODO: think why tu can go to error state 
+    if (!tu) {
+        error("null pointer passed!");
+        return -1;
+    }
+
+    pthread_mutex_lock(&tu->lock);
+
+    // Case 1: TU is 'on hook'
+    if (tu->state == TU_ON_HOOK) {
+        tu->state = TU_DIAL_TONE;
+        notify_state(tu);
+    }
+    // Case 2: TU is 'ringing'
+    else if (tu->state == TU_RINGING) {
+        TU *peer = tu->peer_tu;
+        if (!peer) {
+            error("peer_tu is NULL in RINGING state!");
+            tu->state = TU_ERROR;
+            notify_state(tu);
+            pthread_mutex_unlock(&tu->lock);
+            return -1;
+        }
+
+        pthread_mutex_lock(&peer->lock);
+
+        // Tranisition states
+        tu->state = TU_CONNECTED;
+        peer->state = TU_CONNECTED;
+
+        // Notify both TUs 
+        notify_state(tu);
+        notify_state(peer);
+
+        pthread_mutex_unlock(&peer->lock);
+    }
+    else {
+        notify_state(tu);
+    }
+
+    pthread_mutex_unlock(&tu->lock);
+    return 0;
 }
-#endif
 
 /*
  * Hang up a TU (i.e. replace the handset on the switchhook).
@@ -256,12 +348,60 @@ int tu_pickup(TU *tu) {
  * @return 0 if successful, -1 if any error occurs that results in the originating
  * TU transitioning to the TU_ERROR state. 
  */
-#if 0
 int tu_hangup(TU *tu) {
-    // TO BE IMPLEMENTED
-    abort();
+    if (!tu) {
+        error("null pointer passed!");
+        return -1;
+    }
+
+    pthread_mutex_lock(&tu->lock);
+
+    // Handle cases with a valid peer TU
+    if (tu->state == TU_CONNECTED || tu->state == TU_RINGING || tu->state == TU_RING_BACK) {
+        TU *peer = tu->peer_tu;
+
+        if (!peer) {
+            error("peer_tu is NULL in state requiring a peer!");
+            tu->state = TU_ERROR;
+            notify_state(tu);
+            pthread_mutex_unlock(&tu->lock);
+            return -1;
+        }
+
+        pthread_mutex_lock(&peer->lock);
+
+        // Transition states
+        // Case 1: TU is not calling
+        if (tu->state == TU_CONNECTED || tu->state == TU_RINGING) {
+            tu->state = TU_ON_HOOK;
+            peer->state = TU_DIAL_TONE;
+        }
+        // Case 2: TU is calling
+        else if (tu->state == TU_RING_BACK) {
+            tu->state = TU_ON_HOOK;
+            peer->state = TU_ON_HOOK;
+        }
+        
+        // Disconnect the peers
+        tu->peer_tu = NULL;
+        peer->peer_tu = NULL;
+
+        tu_unref(tu, "disconnect peer on hangup");
+        tu_unref(peer, "disconnect peer on hangup");
+
+        notify_state(peer);
+        pthread_mutex_unlock(&peer->lock);
+    }
+    // Self contained states
+    else if (tu->state == TU_DIAL_TONE || tu->state == TU_BUSY_SIGNAL || tu->state == TU_ERROR) {
+        tu->state = TU_ON_HOOK;
+    }
+
+    notify_state(tu);
+    pthread_mutex_unlock(&tu->lock);
+
+    return 0;
 }
-#endif
 
 /*
  * "Chat" over a connection.
@@ -276,13 +416,54 @@ int tu_hangup(TU *tu) {
  * @return 0  If the chat was successfully sent, -1 if there is no call in progress
  * or some other error occurs.
  */
-#if 0
 int tu_chat(TU *tu, char *msg) {
-    // TO BE IMPLEMENTED
-    abort();
-}
-#endif
+    if (!tu) {
+        error("null TU pointer passed!");
+        return -1;
+    }
+    if (!msg) {
+        error("null msg pointer passed!");
+        return -1;
+    }
 
+    pthread_mutex_lock(&tu->lock);
+    // Invalide state to chat
+    if (tu->state != TU_CONNECTED) {
+        notify_state(tu);
+        pthread_mutex_unlock(&tu->lock);
+        return -1;
+    }
+
+    // Retrieve and validate the peer TU
+    TU *peer = tu->peer_tu;
+    if (!peer) {
+        error("Peer TU is NULL in TU_CONNECTED state.");
+        notify_state(tu);
+        pthread_mutex_unlock(&tu->lock);
+        return -1;
+    }
+
+    pthread_mutex_lock(&peer->lock);
+    int ret_val = 0;
+
+    // Prepare and send the chat message
+    char fmsg[1024]; // TODO: make this dynamic
+    int written_bytes = snprintf(fmsg, sizeof(fmsg), "CHAT %s%s", msg, EOL);
+    if (written_bytes < 0 || written_bytes >= sizeof(msg)) {
+        error("message formatting failed!");
+        ret_val = -1;
+    }
+    else if (write(peer->connfd, msg, strlen(msg)) == -1) {
+        error("write failed with error: %s", strerror(errno));
+        ret_val = -1;
+    }
+
+    pthread_mutex_unlock(&peer->lock);
+    notify_state(tu);
+    pthread_mutex_unlock(&tu->lock);
+    
+    return ret_val;
+}
 
 /*
  * Helper function to notify client about TU state
