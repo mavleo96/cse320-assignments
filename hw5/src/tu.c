@@ -26,7 +26,7 @@ typedef struct tu {
  */
 TU *tu_init(int fd) {
     if (fd < 0) {
-        error("invalid connection fd passed!");
+        error("invalid connection fd (%d) passed!", fd);
         return NULL;
     }
     // Allocate memory for TU
@@ -63,14 +63,18 @@ TU *tu_init(int fd) {
  * (for debugging purposes).
  */
 void tu_ref(TU *tu, char *reason) {
-    if (!tu || !reason) {
-        error("invalid arguments passed!");
+    if (!tu) {
+        error("null TU pointer passed!");
+        return;
+    }
+    if (!reason) {
+        error("null reason pointer passed!");
         return;
     }
 
     pthread_mutex_lock(&tu->lock);
     tu->ref_count++;
-    debug("increment TU reference count (%d): %s", tu->ref_count, reason);
+    debug("TU (ext %d) ref count inc to %d: %s", tu->ext, tu->ref_count, reason);
     pthread_mutex_unlock(&tu->lock);
 }
 
@@ -82,20 +86,24 @@ void tu_ref(TU *tu, char *reason) {
  * (for debugging purposes).
  */
 void tu_unref(TU *tu, char *reason) {
-    if (!tu || !reason) {
-        error("invalid arguments passed!");
+    if (!tu) {
+        error("null TU pointer passed!");
         return;
+    }
+    if (!reason) {
+        warn("null reason pointer passed!");
     }
 
     pthread_mutex_lock(&tu->lock);
     tu->ref_count--;
-    debug("decrement TU reference count (%d): %s", tu->ref_count, reason);
+    debug("TU (ext %d) ref count dec to %d: %s", tu->ext, tu->ref_count, reason ? reason : "null");
 
     if (tu->ref_count == 0) {
         pthread_mutex_unlock(&tu->lock);
         pthread_mutex_destroy(&tu->lock);
+        int ext = tu->ext;
         free(tu);
-        debug("TU freed");
+        debug("TU (ext %d) freed", ext);
         return;
     }
     pthread_mutex_unlock(&tu->lock);
