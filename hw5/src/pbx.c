@@ -113,13 +113,14 @@ int pbx_register(PBX *pbx, TU *tu, int ext) {
 
     // Register TU in pbx tu_array
     pthread_mutex_lock(&pbx->lock);
-    // CRTICAL SECTION
+    //-------- CRTICAL SECTION --------//
     if (pbx->tu_array[ext] != NULL) {
         error("ext %d is already in use!", ext);
         pthread_mutex_unlock(&pbx->lock);
         return -1;
     }
     pbx->tu_array[ext] = tu;
+    //-------- CRTICAL SECTION --------//
     pthread_mutex_unlock(&pbx->lock);
     
     // Initialize the TU state and increment its reference count
@@ -197,28 +198,28 @@ int pbx_dial(PBX *pbx, TU *tu, int ext) {
         return -1;
     }
 
-    TU *target_tu;
+    TU *target;
 
     // Locate the target TU
     pthread_mutex_lock(&pbx->lock);
     //-------- CRTICAL SECTION --------//
-    target_tu = pbx->tu_array[ext];
-    if (!target_tu) {
+    target = pbx->tu_array[ext];
+    if (!target) {
         pthread_mutex_unlock(&pbx->lock);
         error("cannot find TU from ext %d in PBX!", ext);
         return -1;
     }
-    tu_ref(target_tu, "pbx_dial");
+    tu_ref(target, "pbx_dial");
     //-------- CRTICAL SECTION --------//
     pthread_mutex_unlock(&pbx->lock);
 
     // Perform a hangup operation to terminate any ongoing call
-    if (tu_dial(tu, target_tu) == -1) {
-        tu_unref(target_tu, "pbx_dial fail");
+    if (tu_dial(tu, target) == -1) {
+        tu_unref(target, "pbx_dial fail");
         error("failed to dial TU at ext %d!", ext);
         return -1;
     }
-    tu_unref(target_tu, "pbx_dial success");
+    tu_unref(target, "pbx_dial success");
 
     success("successfully dialed TU (ext %d)", ext);
     return 0;
