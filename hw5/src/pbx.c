@@ -74,7 +74,7 @@ void pbx_shutdown(PBX *pbx) {
             TU *tu = pbx->tu_array[i];
             pbx->tu_array[i] = NULL;
             tu_hangup(tu);
-            tu_unref(tu, "unregistering TU during PBX shutdown");
+            tu_unref(tu, "pbx_shutdown");
         }
     }
     //-------- CRITICAL SECTION --------//
@@ -115,7 +115,7 @@ int pbx_register(PBX *pbx, TU *tu, int ext) {
     pthread_mutex_lock(&pbx->lock);
     // CRTICAL SECTION
     if (pbx->tu_array[ext] != NULL) {
-        error("extension %d is already in use!", ext);
+        error("ext %d is already in use!", ext);
         pthread_mutex_unlock(&pbx->lock);
         return -1;
     }
@@ -125,10 +125,10 @@ int pbx_register(PBX *pbx, TU *tu, int ext) {
     // Initialize the TU state and increment its reference count
     tu_set_extension(tu, ext);
     char ref_message[64];
-    snprintf(ref_message, sizeof(ref_message), "registering TU at extension %d", ext);
+    snprintf(ref_message, sizeof(ref_message), "register TU (ext %d)", ext);
     tu_ref(tu, ref_message);
 
-    success("registered TU at extension %d", ext);
+    success("registered TU at ext %d", ext);
     return 0;
 }
 
@@ -153,7 +153,7 @@ int pbx_unregister(PBX *pbx, TU *tu) {
     // Locate the TU's extension number
     int ext = tu_extension(tu);
     if (ext < 0 || ext >= PBX_MAX_EXTENSIONS) {
-        error("error in retrieving extension!");
+        error("error in retrieving ext!");
         return -1;
     }
 
@@ -171,15 +171,15 @@ int pbx_unregister(PBX *pbx, TU *tu) {
 
     // Perform a hangup operation to terminate any ongoing call
     if (tu_hangup(tu) == -1) {
-        error("failed to hang up TU at extension %d!", ext);
+        error("failed to hang up TU (ext %d)!", ext);
     }
 
     // Release the reference to the TU
     char ref_message[64];
-    snprintf(ref_message, sizeof(ref_message), "unregistering TU at extension %d", ext);
+    snprintf(ref_message, sizeof(ref_message), "unregister TU (ext %d)", ext);
     tu_unref(tu, ref_message);
 
-    success("unregistered TU at extension %d", ext);
+    success("unregistered TU at ext %d", ext);
     return 0;
 }
 
@@ -205,21 +205,21 @@ int pbx_dial(PBX *pbx, TU *tu, int ext) {
     target_tu = pbx->tu_array[ext];
     if (!target_tu) {
         pthread_mutex_unlock(&pbx->lock);
-        error("cannot find TU from extension %d in PBX!", ext);
+        error("cannot find TU from ext %d in PBX!", ext);
         return -1;
     }
-    tu_ref(target_tu, "target TU referenced during dialing");
+    tu_ref(target_tu, "pbx_dial");
     //-------- CRTICAL SECTION --------//
     pthread_mutex_unlock(&pbx->lock);
 
     // Perform a hangup operation to terminate any ongoing call
     if (tu_dial(tu, target_tu) == -1) {
-        tu_unref(target_tu, "target TU unreferenced after failed dialing");
-        error("failed to dial TU at extension %d!", ext);
+        tu_unref(target_tu, "pbx_dial fail");
+        error("failed to dial TU at ext %d!", ext);
         return -1;
     }
-    tu_unref(target_tu, "target TU unreferenced after successful dialing");
+    tu_unref(target_tu, "pbx_dial success");
 
-    success("successfully dialed TU at extension %d", ext);
+    success("successfully dialed TU (ext %d)", ext);
     return 0;
 }
