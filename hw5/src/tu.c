@@ -1,10 +1,20 @@
 /*
  * TU: simulates a "telephone unit", which interfaces a client with the PBX.
  */
-#include <stdlib.h>
-
 #include "pbx.h"
 #include "debug.h"
+#include "utils.h"
+
+/*
+ * TU structure holds extension, connection fd, state and reference count of TU along with mutex lock
+ */
+typedef struct tu {
+    int ext;
+    int connfd;
+    TU_STATE state;
+    pthread_mutex_t lock;
+    int ref_count;
+} TU;
 
 /*
  * Initialize a TU
@@ -13,12 +23,35 @@
  * @return  The TU, newly initialized and in the TU_ON_HOOK state, if initialization
  * was successful, otherwise NULL.
  */
-#if 0
 TU *tu_init(int fd) {
-    // TO BE IMPLEMENTED
-    abort();
+    if (fd < 0) {
+        error("invalid connection fd passed!");
+        return NULL;
+    }
+    // Allocate memory for TU
+    TU *tu = malloc(sizeof(TU));
+    if (!tu) {
+        error("malloc failed with error: %s", strerror(errno));
+        return NULL;
+    }
+
+    // Initialize fields
+    tu->ext = -1;
+    tu->connfd = fd;
+    tu->state = TU_ON_HOOK;
+    tu->ref_count = 0;
+
+    // Initialize mutex
+    int status;
+    if ((status = pthread_mutex_init(&tu->lock, NULL)) != 0) {
+        error("pthread_mutex_init failed and returned status %d", status);
+        free(tu);
+        return NULL;
+    }
+
+    success("TU initialized successfully");
+    return tu;
 }
-#endif
 
 /*
  * Increment the reference count on a TU.
@@ -27,12 +60,17 @@ TU *tu_init(int fd) {
  * @param reason  A string describing the reason why the count is being incremented
  * (for debugging purposes).
  */
-#if 0
 void tu_ref(TU *tu, char *reason) {
-    // TO BE IMPLEMENTED
-    abort();
+    if (!tu || !reason) {
+        error("invalid arguments passed!");
+        return;
+    }
+
+    pthread_mutex_lock(&tu->lock);
+    tu->ref_count++;
+    debug("increment TU reference count (%d): %s", tu->ref_count, reason);
+    pthread_mutex_unlock(&tu->lock);
 }
-#endif
 
 /*
  * Decrement the reference count on a TU, freeing it if the count becomes 0.
@@ -41,12 +79,25 @@ void tu_ref(TU *tu, char *reason) {
  * @param reason  A string describing the reason why the count is being decremented
  * (for debugging purposes).
  */
-#if 0
 void tu_unref(TU *tu, char *reason) {
-    // TO BE IMPLEMENTED
-    abort();
+    if (!tu || !reason) {
+        error("invalid arguments passed!");
+        return;
+    }
+
+    pthread_mutex_lock(&tu->lock);
+    tu->ref_count--;
+    debug("decrement TU reference count (%d): %s", tu->ref_count, reason);
+
+    if (tu->ref_count == 0) {
+        pthread_mutex_unlock(&tu->lock);
+        pthread_mutex_destroy(&tu->lock);
+        free(tu);
+        debug("TU freed");
+        return;
+    }
+    pthread_mutex_unlock(&tu->lock);
 }
-#endif
 
 /*
  * Get the file descriptor for the network connection underlying a TU.
@@ -57,12 +108,13 @@ void tu_unref(TU *tu, char *reason) {
  * @param tu
  * @return the underlying file descriptor, if any, otherwise -1.
  */
-#if 0
 int tu_fileno(TU *tu) {
-    // TO BE IMPLEMENTED
-    abort();
+    if (!tu) {
+        error("null TU pointer passed!");
+        return -1;
+    }
+    return tu->connfd;
 }
-#endif
 
 /*
  * Get the extension number for a TU.
@@ -74,12 +126,13 @@ int tu_fileno(TU *tu) {
  * @param tu
  * @return the extension number, if any, otherwise -1.
  */
-#if 0
 int tu_extension(TU *tu) {
-    // TO BE IMPLEMENTED
-    abort();
+    if (!tu) {
+        error("null TU pointer passed!");
+        return -1;
+    }
+    return tu->ext;
 }
-#endif
 
 /*
  * Set the extension number for a TU.
@@ -88,12 +141,28 @@ int tu_extension(TU *tu) {
  *
  * @param tu  The TU whose extension is being set.
  */
-#if 0
 int tu_set_extension(TU *tu, int ext) {
-    // TO BE IMPLEMENTED
-    abort();
+    if (!tu || ext < 0) {
+        error("invalid arguments passed!");
+        return -1;
+    }
+
+    pthread_mutex_lock(&tu->lock);
+    tu->ext = ext;
+
+    // Notify client of the state
+    // TODO: this can be util function
+    char message[256];
+    snprintf(message, sizeof(message), "%s %d\r\n", tu_state_names[tu->state], ext);
+    if (write(tu->connfd, message, strlen(message)) == -1) {
+        error("write failed with error: %s", strerror(errno));
+        pthread_mutex_unlock(&tu->lock);
+        return -1;
+    }
+
+    pthread_mutex_unlock(&tu->lock);
+    return 0;
 }
-#endif
 
 /*
  * Initiate a call from a specified originating TU to a specified target TU.
