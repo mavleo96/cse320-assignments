@@ -1,3 +1,6 @@
+// References: below function has been adapted from csapp library
+// Link [https://csapp.cs.cmu.edu/3e/ics3/code/src/csapp.c]
+
 #include "utils.h"
 
 /*
