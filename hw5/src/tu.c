@@ -248,12 +248,9 @@ int tu_dial(TU *tu, TU *target) {
 
     // Establish peers
     tu->peer_tu = target;
-    // TODO: think about this
-    // tu_ref(target, "connect as peer");
     tu->ref_count++;
     debug("TU (ext %d) ref count inc to %d: tu_dial", tu->ext, tu->ref_count);
     target->peer_tu = tu;
-    // tu_ref(tu, "connect as peer");
     target->ref_count++;
     debug("TU (ext %d) ref count inc to %d: tu_dial", target->ext, target->ref_count);
 
@@ -399,9 +396,6 @@ int tu_hangup(TU *tu) {
         tu->peer_tu = NULL;
         peer->peer_tu = NULL;
 
-        // TODO: think about this
-        // tu_unref(tu, "disconnect peer on hangup");
-        // tu_unref(peer, "disconnect peer on hangup");
         tu->ref_count--;
         debug("TU (ext %d) ref count dec to %d: tu_hangup", tu->ext, tu->ref_count);
         peer->ref_count--;
@@ -492,15 +486,6 @@ static void notify_state(TU *tu) {
         error("null pointer passed!");
         return;
     }
-
-    // TODO: check later if this is needed
-    // // Check if mutex is locked
-    // int check = pthread_mutex_trylock(&tu->lock);
-    // if (!check) {
-    //     pthread_mutex_unlock(&tu->lock);
-    //     warn("mutex is unlocked!");
-    //     abort();
-    // }
     
     // Retrieve fd, state and ext
     int fd = tu->connfd;
