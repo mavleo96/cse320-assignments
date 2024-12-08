@@ -20,7 +20,7 @@ run:
     script:
         - ulimit -t ${CPU_LIMIT}
         - ulimit -f ${FILE_LIMIT}
-        - cd ${HW_DIR} && bin/${EXEC}
+        - cd ${HW_DIR} && bin/${EXEC} -p 1024
 test:
     stage: test
     script:
