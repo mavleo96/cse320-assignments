@@ -154,9 +154,7 @@ static int fstrcmp(char *str1, char *str2) {
 }
 
 static int parse_command(char *buffer, TU_COMMAND *cmd) {
-    // TODO: check if memmove can be implemented here
-    // TODO: num_cmd should be dynamic?
-    int num_cmd = 4; //(int) (sizeof(tu_command_names) / sizeof(tu_command_names[0]));
+    int num_cmd = 4;
     for (int i = 0; i < num_cmd; i++) {
         if (fstrcmp(buffer, tu_command_names[i]) == 0) {
             *cmd = i;
