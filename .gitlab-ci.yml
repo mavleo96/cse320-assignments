@@ -15,12 +15,12 @@ build:
     stage: build
     script:
         - echo "Build done"
-run:
-    stage: run
-    script:
-        - ulimit -t ${CPU_LIMIT}
-        - ulimit -f ${FILE_LIMIT}
-        - cd ${HW_DIR} && bin/${EXEC}
+# run:
+#     stage: run
+#     script:
+#         - ulimit -t ${CPU_LIMIT}
+#         - ulimit -f ${FILE_LIMIT}
+#         - cd ${HW_DIR} && bin/${EXEC}
 test:
     stage: test
     script:
