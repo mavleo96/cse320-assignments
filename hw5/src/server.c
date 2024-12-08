@@ -10,9 +10,9 @@
 /*
  * Internal helper methods declared here
  */
-static int fstrlen(char *str);
-static int fstrcmp(char *str1, char *str2);
-static int parse_command(char *buffer, TU_COMMAND *cmd);
+static int pstrlen(char *str);
+static int pstrcmp(char *str_buf, char *str_cmd);
+static int parse_command(char *buffer, int *offset_p, TU_COMMAND *cmd);
 static int read_client_message(int connfd, char *buffer, size_t buffer_size);
 
 /*
@@ -47,6 +47,7 @@ void *pbx_client_service(void *arg) {
     // Buffer to store the incoming message
     // TODO: check if this static buffer is an issue
     char buffer[1024];
+    int offset = 0;
     ssize_t bytes_read;
     TU_COMMAND cmd;
 
@@ -59,7 +60,7 @@ void *pbx_client_service(void *arg) {
         debug("received message from client on TU (ext %d): %s", tu_extension(tu), buffer);
 
         // Parse the command from the buffer
-        if (parse_command(buffer, &cmd) == -1) {
+        if (parse_command(buffer, &offset, &cmd) == -1) {
             warn("unknown or malformed command from client on TU (ext %d): %s", tu_extension(tu), buffer);
             continue;
         }
@@ -78,13 +79,13 @@ void *pbx_client_service(void *arg) {
 
             case TU_DIAL_CMD:
                 debug("dial command received from client on TU (ext %d)", tu_extension(tu));
-                int target_ext = atoi(buffer + fstrlen(buffer) + 1);
+                int target_ext = atoi(buffer + offset);
                 if (pbx_dial(pbx, tu, target_ext) == -1) error("error handling dial command!");
                 break;
 
             case TU_CHAT_CMD:
                 debug("chat command received from client on TU (ext %d)", tu_extension(tu));
-                if (tu_chat(tu, buffer + fstrlen(buffer) + 1) == -1) error("error handling chat command!");
+                if (tu_chat(tu, buffer + offset) == -1) error("error handling chat command!");
                 break;
 
             default:
@@ -122,7 +123,7 @@ static int read_client_message(int connfd, char *buffer, size_t buffer_size) {
         if (bytes_read >= 2 &&
             buffer[bytes_read - 2] == '\r' &&
             buffer[bytes_read - 1] == '\n') {
-            buffer[bytes_read - strlen(EOL)] = '\0';
+            buffer[bytes_read - 2] = '\0';
             break;
         }
 
@@ -135,28 +136,31 @@ static int read_client_message(int connfd, char *buffer, size_t buffer_size) {
     return bytes_read;
 }
 
-static int fstrlen(char *str) {
+static int pstrlen(char *str) {
     int length = 0;
     while (str[length] != '\0' && str[length] != ' ') {
         length++;
     }
+    if (str[length] == ' ') length++;
     return length;
 }
 
-static int fstrcmp(char *str1, char *str2) {
-    while ((*str1 != '\0' || *str1 != ' ') && *str2 != '\0') {
-        if (*str1 != *str2) return *str1 - *str2;
-        str1++;
-        str2++;
+static int pstrcmp(char *str_buf, char *str_cmd) {
+    while (*str_cmd != '\0') {
+        if (*str_buf != *str_cmd) return -1;
+        str_buf++;
+        str_cmd++;
     }
+    if (*str_buf != '\0' && *str_buf != ' ') return -1;
     return 0;
 }
 
-static int parse_command(char *buffer, TU_COMMAND *cmd) {
+static int parse_command(char *buffer, int *offset_p, TU_COMMAND *cmd) {
     int num_cmd = 4;
     for (int i = 0; i < num_cmd; i++) {
-        if (fstrcmp(buffer, tu_command_names[i]) == 0) {
+        if (pstrcmp(buffer, tu_command_names[i]) == 0) {
             *cmd = i;
+            *offset_p = pstrlen(buffer);
             return 0;
         }
     }
