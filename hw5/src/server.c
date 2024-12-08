@@ -43,7 +43,6 @@ void *pbx_client_service(void *arg) {
         close(connfd);
         return NULL;
     }
-    int ext = tu_extension(tu);
 
     // Buffer to store the incoming message
     // TODO: check if this static buffer is an issue
@@ -57,34 +56,34 @@ void *pbx_client_service(void *arg) {
         // if (bytes_read <= 0) {
         //     break;
         // }
-        debug("received message from client on TU (ext %d): %s", ext, buffer);
+        debug("received message from client on TU (ext %d): %s", tu_extension(tu), buffer);
 
         // Parse the command from the buffer
         if (parse_command(buffer, &cmd) == -1) {
-            warn("unknown or malformed command from client on TU (ext %d): %s", ext, buffer);
+            warn("unknown or malformed command from client on TU (ext %d): %s", tu_extension(tu), buffer);
             continue;
         }
 
         // Handle the command
         switch (cmd) {
             case TU_PICKUP_CMD:
-                debug("pickup command received from client on TU (ext %d)", ext);
+                debug("pickup command received from client on TU (ext %d)", tu_extension(tu));
                 if (tu_pickup(tu) == -1) error("error handling pickup command!");
                 break;
 
             case TU_HANGUP_CMD:
-                debug("hangup command received from client on TU (ext %d)", ext);
+                debug("hangup command received from client on TU (ext %d)", tu_extension(tu));
                 if (tu_hangup(tu) == -1) error("error handling hangup command!");
                 break;
 
             case TU_DIAL_CMD:
-                debug("dial command received from client on TU (ext %d)", ext);
+                debug("dial command received from client on TU (ext %d)", tu_extension(tu));
                 int target_ext = atoi(buffer + fstrlen(buffer) + 1);
                 if (pbx_dial(pbx, tu, target_ext) == -1) error("error handling dial command!");
                 break;
 
             case TU_CHAT_CMD:
-                debug("chat command received from client on TU (ext %d)", ext);
+                debug("chat command received from client on TU (ext %d)", tu_extension(tu));
                 if (tu_chat(tu, buffer + fstrlen(buffer) + 1) == -1) error("error handling chat command!");
                 break;
 

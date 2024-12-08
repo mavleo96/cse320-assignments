@@ -103,9 +103,8 @@ void tu_unref(TU *tu, char *reason) {
     if (tu->ref_count == 0) {
         pthread_mutex_unlock(&tu->lock);
         pthread_mutex_destroy(&tu->lock);
-        int ext = tu->ext;
         free(tu);
-        debug("TU (ext %d) freed", ext);
+        debug("TU (ext %d) freed", tu->ext);
         return;
     }
     pthread_mutex_unlock(&tu->lock);
