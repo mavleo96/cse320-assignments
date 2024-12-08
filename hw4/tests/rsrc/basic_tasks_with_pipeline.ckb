@@ -1,0 +1,2 @@
+all:
+	add hello world | cook something | skim welcome to cse320

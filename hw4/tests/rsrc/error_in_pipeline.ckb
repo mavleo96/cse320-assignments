@@ -1,0 +1,11 @@
+recipe: recipe1 recipe2
+  add main recipe cooked
+
+recipe1: recipe3
+  beat hello | invalid error | say noexec this task > outfile
+
+recipe2:
+  buy this is recipe2
+
+recipe3:
+  cook about to see error

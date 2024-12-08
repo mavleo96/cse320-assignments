@@ -1,0 +1,17 @@
+recipe: recipe1
+  add main recipe done
+
+recipe1: recipe2 recipe4
+  assemble recipe1 done
+
+recipe2: recipe3 recipe5
+  beat recipe2 done
+
+recipe3:
+  boil recipe3 done
+
+recipe5:
+  buy recipe5 done
+
+recipe4:
+  churn recipe4 done

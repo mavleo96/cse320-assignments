@@ -1,0 +1,3 @@
+no_piping:
+  mkdir -p tmp
+  echo Created tmp directory

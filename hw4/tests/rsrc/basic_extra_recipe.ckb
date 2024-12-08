@@ -1,0 +1,8 @@
+recipe: recipe1
+  say main recipe done
+
+recipe1:
+  say recipe1 done
+
+recipe2:
+  say recipe2 done

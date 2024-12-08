@@ -1,0 +1,23 @@
+recipe: recipe1
+  skim main recipe done
+
+recipe1: recipe2 recipe4
+  serve recipe1 done
+
+recipe2: recipe3 recipe5
+  separate recipe2 done
+
+recipe3: recipe6
+  remove recipe3 done
+
+recipe5:
+  reduce recipe5 done
+
+recipe4:
+  milk recipe4 done
+
+recipe6:
+  melt recipe6 done
+
+recipe7:
+  beat recipe7 done

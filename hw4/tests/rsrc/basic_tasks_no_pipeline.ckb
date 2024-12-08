@@ -1,0 +1,4 @@
+all:
+  beat hello world 
+  boil welcome to cse320
+  churn welcome again

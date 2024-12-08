@@ -1,0 +1,19 @@
+all: read_file
+    cat tests/rsrc/real_tasks_with_pipeline_outfile.ckb | timeout -k 5 10 tmp/read_file > tmp/outfile
+    rm -f tmp/read_file tmp/read_file.o tmp/helper.o
+
+read_file: read_file.o helper.o
+    cc -w -o tmp/read_file tmp/read_file.o tmp/helper.o
+    rm -f tmp/read_file.c tmp/helper.c
+
+read_file.o: read_file.c
+    cc -w -c -o tmp/read_file.o tmp/read_file.c
+
+helper.o: helper.c
+    cc -w -c -o tmp/helper.o tmp/helper.c
+
+read_file.c: 
+    echo int main() { char ch; while((ch = getchar()) != -1) {  putchar(ch); } return 0; } > tmp/read_file.c
+
+helper.c:
+    echo int getchar(); int putchar(); > tmp/helper.c

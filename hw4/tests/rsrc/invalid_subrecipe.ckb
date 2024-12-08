@@ -1,0 +1,8 @@
+recipe: recipe1
+  milk main recipe done
+
+recipe2: 
+  skim recipe 2 done
+
+recipe1: recipe2 invalid
+  reduce recipe1 done

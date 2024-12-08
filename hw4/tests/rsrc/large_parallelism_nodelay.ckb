@@ -1,0 +1,48 @@
+recipe: recipe1
+  say -d main recipe done
+
+recipe1: recipe2 recipe4
+  say -d recipe1 done
+
+recipe2: recipe3 recipe5
+  say -d recipe2 done
+
+recipe3: recipe6 recipe7 recipe8 recipe9  recipe10 recipe11 recipe12 recipe13 recipe14 recipe15
+  say -d recipe3 done
+
+recipe5:
+  say -d recipe5 done
+
+recipe4:
+  say -d recipe4 done
+ 
+recipe6:
+  say -d recipe6 done
+
+recipe7:
+  say -d recipe7 done
+ 
+recipe8:
+  say -d recipe8 done
+
+recipe9:
+  say -d recipe9 done
+ 
+recipe10:
+  say -d recipe10 done
+
+recipe11:
+  say -d recipe11 done
+ 
+recipe12:
+  say -d recipe12 done
+
+recipe13:
+  say -d recipe13 done
+
+recipe14:
+  say -d recipe14 done
+ 
+recipe15:
+  say -d recipe15 done
+

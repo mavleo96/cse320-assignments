@@ -1,0 +1,2 @@
+piping:
+  echo Piping | timeout -k 5 10 figlet 

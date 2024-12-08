@@ -4,33 +4,18 @@
 #include <criterion/criterion.h>
 #include "test.h"
 
-void assert_success(int code) {
-    cr_assert_eq(code, EXIT_SUCCESS,
-                 "Program exited with %d instead of EXIT_SUCCESS",
-		 code);
-}
-
-void assert_failure(int code) {
-    cr_assert_eq(code, EXIT_FAILURE,
-                 "Program exited with %d instead of EXIT_FAILURE",
-		 code);
-}
-
-void assert_output_matches(int code) {
-    cr_assert_eq(code, EXIT_SUCCESS,
-                 "Program output did not match reference output.");
-}
+#include "__grading_helpers.h"
 
 Test(basecode_suite, cook_basic_test, .timeout=20)
 {
-    char *cmd = "ulimit -t 10; python3 tests/test_cook.py -c 2 -f rsrc/eggs_benedict.ckb";
+    char *cmd = "killall -q -KILL cook; ulimit -t 10; ulimit -p 200; python3 tests/test_cook.py -c 2 -f rsrc/eggs_benedict.ckb < /dev/null";
 
     int return_code = WEXITSTATUS(system(cmd));
     assert_success(return_code);
 }
 
-Test(basecode_suite, hello_world_test, .timeout=20) {
-    char *cmd = "ulimit -t 10; bin/cook -c 1 -f rsrc/hello_world.ckb > tmp/hello_world.out";
+Test(basecode_suite, hello_world_test, .init=mkdir_tmp, .timeout=20) {
+    char *cmd = "killall -q -KILL cook; ulimit -t 10; ulimit -p 200; bin/cook -c 1 -f rsrc/hello_world.ckb > tmp/hello_world.out < /dev/null";
     char *cmp = "cmp tmp/hello_world.out tests/rsrc/hello_world.out";
 
     int return_code = WEXITSTATUS(system(cmd));

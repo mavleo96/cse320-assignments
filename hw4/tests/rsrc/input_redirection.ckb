@@ -1,0 +1,2 @@
+input_redirection:
+  timeout -k 5 10 figlet < tests/rsrc/input_redirection.txt

@@ -1,0 +1,2 @@
+output_redirection:
+  timeout -k 5 10 figlet Redirecting output > tmp/output_redirection.out

@@ -1,0 +1,11 @@
+recipe1: recipe2 recipe3
+    echo RECIPE1
+
+recipe2: recipe4
+    echo RECIPE2_STEP3 | cat > foobar
+
+recipe3: recipe4
+    echo RECIPE3
+
+recipe4: recipe1
+    echo RECIPE4

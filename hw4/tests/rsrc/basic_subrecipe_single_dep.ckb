@@ -1,0 +1,11 @@
+main: recipe1  
+  melt main recipe done
+
+recipe1: recipe2
+  milk recipe1 done
+
+recipe2: recipe3
+  reduce recipe2 done
+
+recipe3:
+  serve recipe3 done

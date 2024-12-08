@@ -1,0 +1,2 @@
+all: 
+	assemble hello world | echo kill -s INT $$ | bash -s | separate welcome to cse320

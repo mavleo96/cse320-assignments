@@ -1,0 +1,2 @@
+all:
+	add hello world | false | beat welcome to cse320
