@@ -258,11 +258,13 @@ int tu_dial(TU *tu, TU *target) {
     debug("TU (ext %d) ref count inc to %d: tu_dial", target->ext, target->ref_count);
 
     // Transition states
+    info("TU (ext %d) state change to TU_RING_BACK from maybe TU_ON_HOOK", tu->ext);
     tu->state = TU_RING_BACK;
+    info("TU (ext %d) state change to TU_RINGING from maybe TU_ON_HOOK", target->ext);
     target->state = TU_RINGING;
 
-    notify_state(tu);
     notify_state(target);
+    notify_state(tu);
 
     pthread_mutex_unlock(&target->lock);
     pthread_mutex_unlock(&tu->lock);
@@ -299,6 +301,7 @@ int tu_pickup(TU *tu) {
     // Case 1: TU is 'on hook'
     if (tu->state == TU_ON_HOOK) {
         tu->state = TU_DIAL_TONE;
+        info("TU (ext %d) state change to TU_DIAL_TONE from maybe TU_ON_HOOK", tu->ext);
         notify_state(tu);
     }
     // Case 2: TU is 'ringing'
@@ -316,7 +319,9 @@ int tu_pickup(TU *tu) {
 
         // Tranisition states
         tu->state = TU_CONNECTED;
+        info("TU (ext %d) state change to TU_CONNECTED from maybe TU_RINGING", tu->ext);
         peer->state = TU_CONNECTED;
+        info("TU (ext %d) state change to TU_CONNECTED from maybe DNK", peer->ext);
 
         // Notify both TUs 
         notify_state(tu);
@@ -380,7 +385,9 @@ int tu_hangup(TU *tu) {
         // Case 1: TU is not calling
         if (tu->state == TU_CONNECTED || tu->state == TU_RINGING) {
             tu->state = TU_ON_HOOK;
+            info("TU (ext %d) state change to TU_ON_HOOK from maybe DNK", tu->ext);
             peer->state = TU_DIAL_TONE;
+            info("TU (ext %d) state change to TU_DIAL_TONE from maybe DNK", peer->ext);
         }
         // Case 2: TU is calling
         else if (tu->state == TU_RING_BACK) {
