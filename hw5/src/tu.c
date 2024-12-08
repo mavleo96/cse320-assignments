@@ -42,7 +42,7 @@ TU *tu_init(int fd) {
     tu->ext = -1;
     tu->connfd = fd;
     tu->state = TU_ON_HOOK;
-    tu->ref_count = 1;
+    tu->ref_count = 0;
     tu->peer_tu = NULL;
 
     // Initialize mutex
@@ -403,9 +403,9 @@ int tu_hangup(TU *tu) {
         // tu_unref(tu, "disconnect peer on hangup");
         // tu_unref(peer, "disconnect peer on hangup");
         tu->ref_count--;
-        debug("TU (ext %d) ref count inc to %d: tu_hangup", tu->ext, tu->ref_count);
+        debug("TU (ext %d) ref count dec to %d: tu_hangup", tu->ext, tu->ref_count);
         peer->ref_count--;
-        debug("TU (ext %d) ref count inc to %d: tu_hangup", peer->ext, peer->ref_count);
+        debug("TU (ext %d) ref count dec to %d: tu_hangup", peer->ext, peer->ref_count);
 
         notify_state(peer);
         pthread_mutex_unlock(&peer->lock);
