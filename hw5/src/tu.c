@@ -263,8 +263,8 @@ int tu_dial(TU *tu, TU *target) {
     info("TU (ext %d) state change to TU_RINGING from maybe TU_ON_HOOK", target->ext);
     target->state = TU_RINGING;
 
-    notify_state(tu);
     notify_state(target);
+    notify_state(tu);
 
     pthread_mutex_unlock(&target->lock);
     pthread_mutex_unlock(&tu->lock);
