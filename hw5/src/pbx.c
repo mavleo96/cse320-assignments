@@ -72,6 +72,7 @@ void pbx_shutdown(PBX *pbx) {
     for (int i = 0; i < PBX_MAX_EXTENSIONS; i++) {
         if (pbx->tu_array[i]) {
             TU *tu = pbx->tu_array[i];
+            info("shutting down TU (ext %d)", tu_extension(tu));
             pbx->tu_array[i] = NULL;
             tu_hangup(tu);
             tu_unref(tu, "pbx_shutdown");
