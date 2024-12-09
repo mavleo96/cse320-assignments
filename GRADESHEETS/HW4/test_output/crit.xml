@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Tests compiled with Criterion v2.4.2 -->
+<testsuites name="Criterion Tests" tests="28" failures="2" errors="0" disabled="0">
+  <testsuite name="piping_suite" tests="7" failures="1" errors="0" disabled="0" skipped="0" time="8.135">
+    <testcase name="real_tasks_with_pipeline_outfile_test" assertions="2" status="PASSED" time="0.177">
+    </testcase>
+    <testcase name="error_in_pipeline_test" assertions="1" status="PASSED" time="2.336">
+    </testcase>
+    <testcase name="error_in_pipeline_no_input_test" assertions="1" status="PASSED" time="1.231">
+    </testcase>
+    <testcase name="basic_tasks_with_pipeline_test" assertions="1" status="PASSED" time="0.733">
+    </testcase>
+    <testcase name="basic_tasks_with_pipeline_signal_test" assertions="0" status="ERRORED" time="1.004">
+      <error type="timeout" message="The test timed out." />    </testcase>
+    <testcase name="basic_tasks_with_pipeline_nonzero_test" assertions="1" status="PASSED" time="0.825">
+    </testcase>
+    <testcase name="basic_tasks_no_pipeline_test" assertions="1" status="PASSED" time="1.831">
+    </testcase>
+  </testsuite>
+  <testsuite name="parallel_suite" tests="7" failures="0" errors="0" disabled="0" skipped="0" time="8.800">
+    <testcase name="parallel_subrecipe_multiple_deps_test" assertions="1" status="PASSED" time="2.940">
+    </testcase>
+    <testcase name="parallel_real_tasks_with_pipeline_outfile_test" assertions="2" status="PASSED" time="0.142">
+    </testcase>
+    <testcase name="parallel_basic_subrecipe_multiple_deps_nodelay" assertions="1" status="PASSED" time="0.134">
+    </testcase>
+    <testcase name="more_than_max_cook_parallelism_test" assertions="1" status="PASSED" time="2.950">
+    </testcase>
+    <testcase name="more_than_max_cook_parallelism_nodelay" assertions="1" status="PASSED" time="0.140">
+    </testcase>
+    <testcase name="large_parallelism_test" assertions="1" status="PASSED" time="2.350">
+    </testcase>
+    <testcase name="large_parallelism_nodelay" assertions="1" status="PASSED" time="0.145">
+    </testcase>
+  </testsuite>
+  <testsuite name="output_suite" tests="7" failures="0" errors="0" disabled="0" skipped="0" time="0.162">
+    <testcase name="welcome_test" assertions="2" status="PASSED" time="0.023">
+    </testcase>
+    <testcase name="piping_test" assertions="2" status="PASSED" time="0.026">
+    </testcase>
+    <testcase name="output_redirection" assertions="2" status="PASSED" time="0.026">
+    </testcase>
+    <testcase name="no_piping_test" assertions="2" status="PASSED" time="0.027">
+    </testcase>
+    <testcase name="invalid_task_test" assertions="1" status="PASSED" time="0.018">
+    </testcase>
+    <testcase name="invalid_args_test" assertions="1" status="PASSED" time="0.016">
+    </testcase>
+    <testcase name="input_redirection" assertions="2" status="PASSED" time="0.026">
+    </testcase>
+  </testsuite>
+  <testsuite name="dependency_suite" tests="5" failures="0" errors="0" disabled="0" skipped="0" time="5.976">
+    <testcase name="unused_recipe_test" assertions="1" status="PASSED" time="1.631">
+    </testcase>
+    <testcase name="invalid_subrecipe_test" assertions="1" status="PASSED" time="0.120">
+    </testcase>
+    <testcase name="basic_subrecipe_single_dep_test" assertions="1" status="PASSED" time="2.139">
+    </testcase>
+    <testcase name="basic_subrecipe_multiple_deps_seq_test" assertions="1" status="PASSED" time="1.945">
+    </testcase>
+    <testcase name="basic_subrecipe_multiple_deps_nodelay" assertions="1" status="PASSED" time="0.141">
+    </testcase>
+  </testsuite>
+  <testsuite name="basecode_suite" tests="2" failures="1" errors="0" disabled="0" skipped="0" time="2.944">
+    <testcase name="hello_world_test" assertions="2" status="PASSED" time="0.202">
+    </testcase>
+    <testcase name="cook_basic_test" assertions="1" status="FAILED" time="2.742">
+      <failure type="assert" message="1 assertion(s) failed."><![CDATA[tests/__grading_helpers.c:17: Program exited with 255 instead of EXIT_SUCCESS]]>&#10;</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

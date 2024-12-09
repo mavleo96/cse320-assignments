@@ -1,0 +1,32 @@
+Graded Commit:ea4b97142d308d5632fb08a683a3d6dc4ee27208
+
+TEST NAME, POINTS,OUT OF
+basecode_suite/cook_basic_test,0,1,1 assertion(s) failed.: tests/__grading_helpers.c:17: Program exited with 255 instead of EXIT_SUCCESS
+basecode_suite/hello_world_test,1,1,
+dependency_suite/basic_subrecipe_multiple_deps_nodelay,1,1,
+dependency_suite/basic_subrecipe_multiple_deps_seq_test,1,1,
+dependency_suite/basic_subrecipe_single_dep_test,1,1,
+dependency_suite/invalid_subrecipe_test,1,1,
+dependency_suite/unused_recipe_test,1,1,
+output_suite/input_redirection,1,1,
+output_suite/invalid_args_test,1,1,
+output_suite/invalid_task_test,1,1,
+output_suite/no_piping_test,1,1,
+output_suite/output_redirection,1,1,
+output_suite/piping_test,1,1,
+output_suite/welcome_test,1,1,
+parallel_suite/large_parallelism_nodelay,1,1,
+parallel_suite/large_parallelism_test,1,1,
+parallel_suite/more_than_max_cook_parallelism_nodelay,1,1,
+parallel_suite/more_than_max_cook_parallelism_test,1,1,
+parallel_suite/parallel_basic_subrecipe_multiple_deps_nodelay,1,1,
+parallel_suite/parallel_real_tasks_with_pipeline_outfile_test,1,1,
+parallel_suite/parallel_subrecipe_multiple_deps_test,1,1,
+piping_suite/basic_tasks_no_pipeline_test,1,1,
+piping_suite/basic_tasks_with_pipeline_nonzero_test,1,1,
+piping_suite/basic_tasks_with_pipeline_signal_test,0,1,The test timed out.: None
+piping_suite/basic_tasks_with_pipeline_test,1,1,
+piping_suite/error_in_pipeline_no_input_test,1,1,
+piping_suite/error_in_pipeline_test,1,1,
+piping_suite/real_tasks_with_pipeline_outfile_test,1,1,
+total,26,28

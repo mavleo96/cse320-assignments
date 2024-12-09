@@ -1,0 +1,372 @@
+--ascii is deprecated. Use LANG/LC_* variables to control encoding, and TERM/--color to control colors.
+[----] Criterion v2.4.2
+[====] Running 2 tests from basecode_suite:
+[RUN ] basecode_suite::cook_basic_test
+Running  bin/cook -f rsrc/eggs_benedict.ckb -c 2
+stdout:
+ b''
+stderr:
+ b'START\t[1733684869.411,356023, 2] buy pepper from store\nSTART\t[1733684869.411,356024, 4] buy salt from store\nEND\t[1733684869.611,356023, 2]\nSTART\t[1733684869.615,356027, 6] buy juice from store\nEND\t[1733684869.812,356024, 4]\nSTART\t[1733684869.816,356031, 4] milk cow\nEND\t[1733684870.216,356027, 6]\nEND\t[1733684870.216,356031, 4]\nSTART\t[1733684870.220,356035, 9] skim cream from milk\nSTART\t[1733684870.220,356036, 4] buy bacon from store\nEND\t[1733684870.620,356036, 4]\nSTART\t[1733684870.624,356039, 2] buy muffins from store\nEND\t[1733684870.825,356039, 2]\nSTART\t[1733684870.828,356042, 1] buy eggs from store\nEND\t[1733684870.929,356042, 1]\nSTART\t[1733684870.933,356045, 7] boil water\nSTART\t[1733684870.933,356048, 7] remove eggs from water\nSTART\t[1733684870.933,356046, 0] reduce heat to simmer\nSTART\t[1733684870.933,356047, 5] cook eggs\nEND\t[1733684870.933,356046, 0]\nEND\t[1733684871.120,356035, 9]\nSTART\t[1733684871.126,356053, 9] churn cream into butter\nEND\t[1733684871.434,356047, 5]\nEND\t[1733684871.633,356045, 7]\nEND\t[1733684871.633,356048, 7]\nEND\t[1733684872.026,356053, 9]\n'
+rc:  1
+ERROR: student program did not return 0
+[----] tests/__grading_helpers.c:17: Assertion Failed
+[----]   
+[----]   Program exited with 255 instead of EXIT_SUCCESS
+[----]   
+[FAIL] basecode_suite::cook_basic_test: (2.74s)
+[RUN ] basecode_suite::hello_world_test
+[PASS] basecode_suite::hello_world_test: (0.20s)
+[====] Running 5 tests from dependency_suite:
+[RUN ] dependency_suite::basic_subrecipe_multiple_deps_nodelay
+Running  bin/cook -f tests/rsrc/basic_subrecipe_multiple_deps_nodelay.ckb -c 1
+stdout:
+ b''
+stderr:
+ b'START\t[1733684872.372,356101, 0] say -d recipe4 done\nEND\t[1733684872.372,356101, 0]\nSTART\t[1733684872.376,356104, 0] say -d recipe5 done\nEND\t[1733684872.376,356104, 0]\nSTART\t[1733684872.379,356107, 0] say -d recipe3 done\nEND\t[1733684872.379,356107, 0]\nSTART\t[1733684872.382,356110, 0] say -d recipe2 done\nEND\t[1733684872.383,356110, 0]\nSTART\t[1733684872.386,356113, 0] say -d recipe1 done\nEND\t[1733684872.386,356113, 0]\nSTART\t[1733684872.389,356116, 0] say -d main recipe done\nEND\t[1733684872.389,356116, 0]\n'
+rc:  0
+{'recipe', 'recipe1', 'recipe2', 'recipe4', 'recipe3', 'recipe5'}
+START	[1733684872.372,356101, 0] say -d recipe4 done
+END	[1733684872.372,356101, 0]
+START	[1733684872.376,356104, 0] say -d recipe5 done
+END	[1733684872.376,356104, 0]
+START	[1733684872.379,356107, 0] say -d recipe3 done
+END	[1733684872.379,356107, 0]
+START	[1733684872.382,356110, 0] say -d recipe2 done
+END	[1733684872.383,356110, 0]
+START	[1733684872.386,356113, 0] say -d recipe1 done
+END	[1733684872.386,356113, 0]
+START	[1733684872.389,356116, 0] say -d main recipe done
+END	[1733684872.389,356116, 0]
+SUCCESSFUL COMPLETION OF RECIPE: recipe
+[PASS] dependency_suite::basic_subrecipe_multiple_deps_nodelay: (0.14s)
+[RUN ] dependency_suite::basic_subrecipe_multiple_deps_seq_test
+Running  bin/cook -f tests/rsrc/basic_subrecipe_multiple_deps_seq.ckb -c 1
+stdout:
+ b''
+stderr:
+ b'START\t[1733684872.521,356127, 0] churn recipe4 done\nEND\t[1733684872.521,356127, 0]\nSTART\t[1733684872.524,356130, 3] buy recipe5 done\nEND\t[1733684872.825,356130, 3]\nSTART\t[1733684872.828,356133, 0] boil recipe3 done\nEND\t[1733684872.828,356133, 0]\nSTART\t[1733684872.832,356136, 8] beat recipe2 done\nEND\t[1733684873.632,356136, 8]\nSTART\t[1733684873.636,356139, 5] assemble recipe1 done\nEND\t[1733684874.137,356139, 5]\nSTART\t[1733684874.141,356143, 2] add main recipe done\nEND\t[1733684874.341,356143, 2]\n'
+rc:  0
+{'recipe1', 'recipe2', 'recipe3', 'recipe4', 'recipe5', 'recipe'}
+START	[1733684872.521,356127, 0] churn recipe4 done
+END	[1733684872.521,356127, 0]
+START	[1733684872.524,356130, 3] buy recipe5 done
+END	[1733684872.825,356130, 3]
+START	[1733684872.828,356133, 0] boil recipe3 done
+END	[1733684872.828,356133, 0]
+START	[1733684872.832,356136, 8] beat recipe2 done
+END	[1733684873.632,356136, 8]
+START	[1733684873.636,356139, 5] assemble recipe1 done
+END	[1733684874.137,356139, 5]
+START	[1733684874.141,356143, 2] add main recipe done
+END	[1733684874.341,356143, 2]
+SUCCESSFUL COMPLETION OF RECIPE: recipe
+[PASS] dependency_suite::basic_subrecipe_multiple_deps_seq_test: (1.94s)
+[RUN ] dependency_suite::basic_subrecipe_single_dep_test
+Running  bin/cook -f tests/rsrc/basic_subrecipe_single_dep.ckb -c 1
+stdout:
+ b''
+stderr:
+ b'START\t[1733684874.474,356155, 1] serve recipe3 done\nEND\t[1733684874.575,356155, 1]\nSTART\t[1733684874.578,356158, 5] reduce recipe2 done\nEND\t[1733684875.079,356158, 5]\nSTART\t[1733684875.083,356161, 9] milk recipe1 done\nEND\t[1733684875.984,356161, 9]\nSTART\t[1733684875.988,356164, 5] melt main recipe done\nEND\t[1733684876.489,356164, 5]\n'
+rc:  0
+{'recipe2', 'recipe1', 'main', 'recipe3'}
+START	[1733684874.474,356155, 1] serve recipe3 done
+END	[1733684874.575,356155, 1]
+START	[1733684874.578,356158, 5] reduce recipe2 done
+END	[1733684875.079,356158, 5]
+START	[1733684875.083,356161, 9] milk recipe1 done
+END	[1733684875.984,356161, 9]
+START	[1733684875.988,356164, 5] melt main recipe done
+END	[1733684876.489,356164, 5]
+SUCCESSFUL COMPLETION OF RECIPE: main
+[PASS] dependency_suite::basic_subrecipe_single_dep_test: (2.14s)
+[RUN ] dependency_suite::invalid_subrecipe_test
+Dependent recipe does not exist
+Running  bin/cook -f tests/rsrc/invalid_subrecipe.ckb -c 1
+stdout:
+ b''
+stderr:
+ b'Recipe recipe1 depends on non-existent sub-recipe invalid\n'
+rc:  1
+SUCCESSFUL HANDLING OF ERROR (student returned non-zero)
+[PASS] dependency_suite::invalid_subrecipe_test: (0.12s)
+[RUN ] dependency_suite::unused_recipe_test
+Running  bin/cook -f tests/rsrc/basic_extra_recipe.ckb -c 1
+stdout:
+ b''
+stderr:
+ b'START\t[1733684876.750,356183, 6] say recipe1 done\nEND\t[1733684877.351,356183, 6]\nSTART\t[1733684877.356,356186, 9] say main recipe done\nEND\t[1733684878.256,356186, 9]\n'
+rc:  0
+{'recipe', 'recipe1'}
+START	[1733684876.750,356183, 6] say recipe1 done
+END	[1733684877.351,356183, 6]
+START	[1733684877.356,356186, 9] say main recipe done
+END	[1733684878.256,356186, 9]
+SUCCESSFUL COMPLETION OF RECIPE: recipe
+[PASS] dependency_suite::unused_recipe_test: (1.63s)
+[====] Running 7 tests from output_suite:
+[RUN ] output_suite::input_redirection
+[PASS] output_suite::input_redirection: (0.03s)
+[RUN ] output_suite::invalid_args_test
+[PASS] output_suite::invalid_args_test: (0.02s)
+[RUN ] output_suite::invalid_task_test
+[PASS] output_suite::invalid_task_test: (0.02s)
+[RUN ] output_suite::no_piping_test
+[PASS] output_suite::no_piping_test: (0.03s)
+[RUN ] output_suite::output_redirection
+[PASS] output_suite::output_redirection: (0.03s)
+[RUN ] output_suite::piping_test
+[PASS] output_suite::piping_test: (0.03s)
+[RUN ] output_suite::welcome_test
+[PASS] output_suite::welcome_test: (0.02s)
+[====] Running 7 tests from parallel_suite:
+[RUN ] parallel_suite::large_parallelism_nodelay
+Running  bin/cook -f tests/rsrc/large_parallelism_nodelay.ckb -c 10
+stdout:
+ b''
+stderr:
+ b'START\t[1733684878.605,356287, 0] say -d recipe5 done\nSTART\t[1733684878.605,356286, 0] say -d recipe4 done\nEND\t[1733684878.605,356287, 0]\nSTART\t[1733684878.606,356291, 0] say -d recipe14 done\nSTART\t[1733684878.607,356289, 0] say -d recipe15 done\nEND\t[1733684878.607,356291, 0]\nEND\t[1733684878.607,356289, 0]\nSTART\t[1733684878.607,356293, 0] say -d recipe13 done\nEND\t[1733684878.606,356286, 0]\nSTART\t[1733684878.608,356297, 0] say -d recipe11 done\nSTART\t[1733684878.609,356306, 0] say -d recipe10 done\nSTART\t[1733684878.609,356307, 0] say -d recipe7 done\nEND\t[1733684878.609,356293, 0]\nEND\t[1733684878.610,356306, 0]\nEND\t[1733684878.610,356297, 0]\nSTART\t[1733684878.610,356298, 0] say -d recipe12 done\nEND\t[1733684878.610,356307, 0]\nEND\t[1733684878.610,356298, 0]\nSTART\t[1733684878.610,356308, 0] say -d recipe9 done\nEND\t[1733684878.611,356308, 0]\nSTART\t[1733684878.612,356312, 0] say -d recipe6 done\nEND\t[1733684878.612,356312, 0]\nSTART\t[1733684878.612,356313, 0] say -d recipe8 done\nEND\t[1733684878.612,356313, 0]\nSTART\t[1733684878.615,356316, 0] say -d recipe3 done\nEND\t[1733684878.616,356316, 0]\nSTART\t[1733684878.619,356319, 0] say -d recipe2 done\nEND\t[1733684878.620,356319, 0]\nSTART\t[1733684878.623,356322, 0] say -d recipe1 done\nEND\t[1733684878.623,356322, 0]\nSTART\t[1733684878.626,356325, 0] say -d main recipe done\nEND\t[1733684878.626,356325, 0]\n'
+rc:  0
+{'recipe6', 'recipe7', 'recipe8', 'recipe1', 'recipe3', 'recipe12', 'recipe15', 'recipe5', 'recipe4', 'recipe2', 'recipe13', 'recipe14', 'recipe10', 'recipe', 'recipe11', 'recipe9'}
+START	[1733684878.605,356287, 0] say -d recipe5 done
+START	[1733684878.605,356286, 0] say -d recipe4 done
+END	[1733684878.605,356287, 0]
+START	[1733684878.606,356291, 0] say -d recipe14 done
+START	[1733684878.607,356289, 0] say -d recipe15 done
+END	[1733684878.607,356291, 0]
+END	[1733684878.607,356289, 0]
+START	[1733684878.607,356293, 0] say -d recipe13 done
+END	[1733684878.606,356286, 0]
+START	[1733684878.608,356297, 0] say -d recipe11 done
+START	[1733684878.609,356306, 0] say -d recipe10 done
+START	[1733684878.609,356307, 0] say -d recipe7 done
+END	[1733684878.609,356293, 0]
+END	[1733684878.610,356306, 0]
+END	[1733684878.610,356297, 0]
+START	[1733684878.610,356298, 0] say -d recipe12 done
+END	[1733684878.610,356307, 0]
+END	[1733684878.610,356298, 0]
+START	[1733684878.610,356308, 0] say -d recipe9 done
+END	[1733684878.611,356308, 0]
+START	[1733684878.612,356312, 0] say -d recipe6 done
+END	[1733684878.612,356312, 0]
+START	[1733684878.612,356313, 0] say -d recipe8 done
+END	[1733684878.612,356313, 0]
+START	[1733684878.615,356316, 0] say -d recipe3 done
+END	[1733684878.616,356316, 0]
+START	[1733684878.619,356319, 0] say -d recipe2 done
+END	[1733684878.620,356319, 0]
+START	[1733684878.623,356322, 0] say -d recipe1 done
+END	[1733684878.623,356322, 0]
+START	[1733684878.626,356325, 0] say -d main recipe done
+END	[1733684878.626,356325, 0]
+SUCCESSFUL COMPLETION OF RECIPE: recipe
+[PASS] parallel_suite::large_parallelism_nodelay: (0.14s)
+[RUN ] parallel_suite::large_parallelism_test
+Running  bin/cook -f tests/rsrc/large_parallelism.ckb -c 10
+stdout:
+ b''
+stderr:
+ b'START\t[1733684878.759,356343, 2] add recipe5 done\nSTART\t[1733684878.759,356342, 8] add recipe4 done\nSTART\t[1733684878.759,356345, 9] add recipe15 done\nSTART\t[1733684878.760,356355, 8] add recipe11 done\nSTART\t[1733684878.761,356359, 1] add recipe12 done\nSTART\t[1733684878.761,356360, 6] add recipe10 done\nSTART\t[1733684878.761,356362, 3] add recipe8 done\nSTART\t[1733684878.762,356353, 8] add recipe13 done\nSTART\t[1733684878.762,356356, 6] add recipe14 done\nSTART\t[1733684878.762,356363, 1] add recipe9 done\nEND\t[1733684878.861,356359, 1]\nEND\t[1733684878.863,356363, 1]\nSTART\t[1733684878.865,356366, 9] add recipe7 done\nSTART\t[1733684878.865,356369, 5] add recipe6 done\nEND\t[1733684878.959,356343, 2]\nEND\t[1733684879.062,356362, 3]\nEND\t[1733684879.361,356360, 6]\nEND\t[1733684879.362,356356, 6]\nEND\t[1733684879.366,356369, 5]\nEND\t[1733684879.559,356342, 8]\nEND\t[1733684879.561,356355, 8]\nEND\t[1733684879.562,356353, 8]\nEND\t[1733684879.659,356345, 9]\nEND\t[1733684879.765,356366, 9]\nSTART\t[1733684879.769,356372, 3] add recipe3 done\nEND\t[1733684880.069,356372, 3]\nSTART\t[1733684880.074,356375, 4] add recipe2 done\nEND\t[1733684880.474,356375, 4]\nSTART\t[1733684880.479,356378, 0] add recipe1 done\nEND\t[1733684880.479,356378, 0]\nSTART\t[1733684880.483,356381, 5] add main recipe done\nEND\t[1733684880.983,356381, 5]\n'
+rc:  0
+{'recipe14', 'recipe1', 'recipe11', 'recipe4', 'recipe12', 'recipe9', 'recipe13', 'recipe', 'recipe8', 'recipe10', 'recipe3', 'recipe2', 'recipe6', 'recipe5', 'recipe7', 'recipe15'}
+START	[1733684878.759,356343, 2] add recipe5 done
+START	[1733684878.759,356342, 8] add recipe4 done
+START	[1733684878.759,356345, 9] add recipe15 done
+START	[1733684878.760,356355, 8] add recipe11 done
+START	[1733684878.761,356359, 1] add recipe12 done
+START	[1733684878.761,356360, 6] add recipe10 done
+START	[1733684878.761,356362, 3] add recipe8 done
+START	[1733684878.762,356353, 8] add recipe13 done
+START	[1733684878.762,356356, 6] add recipe14 done
+START	[1733684878.762,356363, 1] add recipe9 done
+END	[1733684878.861,356359, 1]
+END	[1733684878.863,356363, 1]
+START	[1733684878.865,356366, 9] add recipe7 done
+START	[1733684878.865,356369, 5] add recipe6 done
+END	[1733684878.959,356343, 2]
+END	[1733684879.062,356362, 3]
+END	[1733684879.361,356360, 6]
+END	[1733684879.362,356356, 6]
+END	[1733684879.366,356369, 5]
+END	[1733684879.559,356342, 8]
+END	[1733684879.561,356355, 8]
+END	[1733684879.562,356353, 8]
+END	[1733684879.659,356345, 9]
+END	[1733684879.765,356366, 9]
+START	[1733684879.769,356372, 3] add recipe3 done
+END	[1733684880.069,356372, 3]
+START	[1733684880.074,356375, 4] add recipe2 done
+END	[1733684880.474,356375, 4]
+START	[1733684880.479,356378, 0] add recipe1 done
+END	[1733684880.479,356378, 0]
+START	[1733684880.483,356381, 5] add main recipe done
+END	[1733684880.983,356381, 5]
+SUCCESSFUL COMPLETION OF RECIPE: recipe
+[PASS] parallel_suite::large_parallelism_test: (2.35s)
+[RUN ] parallel_suite::more_than_max_cook_parallelism_nodelay
+Running  bin/cook -f tests/rsrc/more_than_max_cook_parallelism_nodelay.ckb -c 2
+stdout:
+ b''
+stderr:
+ b'START\t[1733684881.116,356395, 0] say -d recipe4 done\nEND\t[1733684881.117,356395, 0]\nSTART\t[1733684881.117,356396, 0] say -d recipe5 done\nEND\t[1733684881.117,356396, 0]\nSTART\t[1733684881.120,356399, 0] say -d recipe6 done\nEND\t[1733684881.120,356399, 0]\nSTART\t[1733684881.123,356402, 0] say -d recipe3 done\nEND\t[1733684881.123,356402, 0]\nSTART\t[1733684881.127,356405, 0] say -d recipe2 done\nEND\t[1733684881.127,356405, 0]\nSTART\t[1733684881.130,356408, 0] say -d recipe1 done\nEND\t[1733684881.130,356408, 0]\nSTART\t[1733684881.134,356411, 0] say -d main recipe done\nEND\t[1733684881.134,356411, 0]\n'
+rc:  0
+{'recipe4', 'recipe5', 'recipe', 'recipe6', 'recipe1', 'recipe2', 'recipe3'}
+START	[1733684881.116,356395, 0] say -d recipe4 done
+END	[1733684881.117,356395, 0]
+START	[1733684881.117,356396, 0] say -d recipe5 done
+END	[1733684881.117,356396, 0]
+START	[1733684881.120,356399, 0] say -d recipe6 done
+END	[1733684881.120,356399, 0]
+START	[1733684881.123,356402, 0] say -d recipe3 done
+END	[1733684881.123,356402, 0]
+START	[1733684881.127,356405, 0] say -d recipe2 done
+END	[1733684881.127,356405, 0]
+START	[1733684881.130,356408, 0] say -d recipe1 done
+END	[1733684881.130,356408, 0]
+START	[1733684881.134,356411, 0] say -d main recipe done
+END	[1733684881.134,356411, 0]
+SUCCESSFUL COMPLETION OF RECIPE: recipe
+[PASS] parallel_suite::more_than_max_cook_parallelism_nodelay: (0.14s)
+[RUN ] parallel_suite::more_than_max_cook_parallelism_test
+Running  bin/cook -f tests/rsrc/more_than_max_cook_parallelism.ckb -c 2
+stdout:
+ b''
+stderr:
+ b'START\t[1733684881.266,356424, 2] milk recipe4 done\nSTART\t[1733684881.267,356425, 4] reduce recipe5 done\nEND\t[1733684881.466,356424, 2]\nSTART\t[1733684881.469,356428, 7] melt recipe6 done\nEND\t[1733684881.667,356425, 4]\nEND\t[1733684882.169,356428, 7]\nSTART\t[1733684882.173,356431, 7] remove recipe3 done\nEND\t[1733684882.874,356431, 7]\nSTART\t[1733684882.878,356434, 1] separate recipe2 done\nEND\t[1733684882.978,356434, 1]\nSTART\t[1733684882.982,356437, 2] serve recipe1 done\nEND\t[1733684883.183,356437, 2]\nSTART\t[1733684883.187,356440, 9] skim main recipe done\nEND\t[1733684884.088,356440, 9]\n'
+rc:  0
+{'recipe', 'recipe5', 'recipe4', 'recipe6', 'recipe3', 'recipe1', 'recipe2'}
+START	[1733684881.266,356424, 2] milk recipe4 done
+START	[1733684881.267,356425, 4] reduce recipe5 done
+END	[1733684881.466,356424, 2]
+START	[1733684881.469,356428, 7] melt recipe6 done
+END	[1733684881.667,356425, 4]
+END	[1733684882.169,356428, 7]
+START	[1733684882.173,356431, 7] remove recipe3 done
+END	[1733684882.874,356431, 7]
+START	[1733684882.878,356434, 1] separate recipe2 done
+END	[1733684882.978,356434, 1]
+START	[1733684882.982,356437, 2] serve recipe1 done
+END	[1733684883.183,356437, 2]
+START	[1733684883.187,356440, 9] skim main recipe done
+END	[1733684884.088,356440, 9]
+SUCCESSFUL COMPLETION OF RECIPE: recipe
+[PASS] parallel_suite::more_than_max_cook_parallelism_test: (2.95s)
+[RUN ] parallel_suite::parallel_basic_subrecipe_multiple_deps_nodelay
+Running  bin/cook -f tests/rsrc/basic_subrecipe_multiple_deps_nodelay.ckb -c 3
+stdout:
+ b''
+stderr:
+ b'START\t[1733684884.224,356456, 0] say -d recipe4 done\nSTART\t[1733684884.224,356457, 0] say -d recipe3 done\nSTART\t[1733684884.224,356455, 0] say -d recipe5 done\nEND\t[1733684884.224,356456, 0]\nEND\t[1733684884.224,356455, 0]\nEND\t[1733684884.224,356457, 0]\nSTART\t[1733684884.227,356460, 0] say -d recipe2 done\nEND\t[1733684884.227,356460, 0]\nSTART\t[1733684884.231,356463, 0] say -d recipe1 done\nEND\t[1733684884.231,356463, 0]\nSTART\t[1733684884.234,356466, 0] say -d main recipe done\nEND\t[1733684884.234,356466, 0]\n'
+rc:  0
+{'recipe5', 'recipe2', 'recipe1', 'recipe', 'recipe4', 'recipe3'}
+START	[1733684884.224,356456, 0] say -d recipe4 done
+START	[1733684884.224,356457, 0] say -d recipe3 done
+START	[1733684884.224,356455, 0] say -d recipe5 done
+END	[1733684884.224,356456, 0]
+END	[1733684884.224,356455, 0]
+END	[1733684884.224,356457, 0]
+START	[1733684884.227,356460, 0] say -d recipe2 done
+END	[1733684884.227,356460, 0]
+START	[1733684884.231,356463, 0] say -d recipe1 done
+END	[1733684884.231,356463, 0]
+START	[1733684884.234,356466, 0] say -d main recipe done
+END	[1733684884.234,356466, 0]
+SUCCESSFUL COMPLETION OF RECIPE: recipe
+[PASS] parallel_suite::parallel_basic_subrecipe_multiple_deps_nodelay: (0.13s)
+[RUN ] parallel_suite::parallel_real_tasks_with_pipeline_outfile_test
+[PASS] parallel_suite::parallel_real_tasks_with_pipeline_outfile_test: (0.14s)
+[RUN ] parallel_suite::parallel_subrecipe_multiple_deps_test
+Running  bin/cook -f tests/rsrc/basic_subrecipe_multiple_deps_seq.ckb -c 3
+stdout:
+ b''
+stderr:
+ b'START\t[1733684884.516,356523, 1] boil recipe3 done\nSTART\t[1733684884.516,356522, 4] churn recipe4 done\nSTART\t[1733684884.516,356521, 7] buy recipe5 done\nEND\t[1733684884.617,356523, 1]\nEND\t[1733684884.917,356522, 4]\nEND\t[1733684885.217,356521, 7]\nSTART\t[1733684885.220,356526, 6] beat recipe2 done\nEND\t[1733684885.821,356526, 6]\nSTART\t[1733684885.825,356529, 6] assemble recipe1 done\nEND\t[1733684886.426,356529, 6]\nSTART\t[1733684886.430,356532, 9] add main recipe done\nEND\t[1733684887.331,356532, 9]\n'
+rc:  0
+{'recipe3', 'recipe5', 'recipe2', 'recipe', 'recipe1', 'recipe4'}
+START	[1733684884.516,356523, 1] boil recipe3 done
+START	[1733684884.516,356522, 4] churn recipe4 done
+START	[1733684884.516,356521, 7] buy recipe5 done
+END	[1733684884.617,356523, 1]
+END	[1733684884.917,356522, 4]
+END	[1733684885.217,356521, 7]
+START	[1733684885.220,356526, 6] beat recipe2 done
+END	[1733684885.821,356526, 6]
+START	[1733684885.825,356529, 6] assemble recipe1 done
+END	[1733684886.426,356529, 6]
+START	[1733684886.430,356532, 9] add main recipe done
+END	[1733684887.331,356532, 9]
+SUCCESSFUL COMPLETION OF RECIPE: recipe
+[PASS] parallel_suite::parallel_subrecipe_multiple_deps_test: (2.94s)
+[====] Running 7 tests from piping_suite:
+[RUN ] piping_suite::basic_tasks_no_pipeline_test
+Running  bin/cook -f tests/rsrc/basic_tasks_no_pipeline.ckb -c 1
+stdout:
+ b''
+stderr:
+ b'START\t[1733684887.463,356544, 0] beat hello world\nEND\t[1733684887.463,356544, 0]\nSTART\t[1733684887.466,356546, 9] boil welcome to cse320\nEND\t[1733684888.366,356546, 9]\nSTART\t[1733684888.370,356548, 8] churn welcome again\nEND\t[1733684889.170,356548, 8]\n'
+rc:  0
+{'all'}
+START	[1733684887.463,356544, 0] beat hello world
+END	[1733684887.463,356544, 0]
+START	[1733684887.466,356546, 9] boil welcome to cse320
+END	[1733684888.366,356546, 9]
+START	[1733684888.370,356548, 8] churn welcome again
+END	[1733684889.170,356548, 8]
+SUCCESSFUL COMPLETION OF RECIPE: all
+[PASS] piping_suite::basic_tasks_no_pipeline_test: (1.83s)
+[RUN ] piping_suite::basic_tasks_with_pipeline_nonzero_test
+Running  bin/cook -f tests/rsrc/basic_tasks_with_pipeline_nonzero.ckb -c 1
+stdout:
+ b''
+stderr:
+ b'START\t[1733684889.305,356559, 4] add hello world\nSTART\t[1733684889.305,356561, 7] beat welcome to cse320\nEND\t[1733684889.705,356559, 4]\nEND\t[1733684890.005,356561, 7]\n'
+rc:  1
+SUCCESSFUL HANDLING OF ERROR (student returned non-zero)
+[PASS] piping_suite::basic_tasks_with_pipeline_nonzero_test: (0.83s)
+[RUN ] piping_suite::basic_tasks_with_pipeline_signal_test
+[FAIL] piping_suite::basic_tasks_with_pipeline_signal_test: Timed out. (1.00s)
+[RUN ] piping_suite::basic_tasks_with_pipeline_test
+Running  bin/cook -f tests/rsrc/basic_tasks_with_pipeline_signal.ckb -c 1
+stdout:
+ b''
+stderr:
+ b'START\t[1733684890.137,356572, 9] assemble hello world\nSTART\t[1733684890.137,356575, 3] separate welcome to cse320\nEND\t[1733684890.438,356575, 3]\nEND\t[1733684891.038,356572, 9]\n'
+rc:  1
+SUCCESSFUL HANDLING OF ERROR (student returned non-zero)
+Running  bin/cook -f tests/rsrc/basic_tasks_with_pipeline.ckb -c 1
+stdout:
+ b''
+stderr:
+ b'START\t[1733684891.150,356589, 6] cook something\nSTART\t[1733684891.150,356588, 1] add hello world\nSTART\t[1733684891.150,356590, 3] skim welcome to cse320\nEND\t[1733684891.250,356588, 1]\nEND\t[1733684891.450,356590, 3]\nEND\t[1733684891.750,356589, 6]\n'
+rc:  0
+{'all'}
+START	[1733684891.150,356589, 6] cook something
+START	[1733684891.150,356588, 1] add hello world
+START	[1733684891.150,356590, 3] skim welcome to cse320
+END	[1733684891.250,356588, 1]
+END	[1733684891.450,356590, 3]
+END	[1733684891.750,356589, 6]
+SUCCESSFUL COMPLETION OF RECIPE: all
+[PASS] piping_suite::basic_tasks_with_pipeline_test: (0.73s)
+[RUN ] piping_suite::error_in_pipeline_no_input_test
+Running  bin/cook -f tests/rsrc/error_in_pipeline_no_input.ckb -c 1
+stdout:
+ b''
+stderr:
+ b'START\t[1733684891.882,356601, 2] boil this is recipe2\nEND\t[1733684892.083,356601, 2]\nSTART\t[1733684892.087,356604, 9] buy about to see error\nEND\t[1733684892.987,356604, 9]\n'
+rc:  1
+SUCCESSFUL HANDLING OF ERROR (student returned non-zero)
+[PASS] piping_suite::error_in_pipeline_no_input_test: (1.23s)
+[RUN ] piping_suite::error_in_pipeline_test
+Running  bin/cook -f tests/rsrc/error_in_pipeline.ckb -c 1
+stdout:
+ b''
+stderr:
+ b'START\t[1733684893.123,356618, 7] buy this is recipe2\nEND\t[1733684893.823,356618, 7]\nSTART\t[1733684893.827,356622, 6] cook about to see error\nEND\t[1733684894.427,356622, 6]\nSTART\t[1733684894.432,356627, 9] say noexec this task\nSTART\t[1733684894.432,356625, 2] beat hello\nEND\t[1733684894.632,356625, 2]\nEND\t[1733684895.332,356627, 9]\n'
+rc:  1
+SUCCESSFUL HANDLING OF ERROR (student returned non-zero)
+[PASS] piping_suite::error_in_pipeline_test: (2.34s)
+[RUN ] piping_suite::real_tasks_with_pipeline_outfile_test
+[PASS] piping_suite::real_tasks_with_pipeline_outfile_test: (0.18s)
+[----] Writing xml report in `crit.xml`.
+[====] Synthesis: Tested: 28 | Passing: 26 | Failing: 2 | Crashing: 0 
