@@ -13,7 +13,7 @@
 static int pstrlen(char *str);
 static int pstrcmp(char *str_buf, char *str_cmd);
 static int parse_command(char *buffer, int *offset_p, TU_COMMAND *cmd);
-static int read_client_message(int connfd, char *buffer, size_t buffer_size);
+static int read_client_message(int connfd, char **buffer);
 
 /*
  * Thread function for the thread that handles interaction with a client TU.
@@ -46,22 +46,21 @@ void *pbx_client_service(void *arg) {
 
     // Buffer to store the incoming message
     // TODO: check if this static buffer is an issue
-    char buffer[1024];
+    char *buffer = NULL;
     int offset = 0;
     ssize_t bytes_read;
     TU_COMMAND cmd;
 
     // Service loop
     success("service loop started for TU '%d' on (tid %ld)", connfd, pthread_self()); 
-    while((bytes_read = read_client_message(connfd, buffer, sizeof(buffer))) > 0) {
-        // if (bytes_read <= 0) {
-        //     break;
-        // }
+    while((bytes_read = read_client_message(connfd, &buffer)) > 0) {
         debug("received message from client on TU (ext %d): %s", tu_extension(tu), buffer);
 
         // Parse the command from the buffer
         if (parse_command(buffer, &offset, &cmd) == -1) {
             warn("unknown or malformed command from client on TU (ext %d): %s", tu_extension(tu), buffer);
+            free(buffer);
+            buffer = NULL;
             continue;
         }
 
@@ -92,6 +91,9 @@ void *pbx_client_service(void *arg) {
                 error("unhandled command: %s", buffer);
                 break;
         }
+
+        free(buffer);
+        buffer = NULL;
     }
 
     pbx_unregister(pbx, tu);
@@ -100,7 +102,14 @@ void *pbx_client_service(void *arg) {
     return NULL;
 }
 
-static int read_client_message(int connfd, char *buffer, size_t buffer_size) {
+static int read_client_message(int connfd, char **buffer) {
+    size_t capacity = 1024;
+    *buffer = malloc(capacity);
+    if (!*buffer) {
+        error("malloc failed with error: %s", strerror(errno));
+        return -1;
+    }
+
     ssize_t bytes_read = 0;
 
     while (1) {
@@ -109,6 +118,7 @@ static int read_client_message(int connfd, char *buffer, size_t buffer_size) {
 
         // Error handling
         if (n <= 0) {
+            free(*buffer);
             if (n == 0) {
                 debug("client on fd '%d' disconnected", connfd);
             } else {
@@ -117,20 +127,25 @@ static int read_client_message(int connfd, char *buffer, size_t buffer_size) {
             return n;
         }
 
-        buffer[bytes_read++] = c;
+        if (bytes_read + 1 >= capacity) {
+            capacity += 1024;
+            char *new_buffer = realloc(*buffer, capacity);
+            if (!new_buffer) {
+                error("malloc failed with error: %s", strerror(errno));
+                free(*buffer);
+                return -1;
+            }
+            *buffer = new_buffer;
+        }
+
+        (*buffer)[bytes_read++] = c;
 
         // Check for end-of-line sequence
         if (bytes_read >= 2 &&
-            buffer[bytes_read - 2] == '\r' &&
-            buffer[bytes_read - 1] == '\n') {
-            buffer[bytes_read - 2] = '\0';
+            (*buffer)[bytes_read - 2] == '\r' &&
+            (*buffer)[bytes_read - 1] == '\n') {
+            (*buffer)[bytes_read - 2] = '\0';
             break;
-        }
-
-        // Prevent buffer overflow
-        if (bytes_read >= buffer_size) {
-            error("message from client on fd '%d' too long for buffer!", connfd);
-            return -1;
         }
     }
     return bytes_read;
