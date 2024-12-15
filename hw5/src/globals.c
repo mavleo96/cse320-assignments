@@ -33,3 +33,8 @@ char *tu_command_names[] = {
  */
 PBX *pbx;
 
+/*
+ * Force a reference to pbx_client_service(), so it will be properly recognized
+ * that people who did nothing at all did not do the server module.
+ */
+void *pbx_client_service_ref = pbx_client_service;

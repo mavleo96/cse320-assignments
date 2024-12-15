@@ -27,7 +27,7 @@ STD := -std=gnu11
 TEST_LIB := -lcriterion
 LIBS := $(LIB) -lpthread
 LIBS_DB := $(LIB_DB) -lpthread
-EXCLUDES :=
+EXCLUDES := excludes.h
 
 CFLAGS += $(STD) -DTEST_CONFIG_C
 
@@ -63,6 +63,22 @@ $(BLDD)/%.o: $(SRCD)/%.c
 
 clean:
 	rm -rf $(BLDD) $(BIND)
+
+$(INCD)/$(EXCLUDES): $(BIND)/$(EXEC)
+	rm -f $@
+	touch $@
+	if nm $(BIND)/$(EXEC) | grep INSTRUCTOR_MAIN > /dev/null; then \
+	   echo "#define NO_MAIN" >> $@; \
+	fi
+	if nm $(BIND)/$(EXEC) | grep INSTRUCTOR_SERVER > /dev/null; then \
+	   echo "#define NO_SERVER" >> $@; \
+	fi
+	if nm $(BIND)/$(EXEC) | grep INSTRUCTOR_PBX > /dev/null; then \
+	   echo "#define NO_PBX" >> $@; \
+	fi
+	if nm $(BIND)/$(EXEC) | grep INSTRUCTOR_TU > /dev/null; then \
+	   echo "#define NO_TU" >> $@; \
+	fi
 
 .PRECIOUS: $(BLDD)/*.d
 -include $(BLDD)/*.d
