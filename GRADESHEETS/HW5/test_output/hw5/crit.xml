@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Tests compiled with Criterion v2.4.2 -->
+<testsuites name="Criterion Tests" tests="32" failures="2" errors="1" disabled="0">
+  <testsuite name="stress_suite" tests="1" failures="1" errors="0" disabled="0" skipped="0" time="7.942">
+    <testcase name="stress_test" assertions="2" status="FAILED" time="7.942">
+      <failure type="assert" message="1 assertion(s) failed."><![CDATA[tests/stress_tests.c:139: Tester pid 3204377 exit status was not 0&#10;]]>&#10;</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="pbx_suite" tests="2" failures="1" errors="1" disabled="0" skipped="0" time="0.004">
+    <testcase name="many_threads_random_reg_unreg_premature" assertions="0" status="ERRORED" time="0.000">
+      <error type="crash" message="The test crashed." />    </testcase>
+    <testcase name="dial_two_threads" assertions="1" status="PASSED" time="0.004">
+    </testcase>
+  </testsuite>
+  <testsuite name="blackbox_suite" tests="17" failures="0" errors="0" disabled="0" skipped="0" time="17.647">
+    <testcase name="pickup_hangup_test" assertions="2" status="PASSED" time="1.004">
+    </testcase>
+    <testcase name="pickup_hangup2_test" assertions="2" status="PASSED" time="1.006">
+    </testcase>
+    <testcase name="open_connection_valgrind_test" assertions="3" status="PASSED" time="1.195">
+    </testcase>
+    <testcase name="open_connection_test" assertions="2" status="PASSED" time="1.013">
+    </testcase>
+    <testcase name="exercise_valgrind_test" assertions="3" status="PASSED" time="1.066">
+    </testcase>
+    <testcase name="exercise_test" assertions="2" status="PASSED" time="1.068">
+    </testcase>
+    <testcase name="dial_self_test" assertions="2" status="PASSED" time="1.004">
+    </testcase>
+    <testcase name="dial_good_test" assertions="2" status="PASSED" time="1.006">
+    </testcase>
+    <testcase name="dial_disconnect_test" assertions="2" status="PASSED" time="1.048">
+    </testcase>
+    <testcase name="dial_bad_test" assertions="2" status="PASSED" time="1.004">
+    </testcase>
+    <testcase name="dial_answer_test" assertions="2" status="PASSED" time="1.051">
+    </testcase>
+    <testcase name="connect_disconnect_valgrind_test" assertions="3" status="PASSED" time="1.141">
+    </testcase>
+    <testcase name="connect_disconnect_test" assertions="2" status="PASSED" time="1.005">
+    </testcase>
+    <testcase name="connect_disconnect_many_valgrind_test" assertions="3" status="PASSED" time="1.013">
+    </testcase>
+    <testcase name="connect_disconnect_many_test" assertions="2" status="PASSED" time="1.014">
+    </testcase>
+    <testcase name="connect_disconnect2_valgrind_test" assertions="3" status="PASSED" time="1.005">
+    </testcase>
+    <testcase name="connect_disconnect2_test" assertions="2" status="PASSED" time="1.005">
+    </testcase>
+  </testsuite>
+  <testsuite name="TU_suite" tests="12" failures="0" errors="0" disabled="0" skipped="0" time="0.032">
+    <testcase name="tu_self_dial" assertions="4" status="PASSED" time="0.001">
+    </testcase>
+    <testcase name="tu_ref_stress" assertions="0" status="PASSED" time="0.011">
+    </testcase>
+    <testcase name="tu_pickup_repeat" assertions="1" status="PASSED" time="0.001">
+    </testcase>
+    <testcase name="tu_pickup_basic" assertions="3" status="PASSED" time="0.001">
+    </testcase>
+    <testcase name="tu_init" assertions="1" status="PASSED" time="0.000">
+    </testcase>
+    <testcase name="tu_fileno" assertions="1" status="PASSED" time="0.001">
+    </testcase>
+    <testcase name="tu_extension" assertions="1" status="PASSED" time="0.001">
+    </testcase>
+    <testcase name="tu_dial_off_hook" assertions="4" status="PASSED" time="0.001">
+    </testcase>
+    <testcase name="tu_dial_deadlock" assertions="0" status="PASSED" time="0.009">
+    </testcase>
+    <testcase name="tu_dial_basic" assertions="9" status="PASSED" time="0.004">
+    </testcase>
+    <testcase name="tu_chat_invalid" assertions="2" status="PASSED" time="0.001">
+    </testcase>
+    <testcase name="tu_chat_basic" assertions="9" status="PASSED" time="0.001">
+    </testcase>
+  </testsuite>
+</testsuites>
