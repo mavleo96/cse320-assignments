@@ -309,8 +309,8 @@ Test(sfmm_memalign_suite, memalign_zero, .timeout = TEST_TIMEOUT) {
 	void *x = sf_memalign(0, 128);
 
 	cr_assert_null(x, "x is not NULL!");
-	assert_free_block_count(0, 1);
-	assert_free_block_count(1984, 1);
+	_assert_free_block_count(0, 1);
+	_assert_free_block_count(1984, 1);
 	cr_assert(sf_errno == 0, "sf_errno is not 0!");
 }
 
@@ -319,8 +319,8 @@ Test(sfmm_memalign_suite, memalign_too_large, .timeout = TEST_TIMEOUT) {
 	void *x = sf_memalign(100281, 128);
 
 	cr_assert_null(x, "x is not NULL!");
-	assert_free_block_count(0, 1);
-	assert_free_block_count(100288, 1);
+	_assert_free_block_count(0, 1);
+	_assert_free_block_count(100288, 1);
 	cr_assert(sf_errno == ENOMEM, "sf_errno is not ENOMEM!");
 }
 
@@ -329,8 +329,8 @@ Test(sfmm_memalign_suite, memalign_align_32, .timeout = TEST_TIMEOUT) {
 	void *x = sf_memalign(100, 32);
 
 	cr_assert_not_null(x, "x is NULL!");
-	assert_free_block_count(0, 1);
-	assert_free_block_count(1856, 1);
+	_assert_free_block_count(0, 1);
+	_assert_free_block_count(1856, 1);
 	cr_assert(sf_errno == 0, "sf_errno is not 0!");
 }
 
@@ -379,8 +379,8 @@ Test(sfmm_realloc_suite, realloc_zero, .timeout = TEST_TIMEOUT) {
 	void *y = sf_realloc(x, 0);
 
 	cr_assert_null(y, "y is not NULL!");
-	assert_free_block_count(0, 1);
-	assert_free_block_count(1984, 1);
+	_assert_free_block_count(0, 1);
+	_assert_free_block_count(1984, 1);
 	cr_assert(sf_errno == 0, "sf_errno is not 0!");
 }
 
@@ -390,8 +390,8 @@ Test(sfmm_realloc_suite, realloc_too_large, .timeout = TEST_TIMEOUT) {
 	void *y = sf_realloc(x, 100281);
 
 	cr_assert_null(y, "y is not NULL!");
-	assert_free_block_count(0, 1);
-	assert_free_block_count(99264, 1);
+	_assert_free_block_count(0, 1);
+	_assert_free_block_count(99264, 1);
 	cr_assert(sf_errno == ENOMEM, "sf_errno is not ENOMEM!");
 }
 
