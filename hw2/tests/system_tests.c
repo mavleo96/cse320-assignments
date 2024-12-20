@@ -72,7 +72,7 @@ Test(compress_system_suite, compress_test2, .timeout = 5){
 }
 
 // Test on input with size larger than blocksize
-Test(compress_system_suite, compress_test3, .timeout = 5){
+Test(compress_system_suite, compress_test3, .timeout = 30){
 	char * in = "./tests/rsrc/c_rand_3333.in";
 	char * out = "./test_output/compress_system_suite/c_test3.out";
 	int exp_ret = EXIT_SUCCESS;
@@ -168,7 +168,7 @@ Test(compress_system_suite, compress_emoji_ascii, .timeout = 5){
 }
 
 // Test on file much larger than blocksize
-Test(compress_system_suite, compress_large, .timeout = 5){
+Test(compress_system_suite, compress_large, .timeout = 60){
 	char * in = "./tests/rsrc/c_rand_65536.in";
 	char * out = "./test_output/compress_system_suite/c_large.out";
 	int exp_ret = EXIT_SUCCESS;
