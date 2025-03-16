@@ -1,42 +1,83 @@
-# Vijayabharathi Murugan
-## 116745378
-:trollface:
-Eugene Stark - 01
+# CSE 320 - Systems Fundamentals Assignments 
 
-ACADEMIC HONESTY STATEMENT
-================================================================================
-I certify the following:
+This repository contains programming assignments for CSE 320 Systems Fundamentals II course at Stony Brook University by Prof. Eugene Stark. The course focuses on programming in C and explores systems-level concepts including memory management, process control, and system calls.
 
-1. All files hosted in this repository at any time, including any written
-material and code, are entirely of my own work. The only exception permitted to
-this rule is if the Professor(s) give explicit, written permission, in the
-assignment handout, on the webpage/PIAZZA, or in E-mail, to use or adapt other
-source code into my work. In this case, the origins of all such code is clearly
-cited in my files.
+## Repository Structure
+```
+.
+├── ACADEMICHONESTY.md
+├── README.md
+├── hw0/
+├── hw1/
+├── hw2/
+├── hw3/
+├── hw4/
+├── hw5/
+├── .github-ci.yml
+└── .gitignore
+```
 
-2. I have not shared, transmitted, or received source code written for this
-class (including in any semester) from anyone else except the Professor(s) and
-the TAs. This includes both electronic forms (E-mail or downloading), as well as
-written or printed source code.
+## Assignments
 
-3. Except in the case of explicit written permission given by the Professor(s),
-I have not included in my repository any source code obtained from a textbook,
-downloaded from the Internet, extracted from a software package or source code
-library, or from any other similar source.
+### Assignment 0: Development Environment Setup
+Introduction to Linux environment setup, Git, and essential C development tools.
 
-I understand that the appearance of extremely similar code fragments in more
-than one homework submission will be treated as evidence that code has been
-shared and an academic dishonesty case will be filed against me.
+### Assignment 1: Introduction to C Programming
+Implementation of string manipulation and bitwise operations in C with focus on memory safety.
 
-I understand that code fragments can be extremely similar even if they are
-formatted differently and use different identifiers/labels/variables. The
-appearance of extremely similar code fragments that differ in this way will be
-regarded as evidence of an attempt to conceal that sharing has taken place.
+### Assignment 2: Debugging, Fixing, and Optimizing
+Debugging and fixing memory-related issues in existing C code using GDB and Valgrind.
 
-When in doubt about whether or not I am permitted to use particular source
-materials, I will obtain written permission from the Professor(s), in advance of
-my submission. Such permission is best requested and obtained by E-mail to
-cse320@cs.stonybrook.edu
-================================================================================
-Signed:
-Fri Aug 30 04:17:47 AM UTC 2024 -Vijayabharathi Murugan
+### Assignment 3: Dynamic Memory Allocator
+Implementation of a custom memory allocator (malloc/free) with various allocation strategies.
+
+### Assignment 4: Parallel 'Cook'
+Development of multi-level cooking process with multi-processing while handling signal and IO redirection.
+
+### Assignment 5: PBX Server
+Implementation of a Private Branch Exchange (PBX) server for handling concurrent phone connections.
+
+> Note: Each assignment directory contains its own README.md with specific requirements and instructions.
+
+## Development Environment
+
+### VM Requirements
+- VirtualBox 6.1.27 or higher
+- 10GB minimum free disk space (40GB recommended)
+- 64-bit hardware virtualization support
+- Linux Mint 22 "Wilma" (provided in course VM)
+
+### Course Tools
+- GCC compiler suite
+- GNU Make build system
+- GDB debugger
+- Valgrind memory checker
+- Git version control
+
+### VM Setup
+The course provides a pre-configured Linux Mint VM (CSE320_Fall24.ova). For detailed setup instructions and VM download, refer to hw0/README.md.
+
+## Building Projects
+
+Each assignment follows a standard structure:
+```bash
+hwX/
+├── include/     # Header files
+├── src/        # Source files
+├── tests/      # Test cases
+└── Makefile    # Build configuration
+```
+
+To build a project:
+```bash
+cd hwX
+make clean all
+```
+
+## Academic Integrity
+
+This repository contains academic coursework. All work must be your own. Review [ACADEMICHONESTY.md](ACADEMICHONESTY.md) for the complete academic integrity policy.
+
+## License
+
+All rights reserved. This project is for educational purposes only and part of the CSE 320 coursework.
